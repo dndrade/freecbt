@@ -2,12 +2,9 @@
 // README at: https://github.com/devcontainers/templates/tree/main/src/javascript-node
 {
     "name": "Node.js",
-    // Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
     "image": "mcr.microsoft.com/devcontainers/javascript-node:1-20-bullseye",
-    // Features to add to the dev container. More info: https://containers.dev/features.
     "features": {
         "ghcr.io/devcontainers/features/java:1": {},
-        "ghcr.io/akhildevelops/devcontainer-features/android-cli:0": {},
         "ghcr.io/devcontainers/features/docker-in-docker:2": {}
     },
     // expose ports from this image to the local network, so my phone can see the expo go server.
