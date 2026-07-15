@@ -8,5 +8,6 @@
     "source.organizeImports": "explicit",
     "source.sortMembers": "explicit"
   },
-  "jest.jestCommandLine": "yarn test"
+  "jest.jestCommandLine": "yarn test",
+  "js/ts.tsdk.path": "node_modules/typescript/lib"
 }
