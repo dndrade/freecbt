@@ -21,16 +21,17 @@ Sources: code inspection · erosson's [Grist test plan](https://docs.getgrist.co
 
 ## Open
 
-| #     | Finding                                                       | Source                                        |
-| ----- | ------------------------------------------------------------- | --------------------------------------------- |
-| F-003 | Save and finish button looks wrong                            | Grist issues row 3                            |
-| F-004 | Distortion screen — swipe counts as button press (iOS)        | Grist issues row 5                            |
-| F-005 | Language change doesn't propagate until switching screens     | Grist issues row 9                            |
-| F-006 | Backup screen broken — save/load file not working             | Grist test-cases row 25 · marked BROKEN       |
-| F-007 | Data persistence across app upgrades — untested on v2.5.0     | Grist test-cases row 1 · "most critical test" |
-| F-008 | v2.5.0 test plan — 63 executions blank since 2026-01-09       | Grist executions-raw rows 180–242             |
-| F-009 | `expo-notifications` imported in `src/hooks/use-reminders.ts` | Code inspection                               |
-| F-010 | #603 — save and add another / go to index buttons missing     | GitHub issue · code inspection                |
+| #     | Finding                                                                                                | Source                                        |
+| ----- | ------------------------------------------------------------------------------------------------------ | --------------------------------------------- |
+| F-003 | Save and finish button looks wrong                                                                     | Grist issues row 3                            |
+| F-004 | Distortion screen — swipe counts as button press (iOS)                                                 | Grist issues row 5                            |
+| F-005 | Language change doesn't propagate until switching screens                                              | Grist issues row 9                            |
+| F-006 | Backup screen broken — save/load file not working                                                      | Grist test-cases row 25 · marked BROKEN       |
+| F-007 | Data persistence across app upgrades — untested on v2.5.0                                              | Grist test-cases row 1 · "most critical test" |
+| F-008 | v2.5.0 test plan — 63 executions blank since 2026-01-09                                                | Grist executions-raw rows 180–242             |
+| F-009 | `expo-notifications` imported in `src/hooks/use-reminders.ts`                                          | Code inspection                               |
+| F-010 | #603 — save and add another / go to index buttons missing                                              | GitHub issue · code inspection                |
+| F-011 | Settings UI shows mixed languages — `*` prefixed strings may fall back to English regardless of locale | `en.json` design · confirmed on device (PT)   |
 
 **F-006:** erosson notes: created backup, couldn't find the file on import
 
@@ -41,6 +42,8 @@ Sources: code inspection · erosson's [Grist test plan](https://docs.getgrist.co
 **F-009:** Not crashing yet · not in `app/` route · marked iOS-only with TODO
 
 **F-010:** `Routes.thoughtCreateV2()` + `Routes.thoughtListV2()` exist · translation keys missing
+
+**F-011:** Affects theme header, reminders header, settings header · intentional marker by erosson for untranslated strings · translation gap, not a code bug
 
 ## Notes
 
