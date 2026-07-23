@@ -62,20 +62,7 @@ const KeypadSideButton = ({
   />
 );
 
-const Notifier = ({ isActive }: { isActive: boolean }) => (
-  <View />
-  // <BouncyBigOnActive
-  //   style={{
-  //     width: 32,
-  //     height: 32,
-  //     borderRadius: 32,
-  //     backgroundColor: theme.pink,
-  //     borderColor: theme.darkPink,
-  //     borderWidth: 2,
-  //   }}
-  //   pose={isActive ? "active" : "inactive"}
-  // />
-);
+const Notifier = ({ isActive }: { isActive: boolean }) => <View />;
 
 const BUTTON_SIZE = 96;
 
@@ -124,13 +111,6 @@ export default function LockScreen(props: Props) {
   }, [isComplete]);
 
   return (
-    // <FadesIn
-    //   style={{
-    //     backgroundColor: theme.pink,
-    //     height: "100%",
-    //   }}
-    //   pose="visible"
-    // >
     <>
       <StatusBar barStyle="dark-content" />
       <Container
@@ -236,6 +216,5 @@ export default function LockScreen(props: Props) {
         </Row>
       </Container>
     </>
-    // </FadesIn>
   );
 }
