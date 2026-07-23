@@ -103,13 +103,6 @@ export default function FormScreen(props: Props = {}): React.JSX.Element {
   }
 
   return (
-    //<FadesIn
-    //  style={{
-    //    backgroundColor: theme.lightOffwhite,
-    //    height: "100%",
-    //  }}
-    //  pose="visible"
-    //>
     <>
       <StatusBar barStyle="dark-content" />
       <Container
@@ -166,6 +159,5 @@ export default function FormScreen(props: Props = {}): React.JSX.Element {
         />
       </Container>
     </>
-    // </FadesIn>
   );
 }

@@ -1,7 +1,6 @@
 import React from "react";
 import theme from "../theme";
 import { IconButton, Paragraph, SubHeader } from "../ui";
-// import posed from "react-native-pose"
 import * as Haptic from "expo-haptics";
 import { sortBy } from "lodash";
 import { TouchableWithoutFeedback, View } from "react-native";
@@ -14,16 +13,6 @@ import {
   isNewUser,
 } from "./alertstore";
 
-//const PopsUp = posed.View({
-//  full: { height: 380, paddingTop: 18, paddingBottom: 18 },
-//  peak: {
-//    height: 156,
-//    paddingTop: 18,
-//    paddingBottom: 18,
-//    transition: { type: "spring", stiffness: 150 },
-//  },
-//  hidden: { height: 0, paddingTop: 0, paddingBottom: 0 },
-//})
 const PopsUp = View;
 
 interface AlertViewProps {
