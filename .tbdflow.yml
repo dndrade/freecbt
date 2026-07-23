@@ -1,6 +1,6 @@
 main_branch_name: dndrade/main
-release_url_template: https://github.com/owner/repository/releases/tag/{{version}}
-stale_branch_threshold_days: 1
+release_url_template: https://github.com/dndrade/freecbt/releases/tag/{{version}}
+stale_branch_threshold_days: 14
 log_display_count: 15
 monorepo:
   enabled: false
@@ -35,10 +35,10 @@ branch_types:
   feat: feat/
   docs: docs/
   fix: fix/
-  release: release_
+  release: release/
   chore: chore/
   refactor: refactor/
-  feature: feature_
+  hotfix: hotfix/
 automatic_tags:
   release_prefix: v
 lint:
@@ -53,6 +53,8 @@ lint:
     - fix
     - perf
     - refactor
+    - release
+    - hotfix
     - revert
     - style
     - test
