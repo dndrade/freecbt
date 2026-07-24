@@ -330,3 +330,4 @@ Podfile.lock
 *.bak
 
 /secrets/
+.worktrees/
