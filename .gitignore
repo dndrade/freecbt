@@ -1,6 +1,9 @@
 /TODO*
 /www/build
 node_modules/**/*
+# also matches a node_modules entry that's a symlink, not a directory —
+# node_modules/ (below) only matches real directories and misses those
+node_modules
 .expo/*
 npm-debug.*
 *.jks
