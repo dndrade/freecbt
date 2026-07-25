@@ -1,20 +1,61 @@
 import { Distortion, Model, Settings, Thought } from "@/src/model";
 import { AsyncStorageStatic } from "@react-native-async-storage/async-storage";
 
-export function settings(storage: AsyncStorageStatic) {
+export interface SecureStoreLike {
+  getItemAsync(key: string): Promise<string | null>;
+  setItemAsync(key: string, value: string): Promise<void>;
+  deleteItemAsync(key: string): Promise<void>;
+}
+
+export function settings(
+  storage: AsyncStorageStatic,
+  secureStorage: SecureStoreLike
+) {
+  // Existing users may still have their pincode in AsyncStorage from
+  // before this file started using SecureStore. Migrate it once, on the
+  // first read after upgrading, then never touch the legacy key again.
+  async function readPincode(): Promise<string | null> {
+    const secure = await secureStorage.getItemAsync(Settings.pincodeSecureKey);
+    if (secure !== null) return secure;
+    const legacy = await storage.getItem(Settings.pincodeKey);
+    if (legacy !== null) {
+      await Promise.all([
+        secureStorage.setItemAsync(Settings.pincodeSecureKey, legacy),
+        storage.removeItem(Settings.pincodeKey),
+      ]);
+    }
+    return legacy;
+  }
   async function read(): Promise<Settings.Settings> {
-    const json = Object.fromEntries(await storage.multiGet(Settings.keys));
+    const [batch, pincode] = await Promise.all([
+      storage.multiGet(Settings.batchKeys),
+      readPincode(),
+    ]);
+    const json = {
+      ...Object.fromEntries(batch),
+      [Settings.pincodeKey]: pincode,
+    };
     return Settings.fromJson.parse(json);
   }
   async function write(s: Settings.Settings): Promise<void> {
     const json = Settings.fromJson.encode(s);
-    const entries = Object.entries(json);
+    const { [Settings.pincodeKey]: pincode, ...rest } = json;
+    const entries = Object.entries(rest);
     const removes = entries.filter(([, v]) => v === null).map(([k]) => k);
     const sets = entries.filter((p): p is [string, string] => p[1] !== null);
-    await Promise.all([storage.multiRemove(removes), storage.multiSet(sets)]);
+    await Promise.all([
+      storage.multiRemove(removes),
+      storage.multiSet(sets),
+      pincode === null
+        ? secureStorage.deleteItemAsync(Settings.pincodeSecureKey)
+        : secureStorage.setItemAsync(Settings.pincodeSecureKey, pincode),
+    ]);
   }
   async function clear() {
-    await storage.multiRemove(Settings.keys);
+    await Promise.all([
+      storage.multiRemove(Settings.keys),
+      secureStorage.deleteItemAsync(Settings.pincodeSecureKey),
+    ]);
   }
   return { read, write, clear };
 }

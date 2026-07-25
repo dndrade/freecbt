@@ -37,3 +37,21 @@ jest.mock("expo-router", () => ({
     navigate: () => {},
   }),
 }));
+
+// expo-secure-store's native module isn't linked in the jest environment,
+// so real calls resolve `undefined` instead of `null`/rejecting. Mock it
+// with a simple in-memory store so tests that mount the real ModelProvider
+// (which now uses SecureStore for the pincode) see real get/set/delete
+// semantics instead.
+jest.mock("expo-secure-store", () => {
+  const store = new Map<string, string>();
+  return {
+    getItemAsync: async (key: string) => store.get(key) ?? null,
+    setItemAsync: async (key: string, value: string) => {
+      store.set(key, value);
+    },
+    deleteItemAsync: async (key: string) => {
+      store.delete(key);
+    },
+  };
+});
