@@ -42,7 +42,7 @@ export default function Create() {
 function Ready({ model, dispatch, style: s, translate: t }: ModelLoadedProps) {
   const [value, setValue] = useState(Thought.emptySpec());
   return (
-    <SafeAreaView style={[s.view, s.p0, s.py4]}>
+    <SafeAreaView testID="create-thought-screen" style={[s.view, s.p0, s.py4]}>
       <CBTForm
         model={model}
         style={s}
@@ -137,6 +137,7 @@ function CBTFormItem(
           <>
             <Text style={[s.subheader]}>{t("auto_thought")}</Text>
             <TextInput
+              testID="automatic-thought-input"
               style={[s.textInput]}
               // placeholderTextColor={textInputPlaceholderColor}
               placeholder={t("cbt_form.auto_thought_placeholder")}
