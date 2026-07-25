@@ -1,6 +1,5 @@
 import { LoadModel, ModelLoadedProps } from "@/src/hooks/use-model";
 import { Style } from "@/src/hooks/use-style";
-import { AppProvider } from "@/src/view/app-provider";
 import { Feather } from "@expo/vector-icons";
 import { DrawerNavigationOptions } from "@react-navigation/drawer";
 import { Drawer } from "expo-router/drawer";
@@ -9,12 +8,12 @@ import { Platform, useWindowDimensions } from "react-native";
 
 export default function Layout() {
   return (
-    <AppProvider>
+    <>
       {/* <Stack screenOptions={{ headerShown: false }} /> */}
       {/* <Drawer /> */}
       {/* <Nav /> */}
       <LoadModel ready={Nav} />
-    </AppProvider>
+    </>
   );
 }
 
