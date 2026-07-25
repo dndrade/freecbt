@@ -4,7 +4,7 @@ import { useLocalSearchParams } from "expo-router";
 import React, { useState } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useThoughtFromParams } from ".";
-import { CBTForm, SlideName } from "../create";
+import { CBTForm } from "../create";
 
 export default function Create() {
   return <LoadModel ready={Ready} />;
@@ -13,7 +13,7 @@ export default function Create() {
 function Ready({ model, dispatch, style: s, translate: t }: ModelLoadedProps) {
   const res = useThoughtFromParams(model);
   const params = useLocalSearchParams<{ slide?: string }>();
-  const slide = SlideName.safeParse(params.slide);
+  const slide = Thought.SlideName.safeParse(params.slide);
   const [value, setValue] = useState<Thought.Spec>(
     res.status === "success" ? res.value : Thought.emptySpec()
   );
