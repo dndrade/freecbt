@@ -23,10 +23,15 @@ function OnboardingReady(
   const router = useRouter();
   const hasRedirected = useRef(false);
 
-  // set existingUser now, at redirect-decision time — do not wait for
-  // `onboarded` to round-trip back through a completed navigation, since
-  // that round-trip is not guaranteed to ever land here (see
-  // .dev/audits/audit-log-010-onboarding-redirect-loop.md).
+  // Navigate imperatively rather than rendering <Redirect>: the dispatch
+  // below re-renders this component's ancestor, which would unmount a
+  // <Redirect> before its own navigation effect commits. router.push()
+  // survives that remount. See
+  // docs/superpowers/specs/2026-07-25-fix-onboarding-redirect-loop-design.md.
+  //
+  // existingUser is set here, at redirect-decision time, rather than
+  // waiting for `onboarded` to round-trip back through a completed
+  // navigation — that round-trip is not guaranteed to ever land here.
   useEffect(() => {
     if (!model.settings.existingUser && !onboarded && !hasRedirected.current) {
       hasRedirected.current = true;
