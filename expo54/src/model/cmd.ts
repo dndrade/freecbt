@@ -1,6 +1,6 @@
 import { Href } from "expo-router";
-import { Thought } from ".";
 import * as Settings from "./settings";
+import * as Thought from "./thought";
 
 export type Cmd =
   | typeof loadModel

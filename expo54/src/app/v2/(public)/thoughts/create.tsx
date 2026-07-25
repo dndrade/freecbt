@@ -21,18 +21,9 @@ import Carousel, {
   Pagination,
 } from "react-native-reanimated-carousel";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { z } from "zod";
 
-const slideNames = [
-  "automatic-thought",
-  "distortions",
-  "challenge",
-  "alternative-thought",
-] as const;
-export const SlideName = z.enum(slideNames);
-export type SlideName = z.infer<typeof SlideName>;
-const slideNums = new Map<SlideName, number>(
-  slideNames.map((name, i) => [name, i])
+const slideNums = new Map<Thought.SlideName, number>(
+  Thought.SlideName.options.map((name, i) => [name, i])
 );
 
 export default function Create() {
@@ -60,7 +51,7 @@ function Ready({ model, dispatch, style: s, translate: t }: ModelLoadedProps) {
  */
 export function CBTForm(
   props: Pick<ModelLoadedProps, "model" | "style" | "translate"> & {
-    slide?: SlideName; // used only for editing - select this slide on page load
+    slide?: Thought.SlideName; // used only for editing - select this slide on page load
     value: Thought.Spec;
     onChange?: (t: Thought.Spec) => void;
     onSubmit?: () => void;
@@ -85,7 +76,7 @@ export function CBTForm(
     <View style={[s.container]}>
       <Carousel
         ref={ref}
-        data={[...slideNames]}
+        data={[...Thought.SlideName.options]}
         onProgressChange={progress}
         renderItem={CBTFormItem({ ...props, progress })}
         width={width}
@@ -108,7 +99,7 @@ export function CBTForm(
       />
       <Pagination.Basic
         progress={progress}
-        data={[...slideNames]}
+        data={[...Thought.SlideName.options]}
         dotStyle={s.paginationDot}
         activeDotStyle={s.activePaginationDot}
         containerStyle={{ gap: 5, marginTop: 10 }}
@@ -125,7 +116,7 @@ function CBTFormItem(
     onChange?: (t: Thought.Spec) => void;
     onSubmit?: () => void;
   }
-): CarouselRenderItem<SlideName> {
+): CarouselRenderItem<Thought.SlideName> {
   const { model, value, progress, style: s, translate: t } = props;
   const onChange = props.onChange ?? (() => {});
   const onSubmit = props.onSubmit ?? (() => {});

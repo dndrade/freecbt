@@ -1,9 +1,9 @@
 import _ from "lodash";
 import { v4 as uuidv4 } from "uuid";
 import { z } from "zod";
-import type { Model } from ".";
 import { AssertExtends } from "../type-utils";
 import * as Distortion from "./distortion";
+import * as Settings from "./settings";
 
 export const VERSION = "Thought-v2";
 
@@ -40,6 +40,15 @@ export const Id = z
   })
   .brand<"thought.id">();
 export type Id = z.infer<typeof Id>;
+
+export const SlideName = z.enum([
+  "automatic-thought",
+  "distortions",
+  "challenge",
+  "alternative-thought",
+]);
+export type SlideName = z.infer<typeof SlideName>;
+
 export const keyFromId = z.codec(Id, Key, {
   decode: (id: Id) => Key.decode(`${KEY_PREFIX}${id}`),
   encode: (key: z.input<typeof Key>) =>
@@ -154,7 +163,7 @@ export function createParsers(data: Distortion.Data) {
   return { fromJson, toJson, fromString };
 }
 
-export function label(t: Thought, m: Pick<Model.Ready, "settings">) {
+export function label(t: Thought, m: { settings: Settings.Settings }) {
   return m.settings.historyLabels === "automatic-thought"
     ? t.automaticThought
     : t.alternativeThought;
