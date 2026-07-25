@@ -7,6 +7,9 @@ export const remindersKey = `${prefix}notifications`;
 export const localeKey = `${prefix}locale`;
 export const historyLabelsKey = `${prefix}history-button-labels`;
 export const pincodeKey = `@Quirk:pincode`;
+// expo-secure-store rejects "@" and ":"; pincodeKey above must stay as-is
+// for AsyncStorage legacy-migration reads, so SecureStore gets its own key.
+export const pincodeSecureKey = `quirk-pincode`;
 export const themeKey = `${prefix}theme`;
 export const existingUserKey = "@Quirk:existing-user";
 
@@ -23,6 +26,7 @@ export const Json = z.object({
 export type Json = z.infer<typeof Json>;
 export type JsonKey = keyof typeof Json.shape;
 export const keys = Object.keys(Json.shape) as readonly JsonKey[];
+export const batchKeys = keys.filter((k) => k !== pincodeKey);
 
 export const Settings = z.object({
   // all values should catch() - settings are not worth having an error handling flow, just use a default value instead
