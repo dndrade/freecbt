@@ -1,7 +1,7 @@
 import { LoadModel, ModelLoadedProps } from "@/src/hooks/use-model";
 import { Action } from "@/src/model";
 import { Redirect, useGlobalSearchParams } from "expo-router";
-import React, { useEffect } from "react";
+import React from "react";
 import { Routes } from "..";
 
 export function OnboardingGateway(props: {
@@ -21,17 +21,14 @@ function OnboardingReady(
   const { model, dispatch } = props;
   const { onboarded } = useGlobalSearchParams();
 
-  // console.log("onboarding-gateway", model.settings.existingUser, onboarded);
-  useEffect(() => {
-    if (!model.settings.existingUser && onboarded) {
-      // console.log("onboarding-gateway: set");
-      dispatch(Action.setExistingUser());
-    }
-  });
-
   if (model.settings.existingUser || onboarded) {
     return props.children;
   } else {
+    // set existingUser now, at redirect-decision time — do not wait for
+    // `onboarded` to round-trip back through a completed navigation, since
+    // that round-trip is not guaranteed to ever land here (see
+    // .dev/audits/audit-log-010-onboarding-redirect-loop.md).
+    dispatch(Action.setExistingUser());
     return <Redirect href={Routes.introV2({ onboarded: true })} />;
   }
 }
