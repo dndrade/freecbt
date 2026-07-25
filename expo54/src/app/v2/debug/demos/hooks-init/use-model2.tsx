@@ -11,6 +11,7 @@
 import AsyncStorage, {
   AsyncStorageStatic,
 } from "@react-native-async-storage/async-storage";
+import * as SecureStore from "expo-secure-store";
 import React, { createContext, useContext, useEffect, useReducer } from "react";
 import {
   ActivityIndicator,
@@ -59,7 +60,7 @@ function useModelInit(
   data: Distortion.Data,
   storage: AsyncStorageStatic
 ): [Model.Model, (a: Action.Action) => void] {
-  const s = Storage.settings(storage);
+  const s = Storage.settings(storage, SecureStore);
   const t = Storage.thoughts(data, storage);
   // TODO some of these side-effect-y fields should be removed from the model and happen only in views/action-creators instead. especially time!
   // this was a result of me trying to write Elm in React, instead of properly learning React's style.

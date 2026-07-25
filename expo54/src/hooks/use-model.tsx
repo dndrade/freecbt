@@ -4,6 +4,7 @@ import AsyncStorage, {
   AsyncStorageStatic,
 } from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
+import * as SecureStore from "expo-secure-store";
 import React, { useEffect } from "react";
 import { ActivityIndicator, Appearance } from "react-native";
 import { createElmArch, useElmArch } from "./use-elm-arch";
@@ -52,7 +53,7 @@ export interface ModelLoadedProps {
 export type ModelLoadedComponent = (props: ModelLoadedProps) => React.ReactNode;
 
 function useCmdRunner(data: Distortion.Data, storage: AsyncStorageStatic) {
-  const s = Storage.settings(storage);
+  const s = Storage.settings(storage, SecureStore);
   const t = Storage.thoughts(data, storage);
   const router = useRouter();
   // usually mutable stuff should be done with useState() in react, but here it blows up, and I couldn't solve why.
