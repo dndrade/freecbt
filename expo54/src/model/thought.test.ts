@@ -56,6 +56,23 @@ test("enforce missing distortions", () => {
   ).toThrow("no such Distortion.Slug");
 });
 
+test("filter out legacy distortions marked selected: false", () => {
+  const json = {
+    ...fixture,
+    cognitiveDistortions: [
+      { slug: "all-or-nothing", selected: true },
+      { slug: "mind-reading", selected: false },
+      { slug: "should-statements" },
+    ],
+  };
+  const t = T.fromJson.decode(json);
+  expect(
+    Array.from(t.cognitiveDistortions)
+      .map((d) => d.slug)
+      .sort()
+  ).toEqual(["all-or-nothing", "should-statements"]);
+});
+
 test("encode", () => {
   const t = T.fromJson.decode(fixture);
   const json = T.fromJson.encode(t);
