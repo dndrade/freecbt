@@ -21,7 +21,9 @@ export type Json = z.infer<typeof Json>;
 
 export const LegacyJson = z.object({
   ...Json.shape,
-  cognitiveDistortions: z.object({ slug: z.string() }).array(),
+  cognitiveDistortions: z
+    .object({ slug: z.string(), selected: z.boolean().optional() })
+    .array(),
 });
 export type LegacyJson = z.infer<typeof LegacyJson>;
 
@@ -137,9 +139,9 @@ export function createParsers(data: Distortion.Data) {
   });
   const fromJson = z.codec(z.union([Json, LegacyJson]), toJson, {
     decode: (json: Json | LegacyJson) => {
-      const cognitiveDistortions = json.cognitiveDistortions.map((d) =>
-        typeof d === "string" ? d : d.slug
-      );
+      const cognitiveDistortions = json.cognitiveDistortions
+        .filter((d) => typeof d === "string" || d.selected !== false)
+        .map((d) => (typeof d === "string" ? d : d.slug));
       return { ...json, cognitiveDistortions };
     },
     encode: (json: Json) => json,
