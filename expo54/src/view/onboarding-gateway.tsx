@@ -27,7 +27,7 @@ function OnboardingReady(
   // below re-renders this component's ancestor, which would unmount a
   // <Redirect> before its own navigation effect commits. router.push()
   // survives that remount. See
-  // docs/superpowers/specs/2026-07-25-fix-onboarding-redirect-loop-design.md.
+  // 2026-07-25-fix-onboarding-redirect-loop-design.md.
   //
   // existingUser is set here, at redirect-decision time, rather than
   // waiting for `onboarded` to round-trip back through a completed
