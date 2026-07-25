@@ -2,6 +2,9 @@ import { SlideName } from "@/src/app/v2/(public)/thoughts/create";
 import { Href } from "expo-router";
 import { Thought } from "./model";
 
+export function homeV2(): Href {
+  return "/v2";
+}
 export function settingsV2(): Href {
   return "/v2/settings";
 }
