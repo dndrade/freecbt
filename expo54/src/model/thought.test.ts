@@ -73,6 +73,18 @@ test("filter out legacy distortions marked selected: false", () => {
   ).toEqual(["all-or-nothing", "should-statements"]);
 });
 
+test("filter out all legacy distortions leaves an empty set", () => {
+  const json = {
+    ...fixture,
+    cognitiveDistortions: [
+      { slug: "all-or-nothing", selected: false },
+      { slug: "mind-reading", selected: false },
+    ],
+  };
+  const t = T.fromJson.decode(json);
+  expect(Array.from(t.cognitiveDistortions).map((d) => d.slug)).toEqual([]);
+});
+
 test("decode(encode(t)) round-trips", () => {
   const t = T.fromJson.decode(fixture);
   expect(T.fromJson.decode(T.fromJson.encode(t))).toEqual(t);

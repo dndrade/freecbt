@@ -111,4 +111,5 @@ test("round-trips explicit thought fixtures through encode/decode", () => {
   const enc = A.fromString.encode(arc);
   expect(enc).toMatch(/^:FreeCBT:/);
   expect(A.fromString.decode(enc)).toEqual(arc);
+  expect(() => A.fromString.decode("!" + enc)).toThrow();
 });
