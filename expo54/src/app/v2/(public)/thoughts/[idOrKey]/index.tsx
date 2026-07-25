@@ -26,7 +26,7 @@ function Ready({ model, style: s, translate: t }: ModelLoadedProps) {
     slugs.has(d.slug)
   );
   return (
-    <SafeAreaView style={[s.view]}>
+    <SafeAreaView testID="view-thought-screen" style={[s.view]}>
       <View style={[s.container, s.flexCol]}>
         <Text style={[s.subheader, s.mt4]}>{t("auto_thought")}</Text>
         <Link

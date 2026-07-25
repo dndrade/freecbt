@@ -16,8 +16,8 @@ export function intro(page: Page) {
 
 export function createThought(page: Page) {
   return {
-    title: page.getByText("FreeCBT"),
-    automaticThought: page.getByPlaceholder("might crash"),
+    title: page.getByTestId("create-thought-screen"),
+    automaticThought: page.getByTestId("automatic-thought-input"),
     distortionAllOrNothing: page.getByText("All or Nothing"),
     challenge: page.getByPlaceholder("might not be true"),
     alternativeThought: page.getByPlaceholder("could we think instead"),
@@ -34,7 +34,7 @@ export function viewThought(page: Page) {
   const distortion = (name?: string) =>
     maybeEntryText(page.locator('a[href*="distortion"]'), name);
   return {
-    title: page.getByText("FreeCBT"),
+    title: page.getByTestId("view-thought-screen"),
     missingEntries: page.getByRole("link", { name: SHRUG_EMOJI }),
     entry: (name: string) => page.getByRole("link", { name }),
     automaticThought: (name?: string) =>
