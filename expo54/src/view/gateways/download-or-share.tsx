@@ -2,8 +2,8 @@ import * as FileSystem from "expo-file-system";
 import * as Sharing from "expo-sharing";
 import { useEffect } from "react";
 import { ActivityIndicator, Platform } from "react-native";
-import { ModelLoadedProps } from "../hooks/use-model";
-import { PromiseRender } from "../hooks/use-promise-state";
+import { ModelLoadedProps } from "../../hooks/use-model";
+import { PromiseRender } from "../../hooks/use-promise-state";
 
 export function DownloadOrShareLink(props: {
   name: string;

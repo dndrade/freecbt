@@ -1,6 +1,6 @@
 import { LoadModel, ModelLoadedProps } from "@/src/hooks/use-model";
 import { Action, Archive, Model } from "@/src/model";
-import { DownloadOrShareLink } from "@/src/view/download-or-share";
+import { DownloadOrShareLink } from "@/src/view/gateways/download-or-share";
 import * as DocumentPicker from "expo-document-picker";
 import * as FileSystem from "expo-file-system";
 import React, { useState } from "react";

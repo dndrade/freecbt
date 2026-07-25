@@ -2,7 +2,7 @@ import { LoadModel, ModelLoadedProps } from "@/src/hooks/use-model";
 import { Action } from "@/src/model";
 import { useRouter, useGlobalSearchParams } from "expo-router";
 import React, { useEffect, useRef } from "react";
-import { Routes } from "..";
+import { Routes } from "../..";
 
 export function OnboardingGateway(props: {
   children: React.ReactNode;

@@ -3,9 +3,9 @@ import {
   ReanimatedLogLevel,
 } from "react-native-reanimated";
 import { SafeAreaProvider } from "react-native-safe-area-context";
-import { I18nProvider } from "../hooks/use-i18n";
-import { ModelProvider, useModel } from "../hooks/use-model";
-import { Model } from "../model";
+import { I18nProvider } from "../../hooks/use-i18n";
+import { ModelProvider, useModel } from "../../hooks/use-model";
+import { Model } from "../../model";
 import { AuthGateway } from "./auth-gateway";
 import { OnboardingGateway } from "./onboarding-gateway";
 
