@@ -73,6 +73,46 @@ test("filter out legacy distortions marked selected: false", () => {
   ).toEqual(["all-or-nothing", "should-statements"]);
 });
 
+test("decode(encode(t)) round-trips", () => {
+  const t = T.fromJson.decode(fixture);
+  expect(T.fromJson.decode(T.fromJson.encode(t))).toEqual(t);
+});
+
+test("reject a malformed createdAt", () => {
+  expect(() =>
+    T.fromJson.decode({ ...fixture, createdAt: "not a date" })
+  ).toThrow();
+  expect(() =>
+    T.fromJson.decode({ ...fixture, createdAt: 12345 as any })
+  ).toThrow();
+});
+
+test("allow legacy distortion objects with or without a v field", () => {
+  const legacyDistortions = [
+    { slug: "all-or-nothing", selected: true },
+    { slug: "should-statements" },
+  ];
+  const expectedSlugs = ["all-or-nothing", "should-statements"];
+
+  const withV = { ...fixture, cognitiveDistortions: legacyDistortions };
+  expect(
+    Array.from(T.fromJson.decode(withV).cognitiveDistortions)
+      .map((d) => d.slug)
+      .sort()
+  ).toEqual(expectedSlugs);
+
+  const { v, ...fixtureWithoutV } = fixture;
+  const withoutV = {
+    ...fixtureWithoutV,
+    cognitiveDistortions: legacyDistortions,
+  };
+  expect(
+    Array.from(T.fromJson.decode(withoutV).cognitiveDistortions)
+      .map((d) => d.slug)
+      .sort()
+  ).toEqual(expectedSlugs);
+});
+
 test("encode", () => {
   const t = T.fromJson.decode(fixture);
   const json = T.fromJson.encode(t);
