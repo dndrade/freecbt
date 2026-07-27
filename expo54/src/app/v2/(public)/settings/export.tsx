@@ -1,7 +1,7 @@
 import { TranslateFn } from "@/src/i18n/use-i18n";
 import { LoadModel, ModelLoadedProps } from "@/src/hooks/use-model";
 import { Archive, Model, Thought } from "@/src/model";
-import { DownloadOrShareLink } from "@/src/view/gateways/download-or-share";
+import { DownloadOrShareLink } from "@/src/platform/sharing/download-or-share";
 import React from "react";
 import { Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
