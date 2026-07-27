@@ -2,12 +2,12 @@
 
 ## Create a JSON file
 
-Copy the `expo54/src/locals/en.json` file to a new locale following [the ISO-639-1](http://www.loc.gov/standards/iso639-2/php/English_list.php) code. If you have a region designator and you know it, add it as an underscore as described by @briankung.
+Copy the `expo54/src/i18n/locals/en.json` file to a new locale following [the ISO-639-1](http://www.loc.gov/standards/iso639-2/php/English_list.php) code. If you have a region designator and you know it, add it as an underscore as described by @briankung.
 
 For example, if I wanted to translate to Finnish like @Walther, I would do:
 
 ```
-cp expo54/src/locals/en.json expo54/src/locals/fi.json
+cp expo54/src/i18n/locals/en.json expo54/src/i18n/locals/fi.json
 ```
 
 Note that the convention typically uses the English name for the language, so no `suomi.json`! 😭
@@ -18,7 +18,7 @@ Go through as much as you can and translate into your language. If you can't tra
 
 For consistency, the FreeCBT app should be called "FreeCBT" in all languages, even if your language has a different acronym for "CBT".
 
-## Open up `expo54/src/locals/index.ts` and add your language
+## Open up `expo54/src/i18n/locals/index.ts` and add your language
 
 In the file, add an import line:
 
