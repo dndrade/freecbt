@@ -1,6 +1,6 @@
 import { PromiseRender } from "@/src/hooks/use-promise-state";
 import { Style, useDefaultStyle } from "@/src/hooks/use-style";
-import { KVTable, KVTableEntry } from "@/src/view/kv-table";
+import { KVTable, KVTableEntry } from "@/src/components/kv-table";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { KeyValuePair } from "@react-native-async-storage/async-storage/lib/typescript/types";
 import { useEffect, useState } from "react";

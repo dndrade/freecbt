@@ -1,7 +1,7 @@
 import { LoadModel, ModelLoadedProps } from "@/src/hooks/use-model";
 import { useSafeWindowDimensions } from "@/src/hooks/use-safe-area";
 import { Action, Distortion, Thought } from "@/src/model";
-import { ImagePath } from "@/src/view";
+import { ImagePath } from "@/src/components";
 import { Image } from "expo-image";
 import React, { useState } from "react";
 import {
