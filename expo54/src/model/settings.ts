@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { localeTags } from "../hooks/use-i18n";
+import { localeTags } from "../i18n/use-i18n";
 
 const prefix = `@SettingsStore:`;
 // these names are from legacy code, could still be around in users' persisted state, be careful changing them

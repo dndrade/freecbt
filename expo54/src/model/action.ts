@@ -1,4 +1,4 @@
-import type { LocaleTag } from "@/src/hooks/use-i18n";
+import type { LocaleTag } from "@/src/i18n/use-i18n";
 import * as Archive from "./thoughts-archive";
 import * as Model from "./model";
 import * as Settings from "./settings";

@@ -1,6 +1,6 @@
 import _ from "lodash";
 import { z } from "zod";
-import { translateKeys } from "../hooks/use-i18n";
+import { translateKeys } from "../i18n/use-i18n";
 import { AssertExtends } from "../type-utils";
 
 export const TranslateKey = z.enum(translateKeys);

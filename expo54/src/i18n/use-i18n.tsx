@@ -2,8 +2,8 @@ import * as Localization from "expo-localization";
 import { I18n } from "i18n-js";
 import { createContext, useContext } from "react";
 import { z } from "zod";
-import locals0 from "../locals";
-import en from "../locals/en.json";
+import locals0 from "./locals";
+import en from "./locals/en.json";
 
 // Type-safe, autocompletable translation keys!
 export function useTranslate() {
