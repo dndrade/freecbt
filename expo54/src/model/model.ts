@@ -1,6 +1,6 @@
 import _ from "lodash";
 import { z } from "zod";
-import type { LocaleTag } from "../hooks/use-i18n";
+import type { LocaleTag } from "../i18n/use-i18n";
 import * as Routes from "../routes";
 import * as Action from "./action";
 import * as Cmd from "./cmd";

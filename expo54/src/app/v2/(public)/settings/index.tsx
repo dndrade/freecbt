@@ -1,5 +1,5 @@
 import { Routes } from "@/src";
-import { LocaleTag, localeTags, TranslateFn } from "@/src/hooks/use-i18n";
+import { LocaleTag, localeTags, TranslateFn } from "@/src/i18n/use-i18n";
 import { LoadModel, ModelLoadedProps } from "@/src/hooks/use-model";
 import { PromiseRender } from "@/src/hooks/use-promise-state";
 import { useReminders } from "@/src/hooks/use-reminders";

@@ -1,7 +1,7 @@
 import * as Notifications from "expo-notifications";
 import { Platform } from "react-native";
 import { Action } from "../model";
-import { TranslateFn } from "./use-i18n";
+import { TranslateFn } from "@/src/i18n/use-i18n";
 
 export type Reminders = ReturnType<typeof useReminders>;
 export function useReminders() {

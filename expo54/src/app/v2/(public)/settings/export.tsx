@@ -1,4 +1,4 @@
-import { TranslateFn } from "@/src/hooks/use-i18n";
+import { TranslateFn } from "@/src/i18n/use-i18n";
 import { LoadModel, ModelLoadedProps } from "@/src/hooks/use-model";
 import { Archive, Model, Thought } from "@/src/model";
 import { DownloadOrShareLink } from "@/src/view/gateways/download-or-share";

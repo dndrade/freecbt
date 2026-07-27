@@ -23,7 +23,7 @@ import {
   defaultLocale,
   TranslateFn,
   useTranslate,
-} from "../../../../../hooks/use-i18n";
+} from "../../../../../i18n/use-i18n";
 import { Style, useStyle } from "../../../../../hooks/use-style";
 import {
   Action,

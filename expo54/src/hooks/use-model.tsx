@@ -8,7 +8,7 @@ import * as SecureStore from "expo-secure-store";
 import React, { useEffect } from "react";
 import { ActivityIndicator, Appearance } from "react-native";
 import { createElmArch, useElmArch } from "./use-elm-arch";
-import { defaultLocale, TranslateFn, useTranslate } from "./use-i18n";
+import { defaultLocale, TranslateFn, useTranslate } from "@/src/i18n/use-i18n";
 import { Style, useStyle } from "./use-style";
 
 const Ctx = createElmArch<Model.Model, Action.Action, Cmd.Cmd>();
