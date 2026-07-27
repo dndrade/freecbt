@@ -1,7 +1,7 @@
 /** @type {import("jest").Config} **/
 export default {
   preset: "jest-expo",
-  setupFiles: ["./test/jest-setup.ts"],
+  setupFiles: ["./src/testing/jest-setup.ts"],
   testMatch: [
     '<rootDir>/{src,test}/**/*.{spec,test}.{js,jsx,ts,tsx}',
   ],
