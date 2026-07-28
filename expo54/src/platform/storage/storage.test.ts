@@ -1,5 +1,5 @@
-import { Storage } from ".";
-import { Settings } from "./model";
+import { Storage } from "../..";
+import { Settings } from "../../model";
 import { AsyncStorageStatic } from "@react-native-async-storage/async-storage";
 
 function fakeAsyncStorage(initial: Record<string, string> = {}) {
