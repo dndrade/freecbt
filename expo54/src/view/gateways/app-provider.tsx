@@ -6,7 +6,7 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 import { I18nProvider } from "../../i18n/use-i18n";
 import { ModelProvider, useModel } from "../../hooks/use-model";
 import { Model } from "../../model";
-import { AuthGateway } from "./auth-gateway";
+import { AuthGateway } from "@/src/features/lock/auth-gateway";
 import { OnboardingGateway } from "./onboarding-gateway";
 
 export function ModelI18nProvider(props: { children: React.ReactNode }) {
