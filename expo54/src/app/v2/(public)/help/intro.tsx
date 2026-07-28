@@ -1,6 +1,6 @@
 import { Routes } from "@/src";
 import { LoadModel, ModelLoadedProps } from "@/src/hooks/use-model";
-import { Reminders, useReminders } from "@/src/hooks/use-reminders";
+import { Reminders, useReminders } from "@/src/features/reminders/use-reminders";
 import { useSafeWindowDimensions } from "@/src/hooks/use-safe-area";
 import { ImagePath } from "@/src/components";
 import { Link, useRouter } from "expo-router";

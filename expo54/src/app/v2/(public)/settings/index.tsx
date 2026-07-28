@@ -2,7 +2,7 @@ import { Routes } from "@/src";
 import { LocaleTag, localeTags, TranslateFn } from "@/src/i18n/use-i18n";
 import { LoadModel, ModelLoadedProps } from "@/src/hooks/use-model";
 import { PromiseRender } from "@/src/hooks/use-promise-state";
-import { useReminders } from "@/src/hooks/use-reminders";
+import { useReminders } from "@/src/features/reminders/use-reminders";
 import { useStyle, useTheme } from "@/src/hooks/use-style";
 import { Action, Model, Settings } from "@/src/model";
 import { Picker } from "@react-native-picker/picker";
