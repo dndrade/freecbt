@@ -19,10 +19,12 @@ export function settings(
     if (secure !== null) return secure;
     const legacy = await storage.getItem(Settings.pincodeKey);
     if (legacy !== null) {
-      await Promise.all([
-        secureStorage.setItemAsync(Settings.pincodeSecureKey, legacy),
-        storage.removeItem(Settings.pincodeKey),
-      ]);
+      try {
+        await secureStorage.setItemAsync(Settings.pincodeSecureKey, legacy);
+        await storage.removeItem(Settings.pincodeKey);
+      } catch {
+        // secure write failed — leave the legacy key in place so migration can retry later
+      }
     }
     return legacy;
   }
