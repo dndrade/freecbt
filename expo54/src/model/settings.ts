@@ -72,8 +72,8 @@ export const fromJson = z.codec(Json, Settings, {
       historyLabels,
       locale,
       theme,
-      existingUser: z.stringbool().decode(existingUser ?? "0"),
-      reminders: z.stringbool().decode(reminders ?? "0"),
+      existingUser: z.stringbool().catch(false).decode(existingUser ?? "0"),
+      reminders: z.stringbool().catch(false).decode(reminders ?? "0"),
     });
   },
   encode: (s: Settings) => {

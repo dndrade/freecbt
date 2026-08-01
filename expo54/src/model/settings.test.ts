@@ -62,3 +62,17 @@ test("parse invalid json, with errors replaced by defaults", () => {
   expect(j).not.toEqual(j0);
   expect(j).toEqual(empty);
 });
+
+test("parse invalid stringbool values, falling back to false instead of throwing", () => {
+  const j0 = {
+    ...empty,
+    [Settings.existingUserKey]: "not-a-bool",
+    [Settings.remindersKey]: "also-not-a-bool",
+  };
+  expect(() => Settings.fromJson.decode(j0)).not.toThrow();
+  const s = Settings.fromJson.decode(j0);
+  expect(s.existingUser).toBe(false);
+  expect(s.reminders).toBe(false);
+  expect(s.historyLabels).toBe("alternative-thought");
+  expect(s.pincode).toBe(null);
+});

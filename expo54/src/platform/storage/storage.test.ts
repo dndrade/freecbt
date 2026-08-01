@@ -55,6 +55,21 @@ test("read: migrates a legacy plaintext pincode from AsyncStorage to SecureStore
   expect(await async.getItem(Settings.pincodeKey)).toBe(null);
 });
 
+test("read: a failing SecureStore write during migration leaves the legacy pincode untouched and still returns it", async () => {
+  const async = fakeAsyncStorage({ [Settings.pincodeKey]: "1234" });
+  const secure: Storage.SecureStoreLike = {
+    getItemAsync: async () => null,
+    setItemAsync: async () => {
+      throw new Error("secure store unavailable");
+    },
+    deleteItemAsync: async () => {},
+  };
+  const s = Storage.settings(async, secure);
+  const result = await s.read();
+  expect(result.pincode).toBe("1234");
+  expect(await async.getItem(Settings.pincodeKey)).toBe("1234");
+});
+
 test("read: uses the SecureStore value when present, ignoring AsyncStorage", async () => {
   const async = fakeAsyncStorage({ [Settings.pincodeKey]: "0000" });
   const secure = fakeSecureStore({ [Settings.pincodeSecureKey]: "5678" });
