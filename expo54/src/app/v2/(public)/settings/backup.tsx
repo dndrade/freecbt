@@ -1,6 +1,10 @@
 import { LoadModel, ModelLoadedProps } from "@/src/hooks/use-model";
 import { Action, Archive, Model } from "@/src/model";
 import { DownloadOrShareLink } from "@/src/platform/sharing/download-or-share";
+import {
+  BACKUP_EXPORT_MIME_TYPE,
+  BACKUP_IMPORT_MIME_TYPES,
+} from "@/src/platform/sharing/backup-mime";
 import * as DocumentPicker from "expo-document-picker";
 import * as FileSystem from "expo-file-system";
 import React, { useState } from "react";
@@ -46,7 +50,7 @@ function ExportLink(
     <DownloadOrShareLink
       name="FreeCBT-backup.txt"
       body={toArchive}
-      type="text/plain"
+      type={BACKUP_EXPORT_MIME_TYPE}
       UTI="org.erosson.freecbt.backup"
       translate={t}
       error={(e) => <Text style={[s.errorText]}>{e}</Text>}
@@ -100,7 +104,7 @@ async function onImport(
 ) {
   const { toArchive, parser, dispatch, setImportResult, translate: t } = props;
   const res = await DocumentPicker.getDocumentAsync({
-    type: ["text/plain"],
+    type: [...BACKUP_IMPORT_MIME_TYPES],
   });
   if (res.canceled || !res.assets[0]) return;
   const [asset] = res.assets;
