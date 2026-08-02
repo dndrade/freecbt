@@ -1,6 +1,7 @@
 import { Storage } from "../..";
 import { Archive, DistortionData, Settings, Thought } from "../../model";
 import { AsyncStorageStatic } from "@react-native-async-storage/async-storage";
+import { z } from "zod";
 
 function fakeAsyncStorage(initial: Record<string, string> = {}) {
   const store = new Map(Object.entries(initial));
@@ -130,6 +131,11 @@ test("readAll: a malformed thought does not delete either record", async () => {
 
   expect(result.thoughts.size).toBe(1);
   expect(result.thoughtParseErrors.size).toBe(1);
+  expect(result.thoughts.has(validKey as Thought.Key)).toBe(true);
+  expect(result.thoughtParseErrors.has(malformedKey as Thought.Key)).toBe(true);
+  expect(result.thoughtParseErrors.get(malformedKey as Thought.Key)).toBeInstanceOf(
+    z.ZodError
+  );
   expect(await async.getItem(validKey)).not.toBe(null);
   expect(await async.getItem(malformedKey)).not.toBe(null);
 });

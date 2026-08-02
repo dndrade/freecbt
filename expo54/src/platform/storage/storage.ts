@@ -79,13 +79,14 @@ export function thoughts(data: Distortion.Data, storage: AsyncStorageStatic) {
   > {
     const keys = await readKeys();
     const pairs = await storage.multiGet(keys);
+    type ParseResult = ReturnType<typeof T.fromString.safeParse>;
     const parsed = pairs.map(([k, enc]) => {
-      let result = null as any;
+      let result: ParseResult;
       try {
         result = T.fromString.safeParse(enc);
       } catch (err) {
-        // malformed JSON throws from inside the codec's decode function
-        // safeParse doesn't catch it, so wrap it as a ZodError
+        // any throw from inside the codec's decode function (malformed JSON, unknown distortion slug, …) —
+        // reported as a parse error rather than crashing the whole read
         result = {
           success: false,
           error: new z.ZodError([
@@ -93,9 +94,9 @@ export function thoughts(data: Distortion.Data, storage: AsyncStorageStatic) {
               code: "custom",
               message: err instanceof Error ? err.message : "Invalid JSON",
               path: [],
-            } as any,
+            },
           ]),
-        };
+        } as ParseResult;
       }
       return [Thought.Key.decode(k), result] as const;
     });
