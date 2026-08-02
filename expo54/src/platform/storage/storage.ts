@@ -1,5 +1,6 @@
 import { Distortion, Model, Settings, Thought } from "@/src/model";
 import { AsyncStorageStatic } from "@react-native-async-storage/async-storage";
+import { z } from "zod";
 
 export interface SecureStoreLike {
   getItemAsync(key: string): Promise<string | null>;
@@ -78,10 +79,27 @@ export function thoughts(data: Distortion.Data, storage: AsyncStorageStatic) {
   > {
     const keys = await readKeys();
     const pairs = await storage.multiGet(keys);
-    const parsed = pairs.map(
-      ([k, enc]) =>
-        [Thought.Key.decode(k), T.fromString.safeParse(enc)] as const
-    );
+    type ParseResult = ReturnType<typeof T.fromString.safeParse>;
+    const parsed = pairs.map(([k, enc]) => {
+      let result: ParseResult;
+      try {
+        result = T.fromString.safeParse(enc);
+      } catch (err) {
+        // any throw from inside the codec's decode function (malformed JSON, unknown distortion slug, …) —
+        // reported as a parse error rather than crashing the whole read
+        result = {
+          success: false,
+          error: new z.ZodError([
+            {
+              code: "custom",
+              message: err instanceof Error ? err.message : "Invalid JSON",
+              path: [],
+            },
+          ]),
+        } as ParseResult;
+      }
+      return [Thought.Key.decode(k), result] as const;
+    });
     return {
       thoughts: new Map(
         parsed
