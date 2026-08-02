@@ -11,3 +11,11 @@ export const BACKUP_IMPORT_MIME_TYPES: readonly string[] = [
   BACKUP_EXPORT_MIME_TYPE,
   "text/plain",
 ];
+
+// A prior device re-verification found Android's "Save" share target no
+// longer offered after the MIME type above changed to
+// application/octet-stream, while the exported filename still ended in
+// .txt — see
+// .dev/data-compatibility/verification/results/backup/BACKUP-003-v2-android-emulator-fail-013-reverify.md.
+// No extension avoids re-introducing a filename/MIME mismatch.
+export const BACKUP_EXPORT_FILENAME = "FreeCBT-backup";

@@ -2,6 +2,7 @@ import { LoadModel, ModelLoadedProps } from "@/src/hooks/use-model";
 import { Action, Archive, Model } from "@/src/model";
 import { DownloadOrShareLink } from "@/src/platform/sharing/download-or-share";
 import {
+  BACKUP_EXPORT_FILENAME,
   BACKUP_EXPORT_MIME_TYPE,
   BACKUP_IMPORT_MIME_TYPES,
 } from "@/src/platform/sharing/backup-mime";
@@ -48,7 +49,7 @@ function ExportLink(
   const { style: s, translate: t, toArchive } = props;
   return (
     <DownloadOrShareLink
-      name="FreeCBT-backup.txt"
+      name={BACKUP_EXPORT_FILENAME}
       body={toArchive}
       type={BACKUP_EXPORT_MIME_TYPE}
       UTI="org.erosson.freecbt.backup"
