@@ -48,6 +48,9 @@ test("accept keys saved in the id field, too", () => {
   expect(t).toBeTruthy();
   expect(t.uuid).toBe(fixture.uuid);
   expect(t.uuid.startsWith(Thought.KEY_PREFIX)).toBe(false);
+  // re-deriving the storage key from the recovered id must reproduce the
+  // exact same key this record was already stored under — no duplicate key.
+  expect(Thought.key(t)).toBe(json.uuid);
 });
 
 test("enforce missing distortions", () => {
