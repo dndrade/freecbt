@@ -1,5 +1,5 @@
 import { Storage } from "../..";
-import { DistortionData, Settings, Thought } from "../../model";
+import { Archive, DistortionData, Settings, Thought } from "../../model";
 import { AsyncStorageStatic } from "@react-native-async-storage/async-storage";
 
 function fakeAsyncStorage(initial: Record<string, string> = {}) {
@@ -132,4 +132,29 @@ test("readAll: a malformed thought does not delete either record", async () => {
   expect(result.thoughtParseErrors.size).toBe(1);
   expect(await async.getItem(validKey)).not.toBe(null);
   expect(await async.getItem(malformedKey)).not.toBe(null);
+});
+
+test("readAll: restores every thought from a decoded historical archive", async () => {
+  // Same real historical-format snapshot already used in
+  // model/thoughts-archive.test.ts's "parse nonempty json snapshot from old version".
+  const snapshot =
+    ":FreeCBT:N4IgbiBcIIIE4GMAWBLMBTAtGAjCANCAC5ID2ArgOZJEDOUA2qAIblGkC2zRKCAKmSo0oIVuwIhkzADbT0AO0roRU6RJlF0cedzToBFakREaJCUpXkoeGACIpa7OD1Lz6kBqNmZScTPNISFEUQAF1CBDh0bnQAExhjaBwATgB2AAZMdJwsnD509MgCopwAOgAmAGYAFgAtCXIAB1iY+MSQFIzc3PzC4uyKmvrCcnIUWJFaTnRR8YkIaAMhImw8AF9QtaA===:FreeCBT:";
+  const A = Archive.createParsers(DistortionData);
+  const arc = A.fromString.decode(snapshot);
+  expect(arc.thoughts).toHaveLength(1);
+
+  const async = fakeAsyncStorage();
+  const T = Storage.thoughts(DistortionData, async);
+  for (const t of arc.thoughts) {
+    await T.write(t);
+  }
+
+  const result = await T.readAll();
+  expect(result.thoughts.size).toBe(arc.thoughts.length);
+  expect(result.thoughtParseErrors.size).toBe(0);
+  const [restored] = Array.from(result.thoughts.values());
+  expect(restored.automaticThought).toBe("auto");
+  expect(restored.challenge).toBe("chal");
+  expect(restored.alternativeThought).toBe("alt");
+  expect(restored.uuid).toBe("someuuid");
 });
