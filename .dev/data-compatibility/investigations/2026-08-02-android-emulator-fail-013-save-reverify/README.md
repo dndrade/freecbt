@@ -88,6 +88,24 @@ Reproducibility: re-tested by pressing back to dismiss the sheet, re-tapping the
 export/share button, and re-dumping the UI hierarchy — identical three-target result both
 times.
 
+The shared file itself is still named `FreeCBT-backup.txt` — a `.txt` extension — despite
+the MIME type now being declared as `application/octet-stream` (confirmed in
+`raw-logs/share-sheet-uiautomator-dump.xml`, `text="FreeCBT-backup.txt"`, and visible in
+`screenshots/03-share-sheet-no-save-target-confirmed.png`). This filename/MIME mismatch may
+itself be relevant to why "Save" stopped being offered — Android's target-eligibility
+matching may weigh the file extension as well as the declared MIME type, so a
+`.txt`-suffixed filename paired with a non-text MIME type is one of the more obvious next
+levers to try (e.g. renaming to a non-`.txt` extension) before concluding the "Save" chip
+is unconditionally MIME-gated.
+
+Comparing the two sessions' full target lists also shows the change is broader than "Save"
+alone: `BACKUP-002` (pre-fix) showed five targets — Quick Share, **Save**, Chrome, Drive,
+Messages — while this session (post-fix) shows three — Quick Share, Drive, Gmail. Chrome
+and Messages also dropped out between the two runs, and Gmail newly appeared, none of which
+BACKUP-002 exhibited. So the evidence supports a broader read than "Save alone regressed":
+the MIME/octet-stream change appears to have reshuffled the entire chooser's eligible
+target set, of which Save's disappearance is just the user-visible headline.
+
 ### Step 4 (redefined) — Finding: remaining targets accept the payload structurally; no rejection error reproduces
 
 **Severity:** Informational / confirms FAIL-013 is still open with a different failure mode
