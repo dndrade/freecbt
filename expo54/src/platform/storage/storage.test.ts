@@ -1,5 +1,5 @@
 import { Storage } from "../..";
-import { Settings } from "../../model";
+import { DistortionData, Settings, Thought } from "../../model";
 import { AsyncStorageStatic } from "@react-native-async-storage/async-storage";
 
 function fakeAsyncStorage(initial: Record<string, string> = {}) {
@@ -20,6 +20,7 @@ function fakeAsyncStorage(initial: Record<string, string> = {}) {
     multiRemove: async (ks: readonly string[]) => {
       for (const k of ks) store.delete(k);
     },
+    getAllKeys: async () => Array.from(store.keys()),
   } as unknown as AsyncStorageStatic;
 }
 function fakeSecureStore(
@@ -103,4 +104,32 @@ test("clear: removes the pincode from SecureStore and other keys from AsyncStora
   await s.clear();
   expect(await secure.getItemAsync(Settings.pincodeSecureKey)).toBe(null);
   expect(await async.getItem(Settings.themeKey)).toBe(null);
+});
+
+test("readAll: a malformed thought does not delete either record", async () => {
+  const validUuid = "11111111-1111-1111-1111-111111111111";
+  const validKey = `${Thought.KEY_PREFIX}${validUuid}`;
+  const malformedKey = `${Thought.KEY_PREFIX}22222222-2222-2222-2222-222222222222`;
+  const validThoughtJson = {
+    v: "Thought-v1",
+    automaticThought: "auto",
+    alternativeThought: "alt",
+    cognitiveDistortions: ["all-or-nothing"],
+    challenge: "chal",
+    createdAt: new Date(0).toISOString(),
+    updatedAt: new Date(0).toISOString(),
+    uuid: validUuid,
+  };
+  const async = fakeAsyncStorage({
+    [validKey]: JSON.stringify(validThoughtJson),
+    [malformedKey]: "not valid json {",
+  });
+  const T = Storage.thoughts(DistortionData, async);
+
+  const result = await T.readAll();
+
+  expect(result.thoughts.size).toBe(1);
+  expect(result.thoughtParseErrors.size).toBe(1);
+  expect(await async.getItem(validKey)).not.toBe(null);
+  expect(await async.getItem(malformedKey)).not.toBe(null);
 });
