@@ -49,6 +49,15 @@ test("parse + serialize onboarding (boolean json)", () => {
   expect(j).toEqual(j0);
 });
 
+test("parse historical existingUser literal 'true', not just '1'", () => {
+  // The 2.4.0 writer (setIsExistingUser) wrote the literal string "true",
+  // not the current write format "1". Confirms zod's z.stringbool() default
+  // truthy set accepts the historical literal.
+  const j0 = { ...empty, [Settings.existingUserKey]: "true" };
+  const s = Settings.fromJson.decode(j0);
+  expect(s.existingUser).toBe(true);
+});
+
 test("parse invalid json, with errors replaced by defaults", () => {
   const j0 = {
     ...empty,
