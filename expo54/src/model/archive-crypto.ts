@@ -1,5 +1,12 @@
 import { z } from "zod";
-import { decodeBase64Strict, encodeBase64, isCanonicalBase64 } from "./archive-codec";
+import { decodeBase64Strict, encodeBase64 } from "./archive-codec";
+
+// Defense-in-depth sanity cap on base64 string length before decoding. This is
+// independent of and smaller than the archive-level limit that Task 4/8 will
+// define — this is just to prevent pathological inputs from consuming resources
+// in the validation stage itself. 8 MiB of base64 text is generous for any real
+// ciphertext, tiny compared to a hostile input.
+const MAX_FIELD_BASE64_CHARS = 8 * 1024 * 1024;
 
 const AAD_SEPARATOR = "\x1F";
 
@@ -31,7 +38,7 @@ export const EncryptedHeaderV3 = z.object({
   salt: z.string(),
   nonce: z.string(),
   ciphertext: z.string(),
-});
+}).strict();
 export type EncryptedHeaderV3 = z.infer<typeof EncryptedHeaderV3>;
 
 export type HeaderValidation =
@@ -76,18 +83,33 @@ export function validateHeaderV3(obj: unknown): HeaderValidation {
   if (h.iterations !== params.iterations) {
     return { ok: false, reason: "iterations does not match paramsVersion" };
   }
-  if (!isCanonicalBase64(h.salt)) {
+
+  // Defense-in-depth: check base64 string length before decoding
+  if (h.salt.length > MAX_FIELD_BASE64_CHARS) {
+    return { ok: false, reason: "salt base64 exceeds length limit" };
+  }
+  if (h.nonce.length > MAX_FIELD_BASE64_CHARS) {
+    return { ok: false, reason: "nonce base64 exceeds length limit" };
+  }
+  if (h.ciphertext.length > MAX_FIELD_BASE64_CHARS) {
+    return { ok: false, reason: "ciphertext base64 exceeds length limit" };
+  }
+
+  // Decode each field once and verify canonicality via re-encoding
+  const saltBytes = decodeBase64Strict(h.salt);
+  if (saltBytes === null || encodeBase64(saltBytes) !== h.salt) {
     return { ok: false, reason: "salt is not canonical base64" };
   }
-  if (!isCanonicalBase64(h.nonce)) {
+  const nonceBytes = decodeBase64Strict(h.nonce);
+  if (nonceBytes === null || encodeBase64(nonceBytes) !== h.nonce) {
     return { ok: false, reason: "nonce is not canonical base64" };
   }
-  if (!isCanonicalBase64(h.ciphertext)) {
+  const ciphertextBytes = decodeBase64Strict(h.ciphertext);
+  if (ciphertextBytes === null || encodeBase64(ciphertextBytes) !== h.ciphertext) {
     return { ok: false, reason: "ciphertext is not canonical base64" };
   }
-  const saltBytes = decodeBase64Strict(h.salt)!;
-  const nonceBytes = decodeBase64Strict(h.nonce)!;
-  const ciphertextBytes = decodeBase64Strict(h.ciphertext)!;
+
+  // Validate decoded byte lengths
   if (saltBytes.length < SALT_MIN_BYTES || saltBytes.length > SALT_MAX_BYTES) {
     return { ok: false, reason: "salt length out of range" };
   }
