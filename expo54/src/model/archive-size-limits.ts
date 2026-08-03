@@ -1,60 +1,84 @@
 // expo54/src/model/archive-size-limits.ts
 
 /**
- * Derived from Task 4's worst-case synthetic archive assumption: 10,000
- * thoughts, each with three free-text fields (`automaticThought`,
- * `challenge`, `alternativeThought`) at 20,000 characters each (see
- * archive-size-limits.test.ts and
- * docs/superpowers/specs/2026-08-03-encrypted-backup-archive-design.md,
- * "Archive size limits").
+ * Decode-side safety limits for imported backup archives, used by Task 8's
+ * `decodeFile` to reject anomalously large input before/after decompression.
  *
- * IMPORTANT CAVEAT discovered while measuring (see task-4-report.md for
- * full detail): building that exact 10,000 x 20,000 archive and calling
- * `JSON.stringify` on it - which is what both the real encoder
- * (`Archive.fromString.encode`) and the decoded-text-size test do -
- * throws `RangeError: Invalid string length` in this Node runtime, because
- * the resulting string (~602M chars) exceeds V8's hard ceiling
- * (`require("buffer").constants.MAX_STRING_LENGTH` = 536,870,888 on the
- * Node version used for this measurement, Node v22.16.0). The full
- * worst-case archive is therefore NOT constructible as a single JS string
- * on this runtime at all, let alone measurable end-to-end through the real
- * encoder at N=10,000.
+ * ## History: why these are NOT "10,000-thought worst case x 8"
  *
- * To still produce real numbers from real code (not guesses), the encoder
- * was run at smaller thought counts (N=100, 200, 400 - all safely under
- * the string-length ceiling) via `Archive.createParsers(DistortionData)`,
- * and the results were used to derive the N=10,000 figures below:
+ * Task 4 originally tried to derive `MAX_ENCODED_PAYLOAD_CHARS` and
+ * `MAX_DECODED_TEXT_CHARS` from a documented "largest realistic archive"
+ * assumption (10,000 thoughts, each with three free-text fields at 20,000
+ * characters) measured through the real encoder and multiplied by an 8x
+ * safety factor. That approach was wrong and has been abandoned, for two
+ * reasons found in review of the first version of this file:
  *
- *   - Decoded (uncompressed) JSON length is exactly linear in N (verified
- *     across all three measured points to within a fixed +31-char
- *     wrapper): decodedChars(N) = 60,229 * N + 31. This is an exact
- *     formula, not an approximation - extrapolating it to N=10,000 gives
- *     decodedChars(10,000) = 602,290,031.
- *   - Encoded (LZ-string-compressed) length is sub-linear in N (highly
- *     repetitive filler compresses better as N grows: 11,994 chars at
- *     N=100, 17,350 at N=200, 26,254 at N=400). Because true compression
- *     behavior is sub-linear, extrapolating using the *average* chars/
- *     thought ratio from the largest safely-measured point (N=400:
- *     26,254 / 400 = 65.635 chars/thought) and scaling that flat ratio up
- *     to N=10,000 deliberately overestimates the real compressed size,
- *     which is the safe direction for a safety ceiling:
- *     encodedChars(10,000) ~= 65.635 * 10,000 = 656,350.
+ * 1. That 10,000 x 20,000 archive decodes to ~602M JSON characters, which
+ *    cannot exist as a single JS string at all: V8's own ceiling
+ *    (`require("buffer").constants.MAX_STRING_LENGTH`) is 536,870,888
+ *    characters (measured on Node v22.16.0, the runtime used for this
+ *    task's measurements). "Worst case x 8" against an unrepresentable
+ *    number produced `MAX_DECODED_TEXT_CHARS ~= 4.82 billion` - a number
+ *    no real decoded string could ever reach, making the check dead code:
+ *    the runtime throws `RangeError: Invalid string length` building any
+ *    string anywhere near that size, long before `.length` is ever
+ *    compared against the constant. The same problem applies to the
+ *    encoded side: a realistic-text version of that same worst case
+ *    encodes to ~132M chars, and x8 (~1.055B) *also* exceeds the V8
+ *    ceiling.
+ * 2. The original measurement fixture filled every field with
+ *    `"x".repeat(20000)` - a single repeated character, which LZ-string
+ *    compresses at roughly 500-900:1. Real journal text doesn't compress
+ *    anywhere near that well (varied natural-language text typically
+ *    compresses in the 2-5:1 range), so a cap calibrated against
+ *    all-`"x"` filler risked false-rejecting real users' legitimate,
+ *    large-but-normal archives.
  *
- * Both figures are then multiplied by the 8x SAFETY_MULTIPLIER used
- * throughout archive-size-limits.test.ts.
+ * ## Current approach
  *
- *   MAX_ENCODED_PAYLOAD_CHARS = 656,350 * 8    = 5,250,800
- *   MAX_DECODED_TEXT_CHARS    = 602,290,031 * 8 = 4,818,320,248
- *   MAX_THOUGHT_COUNT         = 10,000 * 8      = 80,000
+ * Both char-count limits are now chosen directly as round, generous,
+ * *representable* ceilings, justified against two things instead of one
+ * formula:
+ *   (a) comfortable headroom over what a realistic real-world archive
+ *       (measured through the real encoder with varied, less-compressible
+ *       synthetic text - see archive-size-limits.test.ts's
+ *       `realisticText` helper - at thought counts safely below the V8
+ *       string-length ceiling) actually produces, and
+ *   (b) a solid safety margin *below* V8's ~536,870,888-char
+ *       representability ceiling, so the check can actually fire instead
+ *       of being unreachable dead code.
  *
- * Note MAX_DECODED_TEXT_CHARS (~4.8 billion) is itself far larger than
- * any JS engine can ever materialize as a single string (V8's own ceiling
- * here is ~537 million characters) - see task-4-report.md for why this is
- * flagged as a concern for Task 8's decodeFile to be aware of: on this
- * runtime, an oversized decoded payload will hit the engine's own string
- * limit (and throw RangeError) before this numeric comparison ever gets a
- * chance to reject it.
+ * `MAX_DECODED_TEXT_CHARS = 64,000,000`:
+ *   - anchored against this task's N=400 realistic-text measurement
+ *     (24,091,631 decoded chars for 400 thoughts x 20,000-char fields) -
+ *     64,000,000 is ~2.66x that reference point, comfortably admitting
+ *     archives many times larger than any plausible real journal export.
+ *   - leaves a ~8.4x margin below V8's 536,870,888-char ceiling
+ *     (536,870,888 / 64,000,000 ~= 8.39), so the check remains meaningful:
+ *     an oversized decoded payload has real room to be caught by this
+ *     comparison before the runtime's own string limit would kick in.
+ *
+ * `MAX_ENCODED_PAYLOAD_CHARS = 32,000,000`:
+ *   - anchored against this task's N=400 realistic-text measurement
+ *     (5,275,918 encoded chars for the same 400-thought archive) -
+ *     32,000,000 is ~6.1x that reference point.
+ *   - deliberately smaller than `MAX_DECODED_TEXT_CHARS`: legitimate
+ *     compression is expected to shrink real archives substantially (this
+ *     task measured a stable ~4.57:1 ratio on varied synthetic text across
+ *     N=100/200/400), so a real archive that would pass the decoded check
+ *     should encode to well under this cap; this is a cheap pre-
+ *     decompression fast-reject filter for obviously-oversized raw input,
+ *     not the primary content-size guard (that's `MAX_DECODED_TEXT_CHARS`,
+ *     enforced after decompression, which is what actually defends
+ *     against decompression-bomb-style payloads - a small encoded input
+ *     that decompresses to something huge).
+ *   - leaves a ~16.8x margin below V8's string ceiling.
+ *
+ * `MAX_THOUGHT_COUNT = 80,000`: unaffected by the representability issue
+ * above (a thought count is just a plain integer, not a string), so this
+ * keeps its original derivation - the documented "largest realistic
+ * archive" assumption of 10,000 thoughts, x8 safety margin.
  */
-export const MAX_ENCODED_PAYLOAD_CHARS = 5_250_800;
-export const MAX_DECODED_TEXT_CHARS = 4_818_320_248;
+export const MAX_ENCODED_PAYLOAD_CHARS = 32_000_000;
+export const MAX_DECODED_TEXT_CHARS = 64_000_000;
 export const MAX_THOUGHT_COUNT = 80_000; // 10,000 assumed worst case x 8
