@@ -55,3 +55,17 @@ jest.mock("expo-secure-store", () => {
     },
   };
 });
+// expo-crypto's native module isn't linked in the jest environment. Mock
+// getRandomBytesAsync with real randomness (via Node's crypto) so tests
+// that check for salt/nonce uniqueness are meaningful, not just wired.
+jest.mock("expo-crypto", () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const nodeCrypto = require("crypto");
+
+  return {
+    getRandomBytesAsync: async (byteCount: number) => {
+      const buf = nodeCrypto.randomBytes(byteCount);
+      return new Uint8Array(buf);
+    },
+  };
+});
