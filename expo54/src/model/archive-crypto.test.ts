@@ -1,6 +1,9 @@
 import {
+  ArchiveDecryptError,
   buildAad,
   CURRENT_PARAMS_VERSION,
+  decryptHeader,
+  encryptJson,
   EncryptedHeaderV3,
   PARAMS,
   validateHeaderV3,
@@ -119,5 +122,109 @@ describe("validateHeaderV3", () => {
       ok: false,
       reason: expect.any(String),
     });
+  });
+});
+
+describe("encryptJson / decryptHeader", () => {
+  const plaintext = JSON.stringify({ thoughts: [{ hello: "world" }] });
+
+  test("round-trips", async () => {
+    const header = await encryptJson("correct horse battery staple", plaintext);
+    const decrypted = await decryptHeader(
+      "correct horse battery staple",
+      header
+    );
+    expect(decrypted).toBe(plaintext);
+  });
+
+  test("produces a fresh salt and nonce on every call (uniqueness)", async () => {
+    const headers = await Promise.all(
+      Array.from({ length: 20 }, () => encryptJson("same passphrase", plaintext))
+    );
+    const salts = new Set(headers.map((h) => h.salt));
+    const nonces = new Set(headers.map((h) => h.nonce));
+    expect(salts.size).toBe(20);
+    expect(nonces.size).toBe(20);
+  });
+
+  test("wrong passphrase fails with the generic decrypt error", async () => {
+    const header = await encryptJson("passphrase A", plaintext);
+    await expect(decryptHeader("passphrase B", header)).rejects.toThrow(
+      ArchiveDecryptError
+    );
+  });
+
+  test("single-byte ciphertext tampering fails decryption", async () => {
+    const header = await encryptJson("passphrase", plaintext);
+    const bytes = require("./archive-codec").decodeBase64Strict(
+      header.ciphertext
+    ) as Uint8Array;
+    bytes[0] ^= 0xff;
+    const tampered = {
+      ...header,
+      ciphertext: require("./archive-codec").encodeBase64(bytes),
+    };
+    await expect(decryptHeader("passphrase", tampered)).rejects.toThrow(
+      ArchiveDecryptError
+    );
+  });
+
+  test("tampering with an AAD-covered header field fails decryption", async () => {
+    const header = await encryptJson("passphrase", plaintext);
+    const tampered = { ...header, iterations: header.iterations }; // baseline
+    const bumpedParamsCheck = { ...header, paramsVersion: header.paramsVersion };
+    // salt is AAD-covered and canonical/length-valid either way here — a
+    // same-length flip keeps it structurally valid so it reaches GCM
+    const saltBytes = require("./archive-codec").decodeBase64Strict(
+      header.salt
+    ) as Uint8Array;
+    saltBytes[0] ^= 0xff;
+    const tamperedSalt = {
+      ...header,
+      salt: require("./archive-codec").encodeBase64(saltBytes),
+    };
+    await expect(decryptHeader("passphrase", tamperedSalt)).rejects.toThrow(
+      ArchiveDecryptError
+    );
+    void tampered;
+    void bumpedParamsCheck;
+  });
+
+  test("truncated ciphertext (missing tag bytes) fails decryption", async () => {
+    const header = await encryptJson("passphrase", plaintext);
+    const bytes = require("./archive-codec").decodeBase64Strict(
+      header.ciphertext
+    ) as Uint8Array;
+    const truncated = bytes.slice(0, bytes.length - 4);
+    const tampered = {
+      ...header,
+      ciphertext: require("./archive-codec").encodeBase64(truncated),
+    };
+    await expect(decryptHeader("passphrase", tampered)).rejects.toThrow(
+      ArchiveDecryptError
+    );
+  });
+
+  test("does not leak plaintext or passphrase into thrown error messages", async () => {
+    const header = await encryptJson("super secret passphrase", plaintext);
+    try {
+      await decryptHeader("wrong passphrase", header);
+      throw new Error("expected decryptHeader to throw");
+    } catch (e) {
+      const message = (e as Error).message;
+      expect(message).not.toContain("super secret passphrase");
+      expect(message).not.toContain("wrong passphrase");
+      expect(message).not.toContain("hello");
+    }
+  });
+
+  test("getRandomBytesAsync failure during export fails cleanly", async () => {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const Crypto = require("expo-crypto");
+    const spy = jest
+      .spyOn(Crypto, "getRandomBytesAsync")
+      .mockRejectedValueOnce(new Error("native RNG unavailable"));
+    await expect(encryptJson("passphrase", plaintext)).rejects.toThrow();
+    spy.mockRestore();
   });
 });

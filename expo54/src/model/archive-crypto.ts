@@ -1,5 +1,14 @@
+import { gcm } from "@noble/ciphers/aes.js";
+import { pbkdf2Async } from "@noble/hashes/pbkdf2.js";
+import { sha256 } from "@noble/hashes/sha2.js";
+import * as Crypto from "expo-crypto";
 import { z } from "zod";
-import { decodeBase64Strict, encodeBase64 } from "./archive-codec";
+import {
+  decodeBase64Strict,
+  encodeBase64,
+  utf8DecodeStrict,
+  utf8Encode,
+} from "./archive-codec";
 
 // Defense-in-depth sanity cap on base64 string length before decoding. This is
 // independent of and smaller than the archive-level limit that Task 4/8 will
@@ -120,4 +129,87 @@ export function validateHeaderV3(obj: unknown): HeaderValidation {
     return { ok: false, reason: "ciphertext shorter than the auth tag" };
   }
   return { ok: true, header: h };
+}
+
+const SALT_BYTES = 32;
+const KEY_BYTES = 32;
+// NONCE_BYTES is already declared above (used by validateHeaderV3) — reuse
+// it here rather than redeclaring.
+const VERSION_V3 = "Archive-v3" as const;
+const KDF_NAME = "PBKDF2-SHA256" as const;
+
+export class ArchiveDecryptError extends Error {
+  constructor() {
+    // no plaintext, passphrase, or underlying library error text — ever
+    super("archive decryption failed");
+    this.name = "ArchiveDecryptError";
+  }
+}
+
+async function deriveKey(
+  passphrase: string,
+  salt: Uint8Array,
+  iterations: number
+): Promise<Uint8Array> {
+  const passphraseBytes = utf8Encode(passphrase);
+  return pbkdf2Async(sha256, passphraseBytes, salt, {
+    c: iterations,
+    dkLen: KEY_BYTES,
+  });
+}
+
+export async function encryptJson(
+  passphrase: string,
+  plaintextJson: string
+): Promise<EncryptedHeaderV3> {
+  const paramsVersion = CURRENT_PARAMS_VERSION;
+  const { iterations } = PARAMS[paramsVersion];
+  const salt = await Crypto.getRandomBytesAsync(SALT_BYTES);
+  const nonce = await Crypto.getRandomBytesAsync(NONCE_BYTES);
+  const key = await deriveKey(passphrase, salt, iterations);
+  const plaintextBytes = utf8Encode(plaintextJson);
+  try {
+    const headerForAad = {
+      v: VERSION_V3,
+      kdf: KDF_NAME,
+      paramsVersion,
+      iterations,
+      salt: encodeBase64(salt),
+      nonce: encodeBase64(nonce),
+    };
+    const aad = buildAad(headerForAad);
+    const ciphertext = gcm(key, nonce, aad).encrypt(plaintextBytes);
+    return { ...headerForAad, ciphertext: encodeBase64(ciphertext) };
+  } finally {
+    key.fill(0);
+    plaintextBytes.fill(0);
+  }
+}
+
+export async function decryptHeader(
+  passphrase: string,
+  header: EncryptedHeaderV3
+): Promise<string> {
+  const salt = decodeBase64Strict(header.salt);
+  const nonce = decodeBase64Strict(header.nonce);
+  const ciphertext = decodeBase64Strict(header.ciphertext);
+  if (salt === null || nonce === null || ciphertext === null) {
+    throw new ArchiveDecryptError();
+  }
+  const key = await deriveKey(passphrase, salt, header.iterations);
+  let plaintextBytes: Uint8Array | null = null;
+  try {
+    const aad = buildAad(header);
+    try {
+      plaintextBytes = gcm(key, nonce, aad).decrypt(ciphertext);
+    } catch {
+      throw new ArchiveDecryptError();
+    }
+    const decoded = utf8DecodeStrict(plaintextBytes);
+    if (decoded === null) throw new ArchiveDecryptError();
+    return decoded;
+  } finally {
+    key.fill(0);
+    if (plaintextBytes) plaintextBytes.fill(0);
+  }
 }
