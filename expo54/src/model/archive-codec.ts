@@ -65,6 +65,10 @@ export function utf8Encode(s: string): Uint8Array {
     const codePoint = ch.codePointAt(0)!;
     if (codePoint < 0x80) {
       bytes.push(codePoint);
+    } else if (codePoint >= 0xd800 && codePoint <= 0xdfff) {
+      // Isolated (unpaired) surrogate: match standard TextEncoder, which
+      // substitutes U+FFFD per the WHATWG Encoding spec's UTF-8 encoder.
+      bytes.push(0xef, 0xbf, 0xbd);
     } else if (codePoint < 0x800) {
       bytes.push(0xc0 | (codePoint >> 6), 0x80 | (codePoint & 0x3f));
     } else if (codePoint < 0x10000) {

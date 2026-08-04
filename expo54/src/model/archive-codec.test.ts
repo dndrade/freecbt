@@ -65,4 +65,35 @@ describe("utf8", () => {
   test("rejects encoded surrogate halves", () => {
     expect(utf8DecodeStrict(new Uint8Array([0xed, 0xa0, 0x80]))).toBeNull();
   });
+
+  const textEncoder = new TextEncoder();
+  const fixedVectors: [string, string][] = [
+    ["ASCII", "a"],
+    ["valid surrogate pair", "😀"], // 😀 U+1F600
+    ["isolated high surrogate", "\uD800"],
+    ["isolated low surrogate", "\uDC00"],
+    ["high surrogate followed by non-surrogate", "\uD800X"],
+    ["combining sequence", "é"], // 'e' + combining acute accent
+  ];
+
+  test.each(fixedVectors)(
+    "matches standard TextEncoder for: %s",
+    (_label, input) => {
+      expect(utf8Encode(input)).toEqual(textEncoder.encode(input));
+    }
+  );
+
+  test("replaces an isolated high surrogate with U+FFFD bytes", () => {
+    expect(Array.from(utf8Encode("\uD800"))).toEqual([0xef, 0xbf, 0xbd]);
+  });
+
+  test("replaces an isolated low surrogate with U+FFFD bytes", () => {
+    expect(Array.from(utf8Encode("\uDC00"))).toEqual([0xef, 0xbf, 0xbd]);
+  });
+
+  test("round-trips a string containing a lone surrogate after replacement", () => {
+    const withLoneSurrogate = "a\uD800b";
+    const decoded = utf8DecodeStrict(utf8Encode(withLoneSurrogate));
+    expect(decoded).toBe("a�b");
+  });
 });
