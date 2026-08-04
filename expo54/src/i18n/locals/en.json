@@ -277,7 +277,7 @@
   "backup_screen": {
     "header": "FreeCBT<-",
     "export": {
-      "description": "To backup your FreeCBT data, \"share\" it someplace safe and private, such as emailing it to yourself. Later, you can load that file below to restore your data. Anyone with this file can read your FreeCBT exercises, so be very careful where you send it!",
+      "description": "To backup your FreeCBT data, \"share\" it someplace safe, such as emailing it to yourself. You'll set a passphrase to encrypt it, so it can only be read by re-entering that passphrase inside FreeCBT.",
       "clipboard": {
         "button": "Export your FreeCBT data to the clipboard",
         "success": "Copied to clipboard!"
@@ -293,6 +293,8 @@
     },
     "import": {
       "description": "Restoring a backup file will erase any existing FreeCBT data, replacing it with data from the backup, so consider making another backup first.",
+      "structural_error": "This file isn't a valid FreeCBT backup.",
+      "decrypt_error": "Couldn't unlock this backup. Check the passphrase. If it is correct, the backup file may be damaged or incomplete.",
       "clipboard": {
         "button": "Import your FreeCBT data from the clipboard",
         "failure": "Import failed. Are you sure you pasted the entire FreeCBT backup text?"
@@ -303,6 +305,16 @@
       },
       "noop": "Import succeeded - but nothing changed! You should save your backup text for later, and paste it here if the app ever loses your data.",
       "success": "Import succeeded!"
+    },
+    "passphrase": {
+      "export_header": "Set a backup passphrase",
+      "import_header": "Enter the backup passphrase",
+      "export_warning": "If you forget this passphrase, this backup cannot be recovered — including by us. There is no password reset.",
+      "hint": "At least 12 characters. 16+ characters, or four or more unrelated words, is stronger. Spaces are allowed.",
+      "too_short": "Passphrase must be at least 12 characters.",
+      "mismatch": "Passphrases don't match.",
+      "submit": "Continue",
+      "cancel": "Cancel"
     }
   },
   "export_screen": {
