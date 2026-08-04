@@ -152,10 +152,14 @@ async function deriveKey(
   iterations: number
 ): Promise<Uint8Array> {
   const passphraseBytes = utf8Encode(passphrase);
-  return pbkdf2Async(sha256, passphraseBytes, salt, {
-    c: iterations,
-    dkLen: KEY_BYTES,
-  });
+  try {
+    return await pbkdf2Async(sha256, passphraseBytes, salt, {
+      c: iterations,
+      dkLen: KEY_BYTES,
+    });
+  } finally {
+    passphraseBytes.fill(0);
+  }
 }
 
 export async function encryptJson(
@@ -196,7 +200,14 @@ export async function decryptHeader(
   if (salt === null || nonce === null || ciphertext === null) {
     throw new ArchiveDecryptError();
   }
-  const key = await deriveKey(passphrase, salt, header.iterations);
+  // Never trust `header.iterations` from the file — always look up the
+  // fixed, code-defined value by paramsVersion, and reject any mismatch
+  // before running the (expensive) KDF. See PARAMS's comment above.
+  const params = PARAMS[header.paramsVersion];
+  if (params === undefined || header.iterations !== params.iterations) {
+    throw new ArchiveDecryptError();
+  }
+  const key = await deriveKey(passphrase, salt, params.iterations);
   let plaintextBytes: Uint8Array | null = null;
   try {
     const aad = buildAad(header);

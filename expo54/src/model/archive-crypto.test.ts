@@ -218,6 +218,19 @@ describe("encryptJson / decryptHeader", () => {
     }
   });
 
+  test("rejects a header whose iterations disagrees with the params table, without running the KDF", async () => {
+    const header = await encryptJson("passphrase", plaintext);
+    const tampered = { ...header, iterations: header.iterations + 1 };
+    const start = Date.now();
+    await expect(decryptHeader("passphrase", tampered)).rejects.toThrow(
+      ArchiveDecryptError
+    );
+    // A real PBKDF2 run at 600,000 iterations takes ~5-6s in this suite
+    // (see the other tests' timings); this must reject well before that,
+    // proving the iterations check fires before any KDF work runs.
+    expect(Date.now() - start).toBeLessThan(1000);
+  });
+
   test("getRandomBytesAsync failure during export fails cleanly", async () => {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const Crypto = require("expo-crypto");
