@@ -171,8 +171,23 @@ describe("encryptJson / decryptHeader", () => {
 
   test("tampering with an AAD-covered header field fails decryption", async () => {
     const header = await encryptJson("passphrase", plaintext);
-    const tampered = { ...header, iterations: header.iterations }; // baseline
-    const bumpedParamsCheck = { ...header, paramsVersion: header.paramsVersion };
+
+    const tamperedIterations = { ...header, iterations: header.iterations + 1 };
+    await expect(
+      decryptHeader("passphrase", tamperedIterations)
+    ).rejects.toThrow(ArchiveDecryptError);
+
+    // paramsVersion 2 doesn't exist in PARAMS, so this is rejected by the
+    // structural paramsVersion check rather than by GCM — still proves the
+    // field can't be tampered with undetected.
+    const tamperedParamsVersion = {
+      ...header,
+      paramsVersion: header.paramsVersion + 1,
+    };
+    await expect(
+      decryptHeader("passphrase", tamperedParamsVersion)
+    ).rejects.toThrow(ArchiveDecryptError);
+
     // salt is AAD-covered and canonical/length-valid either way here — a
     // same-length flip keeps it structurally valid so it reaches GCM
     const saltBytes = require("./archive-codec").decodeBase64Strict(
@@ -186,8 +201,6 @@ describe("encryptJson / decryptHeader", () => {
     await expect(decryptHeader("passphrase", tamperedSalt)).rejects.toThrow(
       ArchiveDecryptError
     );
-    void tampered;
-    void bumpedParamsCheck;
   });
 
   test("truncated ciphertext (missing tag bytes) fails decryption", async () => {
@@ -207,28 +220,55 @@ describe("encryptJson / decryptHeader", () => {
 
   test("does not leak plaintext or passphrase into thrown error messages", async () => {
     const header = await encryptJson("super secret passphrase", plaintext);
+    let caught: Error | undefined;
     try {
       await decryptHeader("wrong passphrase", header);
-      throw new Error("expected decryptHeader to throw");
     } catch (e) {
-      const message = (e as Error).message;
-      expect(message).not.toContain("super secret passphrase");
-      expect(message).not.toContain("wrong passphrase");
-      expect(message).not.toContain("hello");
+      caught = e as Error;
     }
+    expect(caught).toBeInstanceOf(ArchiveDecryptError);
+    const message = caught!.message;
+    expect(message).not.toContain("super secret passphrase");
+    expect(message).not.toContain("wrong passphrase");
+    expect(message).not.toContain("hello");
+  });
+
+  test("ArchiveDecryptError instances satisfy instanceof after being thrown and caught", async () => {
+    const header = await encryptJson("passphrase", plaintext);
+    let caught: unknown;
+    try {
+      await decryptHeader("wrong passphrase", header);
+    } catch (e) {
+      caught = e;
+    }
+    expect(caught).toBeInstanceOf(ArchiveDecryptError);
+    expect(caught).toBeInstanceOf(Error);
   });
 
   test("rejects a header whose iterations disagrees with the params table, without running the KDF", async () => {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const pbkdf2Module = require("@noble/hashes/pbkdf2.js");
+    const spy = jest.spyOn(pbkdf2Module, "pbkdf2Async");
+
     const header = await encryptJson("passphrase", plaintext);
+    spy.mockClear(); // encryptJson also derives a key; isolate the calls under test below
+
+    // Positive control: proves the spy is actually observing archive-crypto.ts's
+    // real production import of pbkdf2Async, not a disconnected mock — a header
+    // with matching iterations must invoke the real KDF exactly once.
+    await decryptHeader("passphrase", header);
+    expect(spy).toHaveBeenCalledTimes(1);
+    spy.mockClear();
+
+    // Negative case under test: mismatched iterations must reject before any
+    // KDF call at all.
     const tampered = { ...header, iterations: header.iterations + 1 };
-    const start = Date.now();
     await expect(decryptHeader("passphrase", tampered)).rejects.toThrow(
       ArchiveDecryptError
     );
-    // A real PBKDF2 run at 600,000 iterations takes ~5-6s in this suite
-    // (see the other tests' timings); this must reject well before that,
-    // proving the iterations check fires before any KDF work runs.
-    expect(Date.now() - start).toBeLessThan(1000);
+    expect(spy).not.toHaveBeenCalled();
+
+    spy.mockRestore();
   });
 
   test("getRandomBytesAsync failure during export fails cleanly", async () => {

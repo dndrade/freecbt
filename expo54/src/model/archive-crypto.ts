@@ -143,6 +143,11 @@ export class ArchiveDecryptError extends Error {
     // no plaintext, passphrase, or underlying library error text — ever
     super("archive decryption failed");
     this.name = "ArchiveDecryptError";
+    // Restore the prototype chain explicitly. If this file is ever compiled
+    // to a target that downlevels `class` syntax to the ES5 function/
+    // prototype pattern, `super(message)` alone would leave `instanceof
+    // ArchiveDecryptError` false for thrown instances.
+    Object.setPrototypeOf(this, ArchiveDecryptError.prototype);
   }
 }
 
@@ -168,11 +173,13 @@ export async function encryptJson(
 ): Promise<EncryptedHeaderV3> {
   const paramsVersion = CURRENT_PARAMS_VERSION;
   const { iterations } = PARAMS[paramsVersion];
-  const salt = await Crypto.getRandomBytesAsync(SALT_BYTES);
-  const nonce = await Crypto.getRandomBytesAsync(NONCE_BYTES);
-  const key = await deriveKey(passphrase, salt, iterations);
-  const plaintextBytes = utf8Encode(plaintextJson);
+  let key: Uint8Array | null = null;
+  let plaintextBytes: Uint8Array | null = null;
   try {
+    const salt = await Crypto.getRandomBytesAsync(SALT_BYTES);
+    const nonce = await Crypto.getRandomBytesAsync(NONCE_BYTES);
+    key = await deriveKey(passphrase, salt, iterations);
+    plaintextBytes = utf8Encode(plaintextJson);
     const headerForAad = {
       v: VERSION_V3,
       kdf: KDF_NAME,
@@ -185,8 +192,8 @@ export async function encryptJson(
     const ciphertext = gcm(key, nonce, aad).encrypt(plaintextBytes);
     return { ...headerForAad, ciphertext: encodeBase64(ciphertext) };
   } finally {
-    key.fill(0);
-    plaintextBytes.fill(0);
+    key?.fill(0);
+    plaintextBytes?.fill(0);
   }
 }
 
@@ -207,9 +214,10 @@ export async function decryptHeader(
   if (params === undefined || header.iterations !== params.iterations) {
     throw new ArchiveDecryptError();
   }
-  const key = await deriveKey(passphrase, salt, params.iterations);
+  let key: Uint8Array | null = null;
   let plaintextBytes: Uint8Array | null = null;
   try {
+    key = await deriveKey(passphrase, salt, params.iterations);
     const aad = buildAad(header);
     try {
       plaintextBytes = gcm(key, nonce, aad).decrypt(ciphertext);
@@ -220,7 +228,7 @@ export async function decryptHeader(
     if (decoded === null) throw new ArchiveDecryptError();
     return decoded;
   } finally {
-    key.fill(0);
-    if (plaintextBytes) plaintextBytes.fill(0);
+    key?.fill(0);
+    plaintextBytes?.fill(0);
   }
 }
