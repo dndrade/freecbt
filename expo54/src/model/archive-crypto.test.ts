@@ -203,6 +203,35 @@ describe("encryptJson / decryptHeader", () => {
     );
   });
 
+  describe("AAD authentication of header.v and header.kdf", () => {
+    // decryptHeader performs no structural check on `v` or `kdf` (unlike
+    // `iterations`/`paramsVersion`, which are checked against the PARAMS
+    // table before any KDF work runs) — these two fields are protected
+    // *exclusively* by AAD authentication inside the GCM tag. Each case
+    // below changes only that one field, leaving salt/nonce/ciphertext/
+    // iterations/paramsVersion untouched, so a passing test here can only
+    // be explained by AAD actually being checked, not by any other
+    // validation path in decryptHeader.
+    const tamperCases: Array<[field: "v" | "kdf", tamperedValue: string]> = [
+      ["v", "Archive-v4"],
+      ["kdf", "PBKDF2-SHA512"],
+    ];
+
+    test.each(tamperCases)(
+      "rejects when header.%s is tampered to %s, with every other field intact",
+      async (field, tamperedValue) => {
+        const header = await encryptJson("passphrase", plaintext);
+        const tampered = {
+          ...header,
+          [field]: tamperedValue,
+        } as EncryptedHeaderV3;
+        await expect(decryptHeader("passphrase", tampered)).rejects.toThrow(
+          ArchiveDecryptError
+        );
+      }
+    );
+  });
+
   test("truncated ciphertext (missing tag bytes) fails decryption", async () => {
     const header = await encryptJson("passphrase", plaintext);
     const bytes = require("./archive-codec").decodeBase64Strict(
