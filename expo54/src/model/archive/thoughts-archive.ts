@@ -1,7 +1,7 @@
 import * as LZ from "lz-string";
 import { z } from "zod";
-import * as Distortion from "./distortion";
-import * as Thought from "./thought";
+import * as Distortion from "../distortion";
+import * as Thought from "../thought";
 
 export const VERSION = "Archive-v2";
 

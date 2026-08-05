@@ -1,4 +1,4 @@
-// expo54/src/model/archive-size-limits.ts
+// expo54/src/model/archive/archive-size-limits.ts
 
 /**
  * Decode-side safety limits for imported backup archives, used by Task 8's

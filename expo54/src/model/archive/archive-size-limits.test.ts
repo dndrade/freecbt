@@ -1,6 +1,6 @@
-// expo54/src/model/archive-size-limits.test.ts
+// expo54/src/model/archive/archive-size-limits.test.ts
 import { v4 as uuidv4 } from "uuid";
-import { Archive, DistortionData, Thought } from ".";
+import { Archive, DistortionData, Thought } from "..";
 import {
   MAX_DECODED_TEXT_CHARS,
   MAX_ENCODED_PAYLOAD_CHARS,

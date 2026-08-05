@@ -142,7 +142,7 @@ test("readAll: a malformed thought does not delete either record", async () => {
 
 test("readAll: restores every thought from a decoded historical archive", async () => {
   // Same real historical-format snapshot already used in
-  // model/thoughts-archive.test.ts's "parse nonempty json snapshot from old version".
+  // model/archive/thoughts-archive.test.ts's "parse nonempty json snapshot from old version".
   const snapshot =
     ":FreeCBT:N4IgbiBcIIIE4GMAWBLMBTAtGAjCANCAC5ID2ArgOZJEDOUA2qAIblGkC2zRKCAKmSo0oIVuwIhkzADbT0AO0roRU6RJlF0cedzToBFakREaJCUpXkoeGACIpa7OD1Lz6kBqNmZScTPNISFEUQAF1CBDh0bnQAExhjaBwATgB2AAZMdJwsnD509MgCopwAOgAmAGYAFgAtCXIAB1iY+MSQFIzc3PzC4uyKmvrCcnIUWJFaTnRR8YkIaAMhImw8AF9QtaA===:FreeCBT:";
   const A = Archive.createParsers(DistortionData);

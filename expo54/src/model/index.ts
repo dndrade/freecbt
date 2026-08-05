@@ -6,4 +6,4 @@ export * as Model from "./model";
 export * as PromiseState from "./promise-state";
 export * as Settings from "./settings";
 export * as Thought from "./thought";
-export * as Archive from "./thoughts-archive";
+export * as Archive from "./archive/thoughts-archive";

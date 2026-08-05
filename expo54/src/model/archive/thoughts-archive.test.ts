@@ -1,5 +1,5 @@
 import { v4 as uuidv4 } from "uuid";
-import { Archive, DistortionData, Thought } from ".";
+import { Archive, DistortionData, Thought } from "..";
 
 export const A = Archive.createParsers(DistortionData);
 
