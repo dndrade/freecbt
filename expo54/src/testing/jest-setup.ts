@@ -20,14 +20,15 @@ if (typeof global.structuredClone === "undefined") {
   global.structuredClone = (object) => JSON.parse(JSON.stringify(object));
 }
 
-// this package is giving me syntax errors only in jest, can't figure it out, but we don't need real uuids for tests.
-// string matches zod's uuid validation.
-jest.mock("uuid", () => {
-  let i = 0;
-  return {
-    v4: () => `00000000-0000-4000-8000-${`${i++}`.padStart(12, "0")}`,
-  };
-});
+// provide a polyfill for crypto.randomUUID since it's not available in Node.js/Jest
+if (typeof globalThis.crypto === "undefined" || typeof globalThis.crypto.randomUUID !== "function") {
+  let counter = 0;
+  if (globalThis.crypto === undefined) {
+    (globalThis as any).crypto = {};
+  }
+  (globalThis.crypto as any).randomUUID = () =>
+    `00000000-0000-4000-8000-${`${counter++}`.padStart(12, "0")}`;
+}
 
 // silence some dumb warning
 process.env.EXPO_OS = Platform.OS;

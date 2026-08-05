@@ -1,5 +1,4 @@
 import _ from "lodash";
-import { v4 as uuidv4 } from "uuid";
 import { z } from "zod";
 import { AssertExtends } from "../type-utils";
 import * as Distortion from "./distortion";
@@ -89,7 +88,7 @@ export function isKey(key: string): boolean {
 export function create(spec: Spec, now: Date): Thought {
   const createdAt = now;
   const updatedAt = now;
-  const uuid = Id.decode(uuidv4());
+  const uuid = Id.decode(crypto.randomUUID());
   return { ...spec, createdAt, updatedAt, uuid };
 }
 export function toSpec(t: Thought): Spec {
