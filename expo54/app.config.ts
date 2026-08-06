@@ -79,6 +79,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       },
     ],
     "expo-web-browser",
+    "react-native-quick-crypto",
   ],
   experiments: {
     typedRoutes: true,
