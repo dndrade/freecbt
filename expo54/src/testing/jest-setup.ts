@@ -70,3 +70,25 @@ jest.mock("expo-crypto", () => {
     },
   };
 });
+
+// react-native-quick-crypto's native module isn't linked in the jest
+// environment. Mock pbkdf2 using Node's own (native) crypto.pbkdf2 so
+// archive-crypto tests exercise genuine PBKDF2 behavior, not a stub —
+// same rationale as the expo-crypto mock above.
+jest.mock("react-native-quick-crypto", () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const nodeCrypto = require("crypto");
+
+  return {
+    pbkdf2: (
+      password: Uint8Array,
+      salt: Uint8Array,
+      iterations: number,
+      keylen: number,
+      digest: string,
+      callback: (err: Error | null, derivedKey?: Buffer) => void
+    ) => {
+      nodeCrypto.pbkdf2(password, salt, iterations, keylen, digest, callback);
+    },
+  };
+});
