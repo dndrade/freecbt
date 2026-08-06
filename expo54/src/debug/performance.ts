@@ -1,3 +1,5 @@
+import { debugLoggingAllows } from "@/src/debug/logging";
+
 type MetadataValue = string | number | boolean | null | undefined;
 
 export type PerformanceMetadata = Readonly<
@@ -12,13 +14,11 @@ export type MeasurementResult<T> = Readonly<{
 export type MeasurementOptions = Readonly<{
     /**
      * True when a thrown error from this operation is a normal, anticipated
-     * outcome — not a bug — such as AES-GCM authentication failure from a
-     * wrong passphrase or a tampered/corrupted ciphertext. Expected failures
-     * log via `console.log` (no error type/message, per this feature's
-     * no-raw-crypto-error-logging rule) instead of `console.error`, so
-     * exercising a deliberate-rejection path (e.g. the encrypted-backup
-     * debug tool's "Test wrong passphrase" button) doesn't surface a
-     * misleading red error overlay in development builds.
+     * outcome, such as AES-GCM authentication failure from a wrong passphrase
+     * or tampered ciphertext.
+     *
+     * Expected failures are visible only at the "debug" log level. They do not
+     * expose the underlying error type or message.
      */
     expectedFailure?: boolean;
 }>;
@@ -46,6 +46,10 @@ function logStarted(
     measurementId: string,
     metadata: PerformanceMetadata
 ): void {
+    if (!debugLoggingAllows("debug")) {
+        return;
+    }
+
     console.log(`${LOG_PREFIX} ${name} started`, {
         measurementId,
         ...metadata,
@@ -58,6 +62,10 @@ function logCompleted(
     durationMs: number,
     metadata: PerformanceMetadata
 ): void {
+    if (!debugLoggingAllows("debug")) {
+        return;
+    }
+
     console.log(`${LOG_PREFIX} ${name} completed`, {
         measurementId,
         durationMs: rounded(durationMs),
@@ -72,6 +80,10 @@ function logFailed(
     error: unknown,
     metadata: PerformanceMetadata
 ): void {
+    if (!debugLoggingAllows("error")) {
+        return;
+    }
+
     console.error(`${LOG_PREFIX} ${name} failed`, {
         measurementId,
         durationMs: rounded(durationMs),
@@ -90,6 +102,10 @@ function logExpectedRejection(
     durationMs: number,
     metadata: PerformanceMetadata
 ): void {
+    if (!debugLoggingAllows("debug")) {
+        return;
+    }
+
     console.log(`${LOG_PREFIX} ${name} rejected (expected)`, {
         measurementId,
         durationMs: rounded(durationMs),
@@ -119,7 +135,10 @@ function beginMeasurement(
 
     logStarted(name, measurementId, metadata);
 
-    return { measurementId, startedAt };
+    return {
+        measurementId,
+        startedAt,
+    };
 }
 
 function completeMeasurement<T>(
@@ -148,9 +167,20 @@ function failMeasurement(
     const durationMs = now() - handle.startedAt;
 
     if (options.expectedFailure) {
-        logExpectedRejection(name, handle.measurementId, durationMs, metadata);
+        logExpectedRejection(
+            name,
+            handle.measurementId,
+            durationMs,
+            metadata
+        );
     } else {
-        logFailed(name, handle.measurementId, durationMs, error, metadata);
+        logFailed(
+            name,
+            handle.measurementId,
+            durationMs,
+            error,
+            metadata
+        );
     }
 
     throw error;
@@ -206,8 +236,7 @@ export function measureSync<T>(
  * Measures an asynchronous operation in development builds.
  *
  * Production builds execute the operation directly and return a zero
- * duration. Benchmark output therefore remains development-only without
- * changing the caller's API or result.
+ * duration. Logging is controlled independently through DEBUG_LOG_LEVEL.
  *
  * Never place passphrases, encryption keys, plaintext journal content,
  * decrypted archives, or complete model objects in metadata.
@@ -232,7 +261,7 @@ export async function measureDevelopmentAsync<T>(
  * Measures a synchronous operation in development builds.
  *
  * Production builds execute the operation directly and return a zero
- * duration.
+ * duration. Logging is controlled independently through DEBUG_LOG_LEVEL.
  *
  * Never place passphrases, encryption keys, plaintext journal content,
  * decrypted archives, or complete model objects in metadata.

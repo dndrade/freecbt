@@ -1,4 +1,5 @@
 import { measureDevelopmentSync } from "@/src/debug/performance";
+import { debugLoggingAllows } from "@/src/debug/logging";
 
 /**
  * Canonical Base64 alphabet used by Archive-v3.
@@ -138,7 +139,7 @@ export function decodeBase64Strict(s: string): Uint8Array | null {
       }
   );
 
-  if (__DEV__) {
+  if (debugLoggingAllows("debug")) {
     console.log("[performance] archive.codec.base64.decode result", {
       success: measurement.value !== null,
       outputBytes: measurement.value?.length ?? 0,
@@ -224,7 +225,7 @@ export function utf8Encode(s: string): Uint8Array {
       }
   );
 
-  if (__DEV__) {
+  if (debugLoggingAllows("debug")) {
     console.log("[performance] archive.codec.utf8.encode result", {
       outputBytes: measurement.value.length,
     });
@@ -317,7 +318,7 @@ export function utf8DecodeStrict(bytes: Uint8Array): string | null {
       }
   );
 
-  if (__DEV__) {
+  if (debugLoggingAllows("debug")) {
     console.log("[performance] archive.codec.utf8.decode result", {
       success: measurement.value !== null,
       outputCharacters: measurement.value?.length ?? 0,

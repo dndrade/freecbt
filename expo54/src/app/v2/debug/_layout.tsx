@@ -13,15 +13,7 @@ export default function Layout() {
   }
   return (
     <Drawer screenOptions={drawerOptions}>
-      <Drawer.Screen name="index" options={{ title: "developer debug page" }} />
-      <Drawer.Screen
-        name="tools/encrypted-backup"
-        options={{ title: "encrypted backup diagnostics" }}
-      />
-      <Drawer.Screen
-        name="demos/backup/index"
-        options={{ title: "backup feature flag demo" }}
-      />
+      <Drawer.Screen name="index" options={{ title: "Debug tools" }} />
     </Drawer>
   );
 }

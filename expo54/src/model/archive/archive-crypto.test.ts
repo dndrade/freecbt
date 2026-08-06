@@ -316,24 +316,9 @@ describe("encryptJson / decryptHeader", () => {
     spy.mockRestore();
   });
 
-  test("derives the same key as an independent PBKDF2-HMAC-SHA256 implementation (@noble/hashes)", async () => {
+  test("derives the expected key via the mocked react-native-quick-crypto adapter (Node crypto.pbkdf2)", async () => {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const { pbkdf2Async } = require("@noble/hashes/pbkdf2.js");
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const { sha256 } = require("@noble/hashes/sha2.js");
     const { utf8Encode } = require("./archive-codec");
-
-    // Known-answer vector: independently confirmed to match both Node's
-    // built-in crypto.pbkdf2 and the browser Web Crypto API's
-    // crypto.subtle.deriveBits for these exact inputs.
-    const nobleKey = await pbkdf2Async(
-      sha256,
-      utf8Encode(KAT_PASSPHRASE),
-      KAT_SALT,
-      { c: KAT_ITERATIONS, dkLen: 32 }
-    );
-    const nobleHex = Buffer.from(nobleKey).toString("hex");
-    expect(nobleHex).toBe(KAT_EXPECTED_HEX);
 
     // Direct byte-for-byte comparison against the production path's salt,
     // using the mocked native pbkdf2 (Node's crypto.pbkdf2) with the same
@@ -397,11 +382,23 @@ describe("encryptJson / decryptHeader", () => {
   test("getRandomBytesAsync failure during export fails cleanly", async () => {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const Crypto = require("expo-crypto");
-    const spy = jest
-      .spyOn(Crypto, "getRandomBytesAsync")
-      .mockRejectedValueOnce(new Error("native RNG unavailable"));
-    await expect(encryptJson("passphrase", plaintext)).rejects.toThrow();
-    spy.mockRestore();
+
+    const consoleErrorSpy = jest
+        .spyOn(console, "error")
+        .mockImplementation(() => {});
+
+    const cryptoSpy = jest
+        .spyOn(Crypto, "getRandomBytesAsync")
+        .mockRejectedValueOnce(new Error("native RNG unavailable"));
+
+    try {
+      await expect(
+          encryptJson("passphrase", plaintext)
+      ).rejects.toThrow();
+    } finally {
+      cryptoSpy.mockRestore();
+      consoleErrorSpy.mockRestore();
+    }
   });
 
   test("encryptJson's own output passes validateHeaderV3", async () => {

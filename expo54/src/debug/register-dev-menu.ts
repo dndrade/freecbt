@@ -6,9 +6,9 @@ export async function registerDevMenu() {
 
     await DevClient.registerDevMenuItems([
         {
-            name: "Encrypted backup diagnostics",
+            name: "FreeCBT debug tools",
             shouldCollapse: true,
-            callback: () => router.push("/v2/debug/tools/encrypted-backup"),
+            callback: () => router.push("/v2/debug"),
         },
     ]);
 }

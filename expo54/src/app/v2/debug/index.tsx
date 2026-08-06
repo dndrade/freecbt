@@ -1,17 +1,22 @@
-import { useDefaultStyle } from "@/src/hooks/use-style";
-import { Link } from "expo-router";
-import { Text, View } from "react-native";
+import { DebugAction } from "@/src/debug/ui/debug-action";
+import { DebugScreen } from "@/src/debug/ui/debug-screen";
+import { DebugSection } from "@/src/debug/ui/debug-section";
+import { useRouter } from "expo-router";
+import React from "react";
 
 export default function Index() {
-  const s = useDefaultStyle();
+    const router = useRouter();
   return (
-    <View style={[s.view]}>
-      <Link href="/v2">
-        <Text style={[s.header, s.href]}>Return to FreeCBT</Text>
-      </Link>
-      <Text style={[s.text, s.my4]}>
-        list of debug pages is in the nav drawer.
-      </Text>
-    </View>
+      <DebugScreen
+          title="Developer tools"
+          description="Open the navigation drawer to choose a debug page or demo."
+      >
+          <DebugSection>
+              <DebugAction
+                  label="Return to FreeCBT"
+                  onPress={() => router.push("/v2")}
+              />
+          </DebugSection>
+      </DebugScreen>
   );
 }
