@@ -1,5 +1,4 @@
 // expo54/src/model/archive/archive-size-limits.test.ts
-import { v4 as uuidv4 } from "uuid";
 import { Archive, DistortionData, Thought } from "..";
 import {
   MAX_DECODED_TEXT_CHARS,
@@ -66,7 +65,7 @@ function buildLargeRealisticArchive(): {
   const thoughts: Thought.Json[] = Array.from(
     { length: LARGE_REALISTIC_THOUGHT_COUNT },
     () => ({
-      uuid: uuidv4(),
+      uuid: crypto.randomUUID(),
       createdAt: new Date(0).toISOString(),
       updatedAt: new Date(0).toISOString(),
       automaticThought: realisticText(FIELD_CHARS, rand),
