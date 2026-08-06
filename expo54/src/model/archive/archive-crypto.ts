@@ -623,7 +623,11 @@ export async function decryptHeader(
             nonceBytes: nonce.length,
             aadBytes: aad.length,
             ciphertextBytes: ciphertext.length,
-          }
+          },
+          // A GCM auth-tag failure here is a normal outcome (wrong
+          // passphrase or tampered ciphertext) that this function already
+          // converts to ArchiveDecryptError below — not a bug to flag loudly.
+          { expectedFailure: true }
       );
 
       plaintextBytes = decryptionMeasurement.value;

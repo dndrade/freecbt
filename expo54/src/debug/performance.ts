@@ -9,6 +9,20 @@ export type MeasurementResult<T> = Readonly<{
     durationMs: number;
 }>;
 
+export type MeasurementOptions = Readonly<{
+    /**
+     * True when a thrown error from this operation is a normal, anticipated
+     * outcome — not a bug — such as AES-GCM authentication failure from a
+     * wrong passphrase or a tampered/corrupted ciphertext. Expected failures
+     * log via `console.log` (no error type/message, per this feature's
+     * no-raw-crypto-error-logging rule) instead of `console.error`, so
+     * exercising a deliberate-rejection path (e.g. the encrypted-backup
+     * debug tool's "Test wrong passphrase" button) doesn't surface a
+     * misleading red error overlay in development builds.
+     */
+    expectedFailure?: boolean;
+}>;
+
 const LOG_PREFIX = "[performance]";
 
 function now(): number {
@@ -70,6 +84,19 @@ function logFailed(
     });
 }
 
+function logExpectedRejection(
+    name: string,
+    measurementId: string,
+    durationMs: number,
+    metadata: PerformanceMetadata
+): void {
+    console.log(`${LOG_PREFIX} ${name} rejected (expected)`, {
+        measurementId,
+        durationMs: rounded(durationMs),
+        ...metadata,
+    });
+}
+
 function createMeasurementId(name: string): string {
     return `${name}:${Date.now()}:${Math.random()
         .toString(36)
@@ -115,11 +142,16 @@ function failMeasurement(
     name: string,
     handle: MeasurementHandle,
     error: unknown,
-    metadata: PerformanceMetadata
+    metadata: PerformanceMetadata,
+    options: MeasurementOptions
 ): never {
     const durationMs = now() - handle.startedAt;
 
-    logFailed(name, handle.measurementId, durationMs, error, metadata);
+    if (options.expectedFailure) {
+        logExpectedRejection(name, handle.measurementId, durationMs, metadata);
+    } else {
+        logFailed(name, handle.measurementId, durationMs, error, metadata);
+    }
 
     throw error;
 }
@@ -133,7 +165,8 @@ function failMeasurement(
 export async function measureAsync<T>(
     name: string,
     operation: () => Promise<T>,
-    metadata: PerformanceMetadata = {}
+    metadata: PerformanceMetadata = {},
+    options: MeasurementOptions = {}
 ): Promise<MeasurementResult<T>> {
     const handle = beginMeasurement(name, metadata);
 
@@ -142,7 +175,7 @@ export async function measureAsync<T>(
 
         return completeMeasurement(name, handle, value, metadata);
     } catch (error) {
-        failMeasurement(name, handle, error, metadata);
+        failMeasurement(name, handle, error, metadata, options);
     }
 }
 
@@ -155,7 +188,8 @@ export async function measureAsync<T>(
 export function measureSync<T>(
     name: string,
     operation: () => T,
-    metadata: PerformanceMetadata = {}
+    metadata: PerformanceMetadata = {},
+    options: MeasurementOptions = {}
 ): MeasurementResult<T> {
     const handle = beginMeasurement(name, metadata);
 
@@ -164,7 +198,7 @@ export function measureSync<T>(
 
         return completeMeasurement(name, handle, value, metadata);
     } catch (error) {
-        failMeasurement(name, handle, error, metadata);
+        failMeasurement(name, handle, error, metadata, options);
     }
 }
 
@@ -181,10 +215,11 @@ export function measureSync<T>(
 export async function measureDevelopmentAsync<T>(
     name: string,
     operation: () => Promise<T>,
-    metadata: PerformanceMetadata = {}
+    metadata: PerformanceMetadata = {},
+    options: MeasurementOptions = {}
 ): Promise<MeasurementResult<T>> {
     if (__DEV__) {
-        return measureAsync(name, operation, metadata);
+        return measureAsync(name, operation, metadata, options);
     }
 
     return {
@@ -205,10 +240,11 @@ export async function measureDevelopmentAsync<T>(
 export function measureDevelopmentSync<T>(
     name: string,
     operation: () => T,
-    metadata: PerformanceMetadata = {}
+    metadata: PerformanceMetadata = {},
+    options: MeasurementOptions = {}
 ): MeasurementResult<T> {
     if (__DEV__) {
-        return measureSync(name, operation, metadata);
+        return measureSync(name, operation, metadata, options);
     }
 
     return {
