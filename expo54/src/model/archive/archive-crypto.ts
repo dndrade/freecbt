@@ -3,9 +3,9 @@ import {
   measureDevelopmentSync,
 } from "@/src/debug/performance";
 import { gcm } from "@noble/ciphers/aes.js";
-import { pbkdf2Async } from "@noble/hashes/pbkdf2.js";
-import { sha256 } from "@noble/hashes/sha2.js";
 import * as Crypto from "expo-crypto";
+import { Platform } from "react-native";
+import { pbkdf2 as nativePbkdf2 } from "react-native-quick-crypto";
 import { z } from "zod";
 import {
   decodeBase64Strict,
@@ -321,6 +321,61 @@ export class ArchiveDecryptError extends Error {
 }
 
 /**
+ * Runs PBKDF2-HMAC-SHA256 via the native `react-native-quick-crypto` module
+ * (iOS/Android). Never used on web — see `pbkdf2Web`.
+ */
+function pbkdf2Native(
+    passphraseBytes: Uint8Array,
+    salt: Uint8Array,
+    iterations: number
+): Promise<Uint8Array> {
+  return new Promise((resolve, reject) => {
+    nativePbkdf2(
+        passphraseBytes,
+        salt,
+        iterations,
+        KEY_BYTES,
+        "sha256",
+        (err, derivedKey) => {
+          if (err || !derivedKey) {
+            reject(err ?? new Error("native PBKDF2 failed"));
+            return;
+          }
+
+          resolve(Uint8Array.from(derivedKey));
+        }
+    );
+  });
+}
+
+/**
+ * Runs PBKDF2-HMAC-SHA256 via the browser's native Web Crypto API (web
+ * only). `react-native-quick-crypto` has no web target, so this platform
+ * needs its own path.
+ */
+async function pbkdf2Web(
+    passphraseBytes: Uint8Array,
+    salt: Uint8Array,
+    iterations: number
+): Promise<Uint8Array> {
+  const keyMaterial = await crypto.subtle.importKey(
+      "raw",
+      passphraseBytes as BufferSource,
+      "PBKDF2",
+      false,
+      ["deriveBits"]
+  );
+
+  const bits = await crypto.subtle.deriveBits(
+      { name: "PBKDF2", hash: "SHA-256", salt: salt as BufferSource, iterations },
+      keyMaterial,
+      KEY_BYTES * 8
+  );
+
+  return new Uint8Array(bits);
+}
+
+/**
  * Derives a 256-bit AES key from a user-supplied passphrase using
  * PBKDF2-HMAC-SHA256.
  *
@@ -349,10 +404,9 @@ async function deriveKey(
     const measurement = await measureDevelopmentAsync(
         `archive.pbkdf2.${operation}`,
         () =>
-            pbkdf2Async(sha256, passphraseBytes, salt, {
-              c: iterations,
-              dkLen: KEY_BYTES,
-            }),
+            Platform.OS === "web"
+                ? pbkdf2Web(passphraseBytes, salt, iterations)
+                : pbkdf2Native(passphraseBytes, salt, iterations),
         {
           algorithm: "PBKDF2-HMAC-SHA256",
           iterations,
