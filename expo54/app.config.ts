@@ -79,6 +79,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       },
     ],
     "expo-web-browser",
+    "expo-build-properties",
     "react-native-quick-crypto",
   ],
   experiments: {
