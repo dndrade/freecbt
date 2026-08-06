@@ -140,7 +140,15 @@ function Ready(props: ModelLoadedProps) {
 
             log("decoding decrypted archive", { runId });
 
-            const decodedArchive = parser.fromJson.decode(parsedJson);
+            const validatedJson = Archive.LegacyJson.safeParse(parsedJson);
+
+            if (!validatedJson.success) {
+                log("decrypted archive schema validation failed", { runId });
+                setResult("Decrypted archive failed schema validation.");
+                return;
+            }
+
+            const decodedArchive = parser.fromJson.decode(validatedJson.data);
             const decodedCount = decodedArchive.thoughts.length;
 
             log("decrypted archive decoded", {

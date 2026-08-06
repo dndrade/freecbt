@@ -2,7 +2,10 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react-nativ
 import React from "react";
 import { ModelProvider, useModel } from "@/src/hooks/use-model";
 import { useStyle } from "@/src/hooks/use-style";
-import { ImportButton, Ready } from "./backup";
+import { Ready } from "@/src/app/v2/(public)/settings/backup";
+import {
+  EncryptedBackupImport,
+} from "@/src/features/backup/encrypted-backup-import";
 
 function testTranslate(key: string): string {
   return key;
@@ -31,12 +34,12 @@ function ImportOnlyHarness() {
   const style = useStyle("light");
   if (model.status !== "ready") return null;
   return (
-    <ImportButton
-      model={model}
-      dispatch={dispatch}
-      style={style}
-      translate={testTranslate}
-    />
+      <EncryptedBackupImport
+          model={model}
+          dispatch={dispatch}
+          style={style}
+          translate={testTranslate}
+      />
   );
 }
 
