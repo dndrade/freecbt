@@ -65,7 +65,7 @@ test("parse multiple json snapshot from old version", () => {
 });
 
 test("create and parse", () => {
-  const json: Archive.Json = { v: "Archive-v1", thoughts: [fixture] };
+  const json: Archive.LegacyJson = { v: "Archive-v1", thoughts: [fixture] };
   const arc: Archive.Archive = A.fromJson.decode(json);
   expect(arc.thoughts).toHaveLength(1);
   const enc: string = A.fromString.encode(arc);
@@ -73,7 +73,7 @@ test("create and parse", () => {
 });
 
 test("enforce valid distortions", () => {
-  const json: Archive.Json = {
+  const json: Archive.LegacyJson = {
     v: "Archive-v1",
     thoughts: [{ ...fixture, cognitiveDistortions: ["nonsense"] }],
   };
@@ -81,7 +81,7 @@ test("enforce valid distortions", () => {
 });
 
 test("round-trips explicit thought fixtures through encode/decode", () => {
-  const json: Archive.Json = {
+  const json: Archive.LegacyJson = {
     v: "Archive-v1",
     thoughts: [
       {
