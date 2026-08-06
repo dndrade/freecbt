@@ -18,15 +18,8 @@ export function I18nProvider(props: {
 }) {
   const i18n = new I18n(locals);
   i18n.enableFallback = true;
-  // i18n.locale = defaultLocale();
   i18n.locale = props.locale;
 
-  // const settings = useSettingsStorage(AsyncStorage);
-  //useEffect(() => {
-  //  (async () => {
-  //    i18n.locale = (await loadLocaleSetting(settings)) ?? i18n.locale;
-  //  })();
-  //});
   return <Ctx value={i18n}>{props.children}</Ctx>;
 }
 
@@ -76,18 +69,6 @@ export function defaultLocale(): LocaleTag {
   // if the user prefers none of our translated languages, give up and default to english
   return "en";
 }
-
-//async function loadLocaleSetting(
-//  settings: SettingsStorage
-//): Promise<LocaleTag | null> {
-//  // const locale = isPlatformSupported() ? await getSetting(LOCALE_KEY) : null;
-//  if (typeof window !== "undefined") {
-//    return null;
-//  }
-//  const setting = LocaleTag.safeParse(await settings.read(LOCALE_KEY));
-//  // error reporting isn't worth it here, fallback to the system default
-//  return setting.success ? setting.data : null;
-//}
 
 // json {"a": {"b": "c", "d": "e"}} -> type "a.b" | "a.d"
 // stolen from https://www.raygesualdo.com/posts/flattening-object-keys-with-typescript-types/
