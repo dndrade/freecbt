@@ -10,6 +10,12 @@ import {
 } from "./archive-crypto";
 import { encodeBase64 } from "./archive-codec";
 
+const KAT_PASSPHRASE = "correct horse battery staple";
+const KAT_SALT = new Uint8Array(32).fill(7);
+const KAT_ITERATIONS = 600_000;
+const KAT_EXPECTED_HEX =
+  "59a9d543010c4762aac49a99f88ebb60af42c55eb3a773ef6e5b98312a567b96";
+
 function validHeader(overrides: Partial<EncryptedHeaderV3> = {}): unknown {
   return {
     v: "Archive-v3",
@@ -287,6 +293,16 @@ describe("encryptJson / decryptHeader", () => {
     // with matching iterations must invoke the real KDF exactly once.
     await decryptHeader("passphrase", header);
     expect(spy).toHaveBeenCalledTimes(1);
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { decodeBase64Strict } = require("./archive-codec");
+    expect(spy).toHaveBeenCalledWith(
+      expect.any(Uint8Array),
+      decodeBase64Strict(header.salt),
+      header.iterations,
+      32,
+      "sha256",
+      expect.any(Function)
+    );
     spy.mockClear();
 
     // Negative case under test: mismatched iterations must reject before any
@@ -305,36 +321,19 @@ describe("encryptJson / decryptHeader", () => {
     const { pbkdf2Async } = require("@noble/hashes/pbkdf2.js");
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const { sha256 } = require("@noble/hashes/sha2.js");
-    const { utf8Encode, decodeBase64Strict } = require("./archive-codec");
-
-    const passphrase = "correct horse battery staple";
-    const salt = new Uint8Array(32).fill(7);
-    const iterations = 600_000;
+    const { utf8Encode } = require("./archive-codec");
 
     // Known-answer vector: independently confirmed to match both Node's
     // built-in crypto.pbkdf2 and the browser Web Crypto API's
     // crypto.subtle.deriveBits for these exact inputs.
-    const expectedHex =
-      "59a9d543010c4762aac49a99f88ebb60af42c55eb3a773ef6e5b98312a567b96";
-
-    const nobleKey = await pbkdf2Async(sha256, utf8Encode(passphrase), salt, {
-      c: iterations,
-      dkLen: 32,
-    });
+    const nobleKey = await pbkdf2Async(
+      sha256,
+      utf8Encode(KAT_PASSPHRASE),
+      KAT_SALT,
+      { c: KAT_ITERATIONS, dkLen: 32 }
+    );
     const nobleHex = Buffer.from(nobleKey).toString("hex");
-    expect(nobleHex).toBe(expectedHex);
-
-    // The production path (native mock -> Node's crypto.pbkdf2 under Jest)
-    // must derive the identical key for the identical inputs.
-    const header = await encryptJson(passphrase, plaintext);
-    // Re-derive directly via decryptHeader's internal path by round-tripping:
-    // decrypting with the correct passphrase only succeeds if deriveKey
-    // produced the same AES key encryptJson used to encrypt, which in turn
-    // only happens if the native PBKDF2 path is correct — this is an
-    // indirect but genuine confirmation that production's derived key
-    // matches the KAT-verified value's cryptographic behavior.
-    const decrypted = await decryptHeader(passphrase, header);
-    expect(decrypted).toBe(plaintext);
+    expect(nobleHex).toBe(KAT_EXPECTED_HEX);
 
     // Direct byte-for-byte comparison against the production path's salt,
     // using the mocked native pbkdf2 (Node's crypto.pbkdf2) with the same
@@ -343,9 +342,9 @@ describe("encryptJson / decryptHeader", () => {
     const { pbkdf2: mockedNativePbkdf2 } = require("react-native-quick-crypto");
     const nativeKey: Buffer = await new Promise((resolve, reject) => {
       mockedNativePbkdf2(
-        utf8Encode(passphrase),
-        salt,
-        iterations,
+        utf8Encode(KAT_PASSPHRASE),
+        KAT_SALT,
+        KAT_ITERATIONS,
         32,
         "sha256",
         (err: Error | null, key?: Buffer) => {
@@ -357,7 +356,7 @@ describe("encryptJson / decryptHeader", () => {
         }
       );
     });
-    expect(nativeKey.toString("hex")).toBe(expectedHex);
+    expect(nativeKey.toString("hex")).toBe(KAT_EXPECTED_HEX);
   });
 
   test("web branch (crypto.subtle.deriveBits) derives the same key as the native branch", async () => {
@@ -365,34 +364,33 @@ describe("encryptJson / decryptHeader", () => {
     const RN = require("react-native");
     const originalOS = RN.Platform.OS;
     RN.Platform.OS = "web";
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const nativeSpy = jest.spyOn(require("react-native-quick-crypto"), "pbkdf2");
 
     try {
-      const passphrase = "correct horse battery staple";
-      const salt = new Uint8Array(32).fill(7);
-
-      const header = await encryptJson(passphrase, plaintext);
-      const decrypted = await decryptHeader(passphrase, header);
+      const header = await encryptJson(KAT_PASSPHRASE, plaintext);
+      const decrypted = await decryptHeader(KAT_PASSPHRASE, header);
       expect(decrypted).toBe(plaintext);
+      expect(nativeSpy).not.toHaveBeenCalled();
 
       // Direct KAT check of the web branch's own primitive, matching the
       // same known-answer vector used for the native branch above.
       const keyMaterial = await crypto.subtle.importKey(
         "raw",
-        require("./archive-codec").utf8Encode(passphrase),
+        require("./archive-codec").utf8Encode(KAT_PASSPHRASE),
         "PBKDF2",
         false,
         ["deriveBits"]
       );
       const bits = await crypto.subtle.deriveBits(
-        { name: "PBKDF2", hash: "SHA-256", salt, iterations: 600_000 },
+        { name: "PBKDF2", hash: "SHA-256", salt: KAT_SALT, iterations: KAT_ITERATIONS },
         keyMaterial,
         32 * 8
       );
-      expect(Buffer.from(bits).toString("hex")).toBe(
-        "59a9d543010c4762aac49a99f88ebb60af42c55eb3a773ef6e5b98312a567b96"
-      );
+      expect(Buffer.from(bits).toString("hex")).toBe(KAT_EXPECTED_HEX);
     } finally {
       RN.Platform.OS = originalOS;
+      nativeSpy.mockRestore();
     }
   });
 
