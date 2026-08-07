@@ -39,6 +39,99 @@ function fakeSecureStore(
   };
 }
 
+describe("secureBackupRecoveryKey", () => {
+  test("generation returns a non-empty key", async () => {
+    const secure = fakeSecureStore();
+    const recoveryKey = Storage.secureBackupRecoveryKey(secure);
+
+    const generated = await recoveryKey.create();
+
+    expect(generated).not.toBe("");
+    expect(await recoveryKey.read()).toBe(generated);
+  });
+
+  test("independently generated keys differ", async () => {
+    const first = Storage.secureBackupRecoveryKey(fakeSecureStore());
+    const second = Storage.secureBackupRecoveryKey(fakeSecureStore());
+
+    const firstKey = await first.create();
+    const secondKey = await second.create();
+
+    expect(firstKey).not.toBe(secondKey);
+  });
+
+  test("generated key is persisted in SecureStore", async () => {
+    const secure = fakeSecureStore();
+    const recoveryKey = Storage.secureBackupRecoveryKey(
+        secure,
+        async () => new Uint8Array(32).fill(7)
+    );
+
+    const generated = await recoveryKey.create();
+
+    expect(
+        await secure.getItemAsync(Storage.secureBackupRecoveryKeySecureKey)
+    ).toBe(generated);
+  });
+
+  test("read returns the persisted key", async () => {
+    const secure = fakeSecureStore({
+      [Storage.secureBackupRecoveryKeySecureKey]: "persisted-key",
+    });
+    const recoveryKey = Storage.secureBackupRecoveryKey(secure);
+
+    await expect(recoveryKey.read()).resolves.toBe("persisted-key");
+  });
+
+  test("read returns null when absent", async () => {
+    const recoveryKey = Storage.secureBackupRecoveryKey(fakeSecureStore());
+
+    await expect(recoveryKey.read()).resolves.toBeNull();
+  });
+
+  test("delete removes the key", async () => {
+    const secure = fakeSecureStore({
+      [Storage.secureBackupRecoveryKeySecureKey]: "persisted-key",
+    });
+    const recoveryKey = Storage.secureBackupRecoveryKey(secure);
+
+    await recoveryKey.delete();
+
+    await expect(recoveryKey.read()).resolves.toBeNull();
+  });
+
+  test("AsyncStorage never receives the recovery key", async () => {
+    const async = fakeAsyncStorage();
+    const secure = fakeSecureStore();
+    const recoveryKey = Storage.secureBackupRecoveryKey(
+        secure,
+        async () => new Uint8Array(32).fill(9)
+    );
+
+    const generated = await recoveryKey.create();
+
+    expect(await async.getAllKeys()).toEqual([]);
+    expect(await async.getItem(Storage.secureBackupRecoveryKeySecureKey)).toBe(
+        null
+    );
+    expect(await recoveryKey.read()).toBe(generated);
+  });
+
+  test("RNG failure does not persist anything", async () => {
+    const secure = fakeSecureStore();
+    const recoveryKey = Storage.secureBackupRecoveryKey(secure, async () => {
+      throw new Error("native RNG unavailable");
+    });
+
+    await expect(recoveryKey.create()).rejects.toThrow(
+        "native RNG unavailable"
+    );
+    await expect(recoveryKey.read()).resolves.toBeNull();
+  });
+});
+
+
+
 test("read: fresh install has no pincode in either store", async () => {
   const async = fakeAsyncStorage();
   const secure = fakeSecureStore();
