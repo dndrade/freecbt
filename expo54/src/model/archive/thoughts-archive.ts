@@ -107,9 +107,9 @@ export function createParsers(data: Distortion.Data) {
 }
 
 export type DecodeFileResult =
-  | { kind: "invalid"; reason: string }
-  | { kind: "legacy"; archive: Archive }
-  | { kind: "encrypted"; decrypt: (passphrase: string) => Promise<Archive> };
+    | { kind: "invalid"; reason: string }
+    | { kind: "legacy"; archive: Archive }
+    | { kind: "encrypted"; decrypt: (recoveryKey: string) => Promise<Archive> };
 
 /**
  * Unwraps the outer :FreeCBT: envelope with hard size limits BEFORE
@@ -172,10 +172,10 @@ function buildDecodeFile(fromJson: ArchiveFromJson) {
       const header: EncryptedHeaderV3 = headerValidation.header;
       return {
         kind: "encrypted",
-        decrypt: async (passphrase: string): Promise<Archive> => {
+        decrypt: async (recoveryKey: string): Promise<Archive> => {
           let plaintext: string;
           try {
-            plaintext = await decryptHeader(passphrase, header);
+            plaintext = await decryptHeader(recoveryKey, header);
           } catch {
             throw new ArchiveDecryptError();
           }
@@ -211,21 +211,21 @@ export function createEncodeEncrypted(data: Distortion.Data) {
 
 function buildEncodeEncrypted(toJson: ArchiveToJson) {
   return async function encodeEncrypted(
-    archive: Archive,
-    passphrase: string
+      archive: Archive,
+      recoveryKey: string
   ): Promise<string> {
     const legacyJson = {
       thoughts: archive.thoughts.map((t) => toJson.encode(t)),
     };
     const plaintext = JSON.stringify(legacyJson);
-    const header = await encryptJson(passphrase, plaintext);
+    const header = await encryptJson(recoveryKey, plaintext);
     // encryptJson has no size limit of its own; validateHeaderV3 does (the
     // same check decodeFile applies on import). Without this check, a large
     // archive could "export successfully" here and then be permanently
     // unrestorable, since decodeFile would reject the resulting file.
     if (!validateHeaderV3(header).ok) {
       throw new Error(
-        "archive is too large to produce a restorable encrypted backup"
+          "archive is too large to produce a restorable encrypted backup"
       );
     }
     const headerJson = JSON.stringify(header);

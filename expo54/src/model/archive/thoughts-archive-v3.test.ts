@@ -3,7 +3,34 @@ import { PARAMS, CURRENT_PARAMS_VERSION } from "./archive-crypto";
 import * as CryptoModule from "./archive-crypto";
 import { MAX_ENCODED_PAYLOAD_CHARS } from "./archive-size-limits";
 
-const A = Archive.createParsers(DistortionData);
+
+const QuickCrypto = jest.requireMock(
+    "react-native-quick-crypto"
+) as typeof import("react-native-quick-crypto");
+
+const LZ = jest.requireActual(
+    "lz-string"
+) as typeof import("lz-string");
+
+const A = Archive.createParsers(DistortionData)
+const RECOVERY_KEY = repeatedByteRecoveryKey(0xa1);
+const DIFFERENT_RECOVERY_KEY = repeatedByteRecoveryKey(0xb2);
+const MALFORMED_THOUGHT_RECOVERY_KEY = repeatedByteRecoveryKey(0xd4);
+
+function repeatedByteRecoveryKey(byte: number): string {
+  return byte.toString(16).padStart(2, "0").repeat(32);
+}
+
+function archiveWithFixtureThought(): Archive.Archive {
+  return A.fromJson.decode({
+    v: "Archive-v1",
+    thoughts: [fixtureThought],
+  });
+}
+
+function spyOnPbkdf2() {
+  return jest.spyOn(QuickCrypto, "pbkdf2");
+}
 
 const fixtureThought: Thought.Json = {
   uuid: crypto.randomUUID(),
@@ -22,11 +49,7 @@ describe("decodeFile / encodeEncrypted dispatch", () => {
     // "Archive-v2"` on output regardless of input `v`, so routing a v1 fixture
     // through it would silently turn this into another v2 test and prove
     // nothing about v1 dispatch specifically (this previously happened here).
-    const pbkdf2Spy = jest.spyOn(
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
-      require("react-native-quick-crypto"),
-      "pbkdf2"
-    );
+    const pbkdf2Spy = spyOnPbkdf2();
     const v1Json = { v: "Archive-v1", thoughts: [fixtureThought] };
     const encoded = wrapLikeArchive(JSON.stringify(v1Json));
 
@@ -48,11 +71,7 @@ describe("decodeFile / encodeEncrypted dispatch", () => {
   });
 
   test("Archive-v2 files dispatch through the current plaintext path and never invoke the KDF", async () => {
-    const pbkdf2Spy = jest.spyOn(
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
-      require("react-native-quick-crypto"),
-      "pbkdf2"
-    );
+    const pbkdf2Spy = spyOnPbkdf2();
     const v2Json = { v: "Archive-v2" as const, thoughts: [fixtureThought] };
     // produced by the real current encoder, which always stamps v2 - this is
     // the actual code path a fresh export takes, distinct from the literal
@@ -93,28 +112,22 @@ describe("decodeFile / encodeEncrypted dispatch", () => {
     expect(result.kind).toBe("legacy");
   });
 
-  test("round-trips through encodeEncrypted and decodeFile's decrypt() with the right passphrase", async () => {
+  test("round-trips through encodeEncrypted and decodeFile's decrypt() with the generated recovery key", async () => {
     // sanity check for the `pbkdf2Spy` assertions in the dispatch tests above:
     // confirms the spy actually observes a real KDF call on the one code path
     // that's supposed to trigger it, so "not called" there is corroborating
     // evidence (decodeFile never reaches this closure for a legacy result),
     // not a vacuously-passing assertion
-    const arc = A.fromJson.decode({ v: "Archive-v1", thoughts: [fixtureThought] });
-    const encoded = await A.encodeEncrypted(arc, "a correct twelve-plus code point passphrase");
+    const arc = archiveWithFixtureThought();
+    const encoded = await A.encodeEncrypted(arc, RECOVERY_KEY);
     // spy attached after encoding (which itself calls the KDF to derive the
     // encryption key) so it only observes the decode/decrypt side
-    const pbkdf2Spy = jest.spyOn(
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
-      require("react-native-quick-crypto"),
-      "pbkdf2"
-    );
+    const pbkdf2Spy = spyOnPbkdf2();
     const result = A.decodeFile(encoded);
     expect(result.kind).toBe("encrypted");
     if (result.kind === "encrypted") {
       expect(pbkdf2Spy).not.toHaveBeenCalled();
-      const restored = await result.decrypt(
-        "a correct twelve-plus code point passphrase"
-      );
+      const restored = await result.decrypt(RECOVERY_KEY);
       expect(pbkdf2Spy).toHaveBeenCalled();
       expect(restored.thoughts).toHaveLength(1);
       expect(restored.thoughts[0].automaticThought).toBe("auto");
@@ -122,23 +135,27 @@ describe("decodeFile / encodeEncrypted dispatch", () => {
     pbkdf2Spy.mockRestore();
   });
 
-  test("wrong passphrase on an encrypted file rejects via decrypt()", async () => {
-    const arc = A.fromJson.decode({ v: "Archive-v1", thoughts: [fixtureThought] });
-    const encoded = await A.encodeEncrypted(arc, "correct passphrase here");
+  test("a different recovery key on an encrypted file rejects via decrypt()", async () => {
+    const arc = archiveWithFixtureThought();
+    const encoded = await A.encodeEncrypted(arc, RECOVERY_KEY);
     const result = A.decodeFile(encoded);
     expect(result.kind).toBe("encrypted");
     if (result.kind === "encrypted") {
-      await expect(result.decrypt("wrong passphrase here")).rejects.toThrow();
+      await expect(
+          result.decrypt(DIFFERENT_RECOVERY_KEY)
+      ).rejects.toThrow();
     }
   });
 
   test("an object matching neither legacy nor v3 shape is rejected as invalid, not treated as legacy", () => {
-    const outer = wrapLikeArchive(JSON.stringify({ v: "Archive-v9000", nonsense: true }));
+    const outer = wrapLikeArchive(
+        JSON.stringify({ v: "Archive-v9000", nonsense: true })
+    );
     const result = A.decodeFile(outer);
     expect(result.kind).toBe("invalid");
   });
 
-  test("an unsupported paramsVersion is rejected as invalid before any passphrase is needed", () => {
+  test("an unsupported paramsVersion is rejected as invalid before the recovery key is needed", () => {
     const badHeader = {
       v: "Archive-v3",
       kdf: "PBKDF2-SHA256",
@@ -155,7 +172,10 @@ describe("decodeFile / encodeEncrypted dispatch", () => {
 
   test("a malformed embedded thought aborts the whole restore (transactional)", async () => {
     const goodThought = fixtureThought;
-    const badThoughtJson = { ...fixtureThought, cognitiveDistortions: ["nonsense-slug"] };
+    const badThoughtJson = {
+      ...fixtureThought,
+      cognitiveDistortions: ["nonsense-slug"],
+    };
     // build v3 plaintext directly containing one bad embedded thought, using
     // the same shape `encodeEncrypted` actually produces (no `v` field) so
     // `LegacyJson.safeParse` accepts the outer shape and execution reaches
@@ -165,20 +185,20 @@ describe("decodeFile / encodeEncrypted dispatch", () => {
       thoughts: [goodThought, badThoughtJson],
     });
     const header = await CryptoModule.encryptJson(
-      "some passphrase 123456",
-      plaintextWithBadThought
+        MALFORMED_THOUGHT_RECOVERY_KEY,
+        plaintextWithBadThought
     );
     const outer = wrapLikeArchive(JSON.stringify(header));
     const result = A.decodeFile(outer);
     expect(result.kind).toBe("encrypted");
     if (result.kind === "encrypted") {
-      await expect(result.decrypt("some passphrase 123456")).rejects.toThrow();
+      await expect(
+          result.decrypt(MALFORMED_THOUGHT_RECOVERY_KEY)
+      ).rejects.toThrow();
     }
   });
 
   test("oversized encoded payload is rejected before decompression", () => {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const LZ = require("lz-string");
     const decompressSpy = jest.spyOn(LZ, "decompressFromBase64");
     // the encoded (post-compression, pre-decompression) payload itself must
     // exceed MAX_ENCODED_PAYLOAD_CHARS - highly compressible filler (e.g. a
@@ -198,7 +218,5 @@ describe("decodeFile / encodeEncrypted dispatch", () => {
 });
 
 function wrapLikeArchive(innerJson: string): string {
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const LZ = require("lz-string");
   return `:FreeCBT:${LZ.compressToBase64(innerJson)}:FreeCBT:`;
 }

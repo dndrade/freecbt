@@ -8,13 +8,38 @@ import {
   PARAMS,
   validateHeaderV3,
 } from "./archive-crypto";
-import { encodeBase64 } from "./archive-codec";
+import {
+  decodeBase64Strict,
+  encodeBase64,
+  utf8Encode,
+} from "./archive-codec";
 
-const KAT_PASSPHRASE = "correct horse battery staple";
+const KAT_RECOVERY_KEY =
+    "7f4a2c1e9b8d6f3051728493a5b6c7d8e9f00112233445566778899aabbccdde";
 const KAT_SALT = new Uint8Array(32).fill(7);
 const KAT_ITERATIONS = 600_000;
 const KAT_EXPECTED_HEX =
-  "59a9d543010c4762aac49a99f88ebb60af42c55eb3a773ef6e5b98312a567b96";
+    "4925e7c97340a7616f16193abe07e31b80a755d6db84f6dc3e982e348af1b3e8";
+
+
+const RECOVERY_KEY = repeatedByteRecoveryKey(0x55);
+const DIFFERENT_RECOVERY_KEY = repeatedByteRecoveryKey(0x77);
+const SECRET_RECOVERY_KEY = repeatedByteRecoveryKey(0x66);
+
+function repeatedByteRecoveryKey(byte: number): string {
+  return byte.toString(16).padStart(2, "0").repeat(32);
+}
+
+function tamperBase64Byte(value: string, byteIndex = 0): string {
+  const bytes = decodeBase64Strict(value);
+
+  if (bytes === null || byteIndex >= bytes.length) {
+    throw new Error("test fixture is not valid Base64");
+  }
+
+  bytes[byteIndex] ^= 0xff;
+  return encodeBase64(bytes);
+}
 
 function validHeader(overrides: Partial<EncryptedHeaderV3> = {}): unknown {
   return {
@@ -97,24 +122,24 @@ describe("validateHeaderV3", () => {
   });
   test("rejects iterations that don't match the fixed value for paramsVersion", () => {
     expect(
-      validateHeaderV3(
-        validHeader({ iterations: PARAMS[CURRENT_PARAMS_VERSION].iterations + 1 })
-      )
+        validateHeaderV3(
+            validHeader({ iterations: PARAMS[CURRENT_PARAMS_VERSION].iterations + 1 })
+        )
     ).toEqual({ ok: false, reason: expect.any(String) });
   });
   test("rejects a salt shorter than 16 bytes", () => {
     expect(
-      validateHeaderV3(validHeader({ salt: encodeBase64(new Uint8Array(15)) }))
+        validateHeaderV3(validHeader({ salt: encodeBase64(new Uint8Array(15)) }))
     ).toEqual({ ok: false, reason: expect.any(String) });
   });
   test("rejects a nonce that isn't exactly 12 bytes", () => {
     expect(
-      validateHeaderV3(validHeader({ nonce: encodeBase64(new Uint8Array(11)) }))
+        validateHeaderV3(validHeader({ nonce: encodeBase64(new Uint8Array(11)) }))
     ).toEqual({ ok: false, reason: expect.any(String) });
   });
   test("rejects ciphertext shorter than the 16-byte tag", () => {
     expect(
-      validateHeaderV3(validHeader({ ciphertext: encodeBase64(new Uint8Array(10)) }))
+        validateHeaderV3(validHeader({ ciphertext: encodeBase64(new Uint8Array(10)) }))
     ).toEqual({ ok: false, reason: expect.any(String) });
   });
   test("rejects non-canonical base64 in salt/nonce/ciphertext", () => {
@@ -135,17 +160,17 @@ describe("encryptJson / decryptHeader", () => {
   const plaintext = JSON.stringify({ thoughts: [{ hello: "world" }] });
 
   test("round-trips", async () => {
-    const header = await encryptJson("correct horse battery staple", plaintext);
+    const header = await encryptJson(RECOVERY_KEY, plaintext);
     const decrypted = await decryptHeader(
-      "correct horse battery staple",
-      header
+        RECOVERY_KEY,
+        header
     );
     expect(decrypted).toBe(plaintext);
   });
 
   test("produces a fresh salt and nonce on every call (uniqueness)", async () => {
     const headers = await Promise.all(
-      Array.from({ length: 20 }, () => encryptJson("same passphrase", plaintext))
+        Array.from({ length: 20 }, () => encryptJson(RECOVERY_KEY, plaintext))
     );
     const salts = new Set(headers.map((h) => h.salt));
     const nonces = new Set(headers.map((h) => h.nonce));
@@ -153,34 +178,30 @@ describe("encryptJson / decryptHeader", () => {
     expect(nonces.size).toBe(20);
   });
 
-  test("wrong passphrase fails with the generic decrypt error", async () => {
-    const header = await encryptJson("passphrase A", plaintext);
-    await expect(decryptHeader("passphrase B", header)).rejects.toThrow(
-      ArchiveDecryptError
+  test("wrong recovery key fails with the generic decrypt error", async () => {
+    const header = await encryptJson(RECOVERY_KEY, plaintext);
+    await expect(decryptHeader(DIFFERENT_RECOVERY_KEY, header)).rejects.toThrow(
+        ArchiveDecryptError
     );
   });
 
   test("single-byte ciphertext tampering fails decryption", async () => {
-    const header = await encryptJson("passphrase", plaintext);
-    const bytes = require("./archive-codec").decodeBase64Strict(
-      header.ciphertext
-    ) as Uint8Array;
-    bytes[0] ^= 0xff;
+    const header = await encryptJson(RECOVERY_KEY, plaintext);
     const tampered = {
       ...header,
-      ciphertext: require("./archive-codec").encodeBase64(bytes),
+      ciphertext: tamperBase64Byte(header.ciphertext),
     };
-    await expect(decryptHeader("passphrase", tampered)).rejects.toThrow(
-      ArchiveDecryptError
+    await expect(decryptHeader(RECOVERY_KEY, tampered)).rejects.toThrow(
+        ArchiveDecryptError
     );
   });
 
   test("tampering with an AAD-covered header field fails decryption", async () => {
-    const header = await encryptJson("passphrase", plaintext);
+    const header = await encryptJson(RECOVERY_KEY, plaintext);
 
     const tamperedIterations = { ...header, iterations: header.iterations + 1 };
     await expect(
-      decryptHeader("passphrase", tamperedIterations)
+        decryptHeader(RECOVERY_KEY, tamperedIterations)
     ).rejects.toThrow(ArchiveDecryptError);
 
     // paramsVersion 2 doesn't exist in PARAMS, so this is rejected by the
@@ -191,21 +212,17 @@ describe("encryptJson / decryptHeader", () => {
       paramsVersion: header.paramsVersion + 1,
     };
     await expect(
-      decryptHeader("passphrase", tamperedParamsVersion)
+        decryptHeader(RECOVERY_KEY, tamperedParamsVersion)
     ).rejects.toThrow(ArchiveDecryptError);
 
     // salt is AAD-covered and canonical/length-valid either way here — a
     // same-length flip keeps it structurally valid so it reaches GCM
-    const saltBytes = require("./archive-codec").decodeBase64Strict(
-      header.salt
-    ) as Uint8Array;
-    saltBytes[0] ^= 0xff;
     const tamperedSalt = {
       ...header,
-      salt: require("./archive-codec").encodeBase64(saltBytes),
+      salt: tamperBase64Byte(header.salt),
     };
-    await expect(decryptHeader("passphrase", tamperedSalt)).rejects.toThrow(
-      ArchiveDecryptError
+    await expect(decryptHeader(RECOVERY_KEY, tamperedSalt)).rejects.toThrow(
+        ArchiveDecryptError
     );
   });
 
@@ -218,61 +235,64 @@ describe("encryptJson / decryptHeader", () => {
     // iterations/paramsVersion untouched, so a passing test here can only
     // be explained by AAD actually being checked, not by any other
     // validation path in decryptHeader.
-    const tamperCases: Array<[field: "v" | "kdf", tamperedValue: string]> = [
+    const tamperCases: [field: "v" | "kdf", tamperedValue: string][] = [
       ["v", "Archive-v4"],
       ["kdf", "PBKDF2-SHA512"],
     ];
 
     test.each(tamperCases)(
-      "rejects when header.%s is tampered to %s, with every other field intact",
-      async (field, tamperedValue) => {
-        const header = await encryptJson("passphrase", plaintext);
-        const tampered = {
-          ...header,
-          [field]: tamperedValue,
-        } as EncryptedHeaderV3;
-        await expect(decryptHeader("passphrase", tampered)).rejects.toThrow(
-          ArchiveDecryptError
-        );
-      }
+        "rejects when header.%s is tampered to %s, with every other field intact",
+        async (field, tamperedValue) => {
+          const header = await encryptJson(RECOVERY_KEY, plaintext);
+          const tampered = {
+            ...header,
+            [field]: tamperedValue,
+          } as EncryptedHeaderV3;
+          await expect(decryptHeader(RECOVERY_KEY, tampered)).rejects.toThrow(
+              ArchiveDecryptError
+          );
+        }
     );
   });
 
   test("truncated ciphertext (missing tag bytes) fails decryption", async () => {
-    const header = await encryptJson("passphrase", plaintext);
-    const bytes = require("./archive-codec").decodeBase64Strict(
-      header.ciphertext
-    ) as Uint8Array;
+    const header = await encryptJson(RECOVERY_KEY, plaintext);
+    const bytes = decodeBase64Strict(header.ciphertext);
+
+    if (bytes === null) {
+      throw new Error("test fixture is not valid Base64");
+    }
+
     const truncated = bytes.slice(0, bytes.length - 4);
     const tampered = {
       ...header,
-      ciphertext: require("./archive-codec").encodeBase64(truncated),
+      ciphertext: encodeBase64(truncated),
     };
-    await expect(decryptHeader("passphrase", tampered)).rejects.toThrow(
-      ArchiveDecryptError
+    await expect(decryptHeader(RECOVERY_KEY, tampered)).rejects.toThrow(
+        ArchiveDecryptError
     );
   });
 
-  test("does not leak plaintext or passphrase into thrown error messages", async () => {
-    const header = await encryptJson("super secret passphrase", plaintext);
+  test("does not leak plaintext or recovery key into thrown error messages", async () => {
+    const header = await encryptJson(SECRET_RECOVERY_KEY, plaintext);
     let caught: Error | undefined;
     try {
-      await decryptHeader("wrong passphrase", header);
+      await decryptHeader(DIFFERENT_RECOVERY_KEY, header);
     } catch (e) {
       caught = e as Error;
     }
     expect(caught).toBeInstanceOf(ArchiveDecryptError);
     const message = caught!.message;
-    expect(message).not.toContain("super secret passphrase");
-    expect(message).not.toContain("wrong passphrase");
+    expect(message).not.toContain(SECRET_RECOVERY_KEY);
+    expect(message).not.toContain(DIFFERENT_RECOVERY_KEY);
     expect(message).not.toContain("hello");
   });
 
   test("ArchiveDecryptError instances satisfy instanceof after being thrown and caught", async () => {
-    const header = await encryptJson("passphrase", plaintext);
+    const header = await encryptJson(RECOVERY_KEY, plaintext);
     let caught: unknown;
     try {
-      await decryptHeader("wrong passphrase", header);
+      await decryptHeader(DIFFERENT_RECOVERY_KEY, header);
     } catch (e) {
       caught = e;
     }
@@ -285,31 +305,29 @@ describe("encryptJson / decryptHeader", () => {
     const quickCryptoModule = require("react-native-quick-crypto");
     const spy = jest.spyOn(quickCryptoModule, "pbkdf2");
 
-    const header = await encryptJson("passphrase", plaintext);
+    const header = await encryptJson(RECOVERY_KEY, plaintext);
     spy.mockClear(); // encryptJson also derives a key; isolate the calls under test below
 
     // Positive control: proves the spy is actually observing archive-crypto.ts's
     // real production import of pbkdf2, not a disconnected mock — a header
     // with matching iterations must invoke the real KDF exactly once.
-    await decryptHeader("passphrase", header);
+    await decryptHeader(RECOVERY_KEY, header);
     expect(spy).toHaveBeenCalledTimes(1);
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const { decodeBase64Strict } = require("./archive-codec");
     expect(spy).toHaveBeenCalledWith(
-      expect.any(Uint8Array),
-      decodeBase64Strict(header.salt),
-      header.iterations,
-      32,
-      "sha256",
-      expect.any(Function)
+        expect.any(Uint8Array),
+        decodeBase64Strict(header.salt),
+        header.iterations,
+        32,
+        "sha256",
+        expect.any(Function)
     );
     spy.mockClear();
 
     // Negative case under test: mismatched iterations must reject before any
     // KDF call at all.
     const tampered = { ...header, iterations: header.iterations + 1 };
-    await expect(decryptHeader("passphrase", tampered)).rejects.toThrow(
-      ArchiveDecryptError
+    await expect(decryptHeader(RECOVERY_KEY, tampered)).rejects.toThrow(
+        ArchiveDecryptError
     );
     expect(spy).not.toHaveBeenCalled();
 
@@ -317,9 +335,6 @@ describe("encryptJson / decryptHeader", () => {
   });
 
   test("derives the expected key via the mocked react-native-quick-crypto adapter (Node crypto.pbkdf2)", async () => {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const { utf8Encode } = require("./archive-codec");
-
     // Direct byte-for-byte comparison against the production path's salt,
     // using the mocked native pbkdf2 (Node's crypto.pbkdf2) with the same
     // fixed salt/iterations as the KAT vector above.
@@ -327,18 +342,18 @@ describe("encryptJson / decryptHeader", () => {
     const { pbkdf2: mockedNativePbkdf2 } = require("react-native-quick-crypto");
     const nativeKey: Buffer = await new Promise((resolve, reject) => {
       mockedNativePbkdf2(
-        utf8Encode(KAT_PASSPHRASE),
-        KAT_SALT,
-        KAT_ITERATIONS,
-        32,
-        "sha256",
-        (err: Error | null, key?: Buffer) => {
-          if (err || !key) {
-            reject(err ?? new Error("pbkdf2 failed"));
-            return;
+          utf8Encode(KAT_RECOVERY_KEY),
+          KAT_SALT,
+          KAT_ITERATIONS,
+          32,
+          "sha256",
+          (err: Error | null, key?: Buffer) => {
+            if (err || !key) {
+              reject(err ?? new Error("pbkdf2 failed"));
+              return;
+            }
+            resolve(key);
           }
-          resolve(key);
-        }
       );
     });
     expect(nativeKey.toString("hex")).toBe(KAT_EXPECTED_HEX);
@@ -353,24 +368,28 @@ describe("encryptJson / decryptHeader", () => {
     const nativeSpy = jest.spyOn(require("react-native-quick-crypto"), "pbkdf2");
 
     try {
-      const header = await encryptJson(KAT_PASSPHRASE, plaintext);
-      const decrypted = await decryptHeader(KAT_PASSPHRASE, header);
+      const header = await encryptJson(KAT_RECOVERY_KEY, plaintext);
+      const decrypted = await decryptHeader(KAT_RECOVERY_KEY, header);
       expect(decrypted).toBe(plaintext);
       expect(nativeSpy).not.toHaveBeenCalled();
 
       // Direct KAT check of the web branch's own primitive, matching the
       // same known-answer vector used for the native branch above.
+      const encodedRecoveryKey = utf8Encode(KAT_RECOVERY_KEY);
+      const recoveryKeyBytes = new Uint8Array(encodedRecoveryKey.byteLength);
+      recoveryKeyBytes.set(encodedRecoveryKey);
+
       const keyMaterial = await crypto.subtle.importKey(
-        "raw",
-        require("./archive-codec").utf8Encode(KAT_PASSPHRASE),
-        "PBKDF2",
-        false,
-        ["deriveBits"]
+          "raw",
+          recoveryKeyBytes,
+          "PBKDF2",
+          false,
+          ["deriveBits"]
       );
       const bits = await crypto.subtle.deriveBits(
-        { name: "PBKDF2", hash: "SHA-256", salt: KAT_SALT, iterations: KAT_ITERATIONS },
-        keyMaterial,
-        32 * 8
+          { name: "PBKDF2", hash: "SHA-256", salt: KAT_SALT, iterations: KAT_ITERATIONS },
+          keyMaterial,
+          32 * 8
       );
       expect(Buffer.from(bits).toString("hex")).toBe(KAT_EXPECTED_HEX);
     } finally {
@@ -393,7 +412,7 @@ describe("encryptJson / decryptHeader", () => {
 
     try {
       await expect(
-          encryptJson("passphrase", plaintext)
+          encryptJson(RECOVERY_KEY, plaintext)
       ).rejects.toThrow();
     } finally {
       cryptoSpy.mockRestore();
@@ -402,7 +421,7 @@ describe("encryptJson / decryptHeader", () => {
   });
 
   test("encryptJson's own output passes validateHeaderV3", async () => {
-    const header = await encryptJson("passphrase", plaintext);
+    const header = await encryptJson(RECOVERY_KEY, plaintext);
     expect(validateHeaderV3(header)).toEqual({
       ok: true,
       header: expect.objectContaining({ v: "Archive-v3" }),
@@ -411,8 +430,8 @@ describe("encryptJson / decryptHeader", () => {
 });
 
 describe("deterministic known-answer fixture", () => {
-  // Generated by a standalone Node `crypto` script (Task 6), deliberately
-  // NOT via this codebase's own encryptJson — fixed passphrase, plaintext,
+  // Generated by a standalone Node `crypto` script, deliberately
+  // NOT via this codebase's own encryptJson — fixed generated recovery key, plaintext,
   // salt, nonce, and KDF params, frozen forever as a regression pin. See
   // AES-256-GCM (NIST SP 800-38D) and PBKDF2-HMAC-SHA256 (RFC 8018); Node's
   // `crypto.createCipheriv('aes-256-gcm', ...)` appends the auth tag the
@@ -425,11 +444,11 @@ describe("deterministic known-answer fixture", () => {
   //
   //   node -e "
   //   const crypto = require('crypto');
-  //   const passphrase = 'known-answer fixture passphrase 456';
+  //   const recoveryKey = '9a8b7c6d5e4f30211223344556677889900aabbccddeeff00112233445566778';
   //   const salt = Buffer.from('aabbccddeeff00112233445566778899', 'hex');
   //   const nonce = Buffer.from('000102030405060708090a0b', 'hex');
   //   const iterations = 600000;
-  //   const key = crypto.pbkdf2Sync(passphrase, salt, iterations, 32, 'sha256');
+  //   const key = crypto.pbkdf2Sync(recoveryKey, salt, iterations, 32, 'sha256');
   //   const aad = Buffer.from('Archive-v3\x1FPBKDF2-SHA256\x1F1\x1F600000\x1F' + salt.toString('base64') + '\x1F' + nonce.toString('base64'), 'utf8');
   //   const plaintext = Buffer.from(JSON.stringify({ thoughts: [{ hello: 'known-answer' }] }), 'utf8');
   //   const cipher = crypto.createCipheriv('aes-256-gcm', key, nonce);
@@ -438,7 +457,8 @@ describe("deterministic known-answer fixture", () => {
   //   const ciphertext = Buffer.concat([enc, cipher.getAuthTag()]);
   //   console.log(JSON.stringify({ salt: salt.toString('base64'), nonce: nonce.toString('base64'), ciphertext: ciphertext.toString('base64') }));
   //   "
-  const knownAnswerPassphrase = "known-answer fixture passphrase 456";
+  const knownAnswerRecoveryKey =
+      "9a8b7c6d5e4f30211223344556677889900aabbccddeeff00112233445566778";
   const knownAnswerPlaintext = JSON.stringify({
     thoughts: [{ hello: "known-answer" }],
   });
@@ -450,7 +470,7 @@ describe("deterministic known-answer fixture", () => {
     salt: "qrvM3e7/ABEiM0RVZneImQ==",
     nonce: "AAECAwQFBgcICQoL",
     ciphertext:
-      "4FBV736iro3rX+S/QavMQ4dg0JDUiPCwAlEvFqDjkU+nzsWtI40ABwOZ0qbNyGM7gUTodPneQQ==",
+        "fme2k9PfVr1oKajKZOv1ro1aeGOu26VgVZ1SQKZ3dRAFimTXYW6/Yl/xhXeAGlpZMWikTQOF3Q==",
   };
 
   test("the frozen fixture header passes validateHeaderV3", () => {
@@ -462,8 +482,8 @@ describe("deterministic known-answer fixture", () => {
 
   test("this codebase's decryptHeader returns the exact known plaintext", async () => {
     const decrypted = await decryptHeader(
-      knownAnswerPassphrase,
-      knownAnswerHeader
+        knownAnswerRecoveryKey,
+        knownAnswerHeader
     );
     expect(decrypted).toBe(knownAnswerPlaintext);
   });
@@ -474,12 +494,15 @@ describe("deterministic known-answer fixture", () => {
       nonce: encodeBase64(new Uint8Array(12).fill(0)),
     };
     await expect(
-      decryptHeader(knownAnswerPassphrase, tampered)
+        decryptHeader(knownAnswerRecoveryKey, tampered)
     ).rejects.toThrow(ArchiveDecryptError);
   });
 });
 
 describe("independent interoperability fixture", () => {
+  const independentFixtureRecoveryKey =
+      "696e646570656e64656e742066697874757265207061737370687261736520313233";
+
   // Generated by an independent Node `crypto` script (Task 6, Step 1),
   // NOT by this codebase's own encryptJson — a shared implementation bug
   // in both encode and decode here can't hide behind a self-consistent
@@ -493,41 +516,15 @@ describe("independent interoperability fixture", () => {
     iterations: 600000,
     salt: "AQIDBAUGBwgJCgsMDQ4PEA==",
     nonce: "EBESExQVFhcYGRob",
-    ciphertext: "O2E5Mejqeutn3i+YrjTwOWTPX6YIeIgJVT6NVSwTng==",
+    ciphertext: "yBXk2lvolcvvkP1Cr553xA6b3FXXCqZ5gMPJf2K7Ug==",
   };
 
   test("this codebase's decryptHeader accepts the independently-generated fixture", async () => {
     const decrypted = await decryptHeader(
-      "independent fixture passphrase 123",
-      independentFixture
+        independentFixtureRecoveryKey,
+        independentFixture
     );
     expect(JSON.parse(decrypted)).toEqual({ thoughts: [] });
   });
 });
 
-describe("passphrase Unicode behavior", () => {
-  const plaintext = JSON.stringify({ thoughts: [] });
-
-  test("NFC and NFD forms of the same visible passphrase are treated as different secrets", async () => {
-    // "café" with a precomposed é (U+00E9) vs. combining acute accent (U+0301)
-    const nfc = "café-testing-1234".normalize("NFC");
-    const nfd = "café-testing-1234".normalize("NFD");
-    expect(nfc).not.toBe(nfd); // sanity: they really are different code-point sequences
-    const header = await encryptJson(nfc, plaintext);
-    await expect(decryptHeader(nfd, header)).rejects.toThrow();
-    await expect(decryptHeader(nfc, header)).resolves.toBe(plaintext);
-  });
-
-  test("leading/trailing whitespace is significant, not trimmed", async () => {
-    const header = await encryptJson("  padded passphrase  ", plaintext);
-    await expect(decryptHeader("padded passphrase", header)).rejects.toThrow();
-    await expect(
-      decryptHeader("  padded passphrase  ", header)
-    ).resolves.toBe(plaintext);
-  });
-
-  test("case is significant, not folded", async () => {
-    const header = await encryptJson("CaseSensitive123!", plaintext);
-    await expect(decryptHeader("casesensitive123!", header)).rejects.toThrow();
-  });
-});

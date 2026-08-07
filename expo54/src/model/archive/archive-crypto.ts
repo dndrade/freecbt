@@ -325,13 +325,13 @@ export class ArchiveDecryptError extends Error {
  * (iOS/Android). Never used on web — see `pbkdf2Web`.
  */
 function pbkdf2Native(
-    passphraseBytes: Uint8Array,
+    recoveryKeyBytes: Uint8Array,
     salt: Uint8Array,
     iterations: number
 ): Promise<Uint8Array> {
   return new Promise((resolve, reject) => {
     nativePbkdf2(
-        passphraseBytes,
+        recoveryKeyBytes,
         salt,
         iterations,
         KEY_BYTES,
@@ -354,13 +354,13 @@ function pbkdf2Native(
  * needs its own path.
  */
 async function pbkdf2Web(
-    passphraseBytes: Uint8Array,
+    recoveryKeyBytes: Uint8Array,
     salt: Uint8Array,
     iterations: number
 ): Promise<Uint8Array> {
   const keyMaterial = await crypto.subtle.importKey(
       "raw",
-      passphraseBytes as BufferSource,
+      recoveryKeyBytes as BufferSource,
       "PBKDF2",
       false,
       ["deriveBits"]
@@ -376,17 +376,17 @@ async function pbkdf2Web(
 }
 
 /**
- * Derives a 256-bit AES key from a user-supplied passphrase using
+ * Derives a 256-bit AES key from a generated recovery key using
  * PBKDF2-HMAC-SHA256.
  *
- * The passphrase is converted to a temporary UTF-8 byte buffer. That buffer
+ * The recovery key is converted to a temporary UTF-8 byte buffer. That buffer
  * is wiped in `finally`, regardless of whether derivation succeeds or fails.
  *
- * The passphrase, derived key, salt contents, and other secret material must
+ * The recovery key, derived key, salt contents, and other secret material must
  * never be included in performance metadata or logs.
  *
  * @param operation Distinguishes encryption and decryption measurements.
- * @param passphrase User-supplied passphrase. Never persisted or logged.
+ * @param recoveryKey Generated recovery key. Never logged.
  * @param salt Random archive salt or the validated salt read from a header.
  * @param iterations Code-defined iteration count selected through
  * `paramsVersion`.
@@ -394,19 +394,19 @@ async function pbkdf2Web(
  */
 async function deriveKey(
     operation: "encrypt" | "decrypt",
-    passphrase: string,
+    recoveryKey: string,
     salt: Uint8Array,
     iterations: number
 ): Promise<Uint8Array> {
-  const passphraseBytes = utf8Encode(passphrase);
+  const recoveryKeyBytes = utf8Encode(recoveryKey);
 
   try {
     const measurement = await measureDevelopmentAsync(
         `archive.pbkdf2.${operation}`,
         () =>
             Platform.OS === "web"
-                ? pbkdf2Web(passphraseBytes, salt, iterations)
-                : pbkdf2Native(passphraseBytes, salt, iterations),
+                ? pbkdf2Web(recoveryKeyBytes, salt, iterations)
+                : pbkdf2Native(recoveryKeyBytes, salt, iterations),
         {
           algorithm: "PBKDF2-HMAC-SHA256",
           iterations,
@@ -417,7 +417,7 @@ async function deriveKey(
 
     return measurement.value;
   } finally {
-    passphraseBytes.fill(0);
+    recoveryKeyBytes.fill(0);
   }
 }
 
@@ -425,17 +425,17 @@ async function deriveKey(
  * Encrypts a serialized archive JSON document into an Archive-v3 header.
  *
  * A fresh random salt and nonce are generated for every encryption. The
- * passphrase-derived key encrypts the UTF-8 JSON bytes using AES-256-GCM,
+ * recovery-key-derived key encrypts the UTF-8 JSON bytes using AES-256-GCM,
  * while the version and KDF metadata are authenticated as AAD.
  *
  * Temporary key and plaintext buffers are wiped before returning.
  *
- * @param passphrase User-supplied passphrase. Never persisted or logged.
+ * @param recoveryKey Generated recovery key. Never logged.
  * @param plaintextJson Serialized archive JSON.
  * @returns A complete Archive-v3 encrypted header.
  */
 export async function encryptJson(
-    passphrase: string,
+    recoveryKey: string,
     plaintextJson: string
 ): Promise<EncryptedHeaderV3> {
   const paramsVersion = CURRENT_PARAMS_VERSION;
@@ -465,7 +465,7 @@ export async function encryptJson(
 
     const nonce = nonceMeasurement.value;
 
-    key = await deriveKey("encrypt", passphrase, salt, iterations);
+    key = await deriveKey("encrypt", recoveryKey, salt, iterations);
 
     const plaintextMeasurement = measureDevelopmentSync(
         "archive.utf8.encode",
@@ -552,14 +552,14 @@ export async function encryptJson(
  *
  * Temporary key and plaintext buffers are wiped before returning or throwing.
  *
- * @param passphrase User-supplied passphrase. Never persisted or logged.
+ * @param recoveryKey Generated recovery key. Never logged.
  * @param header Validated Archive-v3 encrypted header.
  * @returns The decrypted archive JSON string.
  * @throws {ArchiveDecryptError} When validation, authentication, decryption,
  * or UTF-8 decoding fails.
  */
 export async function decryptHeader(
-    passphrase: string,
+    recoveryKey: string,
     header: EncryptedHeaderV3
 ): Promise<string> {
   const decodeMeasurement = measureDevelopmentSync(
@@ -597,7 +597,7 @@ export async function decryptHeader(
   try {
     key = await deriveKey(
         "decrypt",
-        passphrase,
+        recoveryKey,
         salt,
         params.iterations
     );
@@ -625,7 +625,7 @@ export async function decryptHeader(
             ciphertextBytes: ciphertext.length,
           },
           // A GCM auth-tag failure here is a normal outcome (wrong
-          // passphrase or tampered ciphertext) that this function already
+          // recovery key or tampered ciphertext) that this function already
           // converts to ArchiveDecryptError below — not a bug to flag loudly.
           { expectedFailure: true }
       );
