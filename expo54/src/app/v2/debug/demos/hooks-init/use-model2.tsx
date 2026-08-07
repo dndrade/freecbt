@@ -23,8 +23,8 @@ import {
   defaultLocale,
   TranslateFn,
   useTranslate,
-} from "../../../../../i18n/use-i18n";
-import { Style, useStyle } from "../../../../../hooks/use-style";
+} from "@/src/i18n/use-i18n";
+import { Style, useStyle } from "@/src/hooks/use-style";
 import {
   Action,
   Distortion,
