@@ -5,13 +5,17 @@ import { isEncryptedBackupEnabled } from "./backup-feature";
  *
  * Production always resolves to the legacy backup implementation.
  * Change this value to disable the encrypted controls during development.
+ *
+ * Set FORCE_LEGACY_BACKUP to true for an emergency rollback without
+ *  removing the encrypted backup implementation or its compatibility code.
  */
-const ENABLE_ENCRYPTED_BACKUP_IN_DEVELOPMENT = true;
+
+const ENABLE_ENCRYPTED_BACKUP = false;
+const FORCE_LEGACY_BACKUP = false;
 
 export const backupFlags = {
     encryptedBackup: isEncryptedBackupEnabled({
-        isDevelopment: __DEV__,
-        encryptedBackupInDevelopment:
-        ENABLE_ENCRYPTED_BACKUP_IN_DEVELOPMENT,
+        encryptedBackupEnabled: ENABLE_ENCRYPTED_BACKUP,
+        forceLegacyBackup: FORCE_LEGACY_BACKUP,
     }),
 } as const;

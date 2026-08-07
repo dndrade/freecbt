@@ -1,39 +1,39 @@
 import { isEncryptedBackupEnabled } from "./backup-feature";
 
 describe("isEncryptedBackupEnabled", () => {
-  test("is disabled in production when the development flag is off", () => {
-    expect(
-      isEncryptedBackupEnabled({
-        isDevelopment: false,
-        encryptedBackupInDevelopment: false,
-      })
-    ).toBe(false);
-  });
+    test("is disabled when encrypted backup is not enabled", () => {
+        expect(
+            isEncryptedBackupEnabled({
+                encryptedBackupEnabled: false,
+                forceLegacyBackup: false,
+            })
+        ).toBe(false);
+    });
 
-  test("is disabled in production even when the development flag is on", () => {
-    expect(
-      isEncryptedBackupEnabled({
-        isDevelopment: false,
-        encryptedBackupInDevelopment: true,
-      })
-    ).toBe(false);
-  });
+    test("is enabled when encrypted backup is enabled", () => {
+        expect(
+            isEncryptedBackupEnabled({
+                encryptedBackupEnabled: true,
+                forceLegacyBackup: false,
+            })
+        ).toBe(true);
+    });
 
-  test("is disabled in development when the development flag is off", () => {
-    expect(
-      isEncryptedBackupEnabled({
-        isDevelopment: true,
-        encryptedBackupInDevelopment: false,
-      })
-    ).toBe(false);
-  });
+    test("the rollback switch disables encrypted backup", () => {
+        expect(
+            isEncryptedBackupEnabled({
+                encryptedBackupEnabled: true,
+                forceLegacyBackup: true,
+            })
+        ).toBe(false);
+    });
 
-  test("is enabled only in development when explicitly enabled", () => {
-    expect(
-      isEncryptedBackupEnabled({
-        isDevelopment: true,
-        encryptedBackupInDevelopment: true,
-      })
-    ).toBe(true);
-  });
+    test("the rollback switch remains legacy when encrypted backup is already disabled", () => {
+        expect(
+            isEncryptedBackupEnabled({
+                encryptedBackupEnabled: false,
+                forceLegacyBackup: true,
+            })
+        ).toBe(false);
+    });
 });

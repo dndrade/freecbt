@@ -1,13 +1,13 @@
-export type BackupFeatureEnvironment = {
-  isDevelopment: boolean;
-  encryptedBackupInDevelopment: boolean;
+export type BackupFeatureConfiguration = {
+  encryptedBackupEnabled: boolean;
+  forceLegacyBackup: boolean;
 };
 
 export function isEncryptedBackupEnabled(
-  environment: BackupFeatureEnvironment
+    configuration: BackupFeatureConfiguration
 ): boolean {
   return (
-    environment.isDevelopment &&
-    environment.encryptedBackupInDevelopment
+      configuration.encryptedBackupEnabled &&
+      !configuration.forceLegacyBackup
   );
 }
