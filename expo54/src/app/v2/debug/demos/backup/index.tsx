@@ -5,30 +5,45 @@ import { useRouter } from "expo-router";
 import React from "react";
 
 export default function BackupDemosIndex() {
-    const router = useRouter();
+  const router = useRouter();
 
-    return (
-        <DebugScreen
-            title="Backup tools"
-            description="Choose a development-only backup verification screen."
-        >
-            <DebugSection>
-                <DebugAction
-                    label="Backup feature-flag demo"
-                    onPress={() =>
-                        router.push("/v2/debug/demos/backup/backup-feature-flag")
-                    }
-                />
+  return (
+    <DebugScreen
+      title="Backup verification"
+      description="Choose a focused development-only backup verification workflow."
+    >
+      <DebugSection title="Production workflow">
+        <DebugAction
+          label="Run recovery-key workflow"
+          onPress={() =>
+            router.push(
+              "/v2/debug/demos/backup/recovery-key-workflow"
+            )
+          }
+        />
+      </DebugSection>
 
-                <DebugAction
-                    label="Archive crypto diagnostics"
-                    onPress={() =>
-                        router.push(
-                            "/v2/debug/demos/backup/archive-crypto-diagnostics"
-                        )
-                    }
-                />
-            </DebugSection>
-        </DebugScreen>
-    );
+      <DebugSection title="Rollout">
+        <DebugAction
+          label="Select backup implementation"
+          onPress={() =>
+            router.push(
+              "/v2/debug/demos/backup/backup-implementation"
+            )
+          }
+        />
+      </DebugSection>
+
+      <DebugSection title="Cryptography">
+        <DebugAction
+          label="Run Archive-v3 diagnostics"
+          onPress={() =>
+            router.push(
+              "/v2/debug/demos/backup/archive-crypto-diagnostics"
+            )
+          }
+        />
+      </DebugSection>
+    </DebugScreen>
+  );
 }

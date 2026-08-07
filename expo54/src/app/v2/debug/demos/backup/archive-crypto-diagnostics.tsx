@@ -2,256 +2,131 @@ import { DebugAction } from "@/src/debug/ui/debug-action";
 import { DebugResult } from "@/src/debug/ui/debug-result";
 import { DebugScreen } from "@/src/debug/ui/debug-screen";
 import { DebugSection } from "@/src/debug/ui/debug-section";
-import { LoadModel } from "@/src/hooks/use-model";
 import {
-    ArchiveDecryptError,
-    decryptHeader,
-    EncryptedHeaderV3,
+  ArchiveDecryptError,
+  decryptHeader,
+  EncryptedHeaderV3,
 } from "@/src/model/archive/archive-crypto";
 import { Redirect } from "expo-router";
 import React, { useState } from "react";
 import { Platform } from "react-native";
 
-const LOG_PREFIX = "[archive-crypto-diagnostics]";
+const FIXTURE_KEY = "independent fixture passphrase 123";
+const FIXTURE_PLAINTEXT = JSON.stringify({ thoughts: [] });
 
-const INDEPENDENT_FIXTURE_PASSPHRASE =
-    "independent fixture passphrase 123";
-
-const INDEPENDENT_FIXTURE_PLAINTEXT = JSON.stringify({
-    thoughts: [],
-});
-
-const INDEPENDENT_FIXTURE: EncryptedHeaderV3 = {
-    v: "Archive-v3",
-    kdf: "PBKDF2-SHA256",
-    paramsVersion: 1,
-    iterations: 600_000,
-    salt: "AQIDBAUGBwgJCgsMDQ4PEA==",
-    nonce: "EBESExQVFhcYGRob",
-    ciphertext: "O2E5Mejqeutn3i+YrjTwOWTPX6YIeIgJVT6NVSwTng==",
+const FIXTURE: EncryptedHeaderV3 = {
+  v: "Archive-v3",
+  kdf: "PBKDF2-SHA256",
+  paramsVersion: 1,
+  iterations: 600_000,
+  salt: "AQIDBAUGBwgJCgsMDQ4PEA==",
+  nonce: "EBESExQVFhcYGRob",
+  ciphertext: "O2E5Mejqeutn3i+YrjTwOWTPX6YIeIgJVT6NVSwTng==",
 };
 
-function log(step: string, details?: Record<string, unknown>) {
-    if (details) {
-        console.log(`${LOG_PREFIX} ${step}`, details);
-        return;
-    }
-
-    console.log(`${LOG_PREFIX} ${step}`);
-}
-
-function logError(step: string, error: unknown) {
-    console.error(`${LOG_PREFIX} ${step}`, {
-        type: error instanceof Error ? error.name : typeof error,
-        message: describeError(error),
-    });
-}
-
-function yieldToUI(): Promise<void> {
-    return new Promise((resolve) => setTimeout(resolve, 0));
-}
-
 export default function ArchiveCryptoDiagnostics() {
-    if (!__DEV__) {
-        return <Redirect href="/v2" />;
-    }
+  if (!__DEV__) {
+    return <Redirect href="/v2" />;
+  }
 
-    return <LoadModel ready={Ready} />;
+  return <Ready />;
 }
 
 function Ready() {
-    const [result, setResult] = useState("No diagnostic run yet.");
-    const [running, setRunning] = useState(false);
+  const [result, setResult] = useState("No diagnostic run yet.");
+  const [running, setRunning] = useState(false);
+  const isNative =
+    Platform.OS === "android" || Platform.OS === "ios";
 
-    const isNative = Platform.OS === "android" || Platform.OS === "ios";
+  async function run(
+    message: string,
+    diagnostic: () => Promise<string>
+  ): Promise<void> {
+    setRunning(true);
+    setResult(message);
 
-    async function runIndependentFixtureTest() {
-        const runId = Date.now();
+    try {
+      if (!isNative) {
+        setResult(`Skipped on ${Platform.OS}. Android or iOS required.`);
+        return;
+      }
 
-        log("independent fixture test requested", {
-            runId,
-            platform: Platform.OS,
-        });
+      setResult(await diagnostic());
+    } catch (error) {
+      setResult(describeError(error));
+    } finally {
+      setRunning(false);
+    }
+  }
 
-        setRunning(true);
-        setResult("Decrypting independent Archive-v3 fixture…");
+  async function decryptFixture(): Promise<string> {
+    const started = performance.now();
+    const plaintext = await decryptHeader(FIXTURE_KEY, FIXTURE);
+    const durationMs = performance.now() - started;
 
-        await yieldToUI();
-
-        try {
-            if (!isNative) {
-                setResult(
-                    `Skipped: this diagnostic requires Android or iOS. Current platform: ${Platform.OS}.`
-                );
-                return;
-            }
-
-            const started = performance.now();
-
-            const plaintext = await decryptHeader(
-                INDEPENDENT_FIXTURE_PASSPHRASE,
-                INDEPENDENT_FIXTURE
-            );
-
-            const durationMs = performance.now() - started;
-
-            if (plaintext !== INDEPENDENT_FIXTURE_PLAINTEXT) {
-                log("independent fixture plaintext mismatch", {
-                    runId,
-                    platform: Platform.OS,
-                    durationMs: Number(durationMs.toFixed(1)),
-                    expectedCharacters: INDEPENDENT_FIXTURE_PLAINTEXT.length,
-                    actualCharacters: plaintext.length,
-                });
-
-                setResult(
-                    [
-                        "FAILED: independent fixture plaintext did not match.",
-                        `Platform: ${Platform.OS}`,
-                        `Decrypt: ${durationMs.toFixed(1)} ms`,
-                    ].join("\n")
-                );
-                return;
-            }
-
-            log("independent fixture test passed", {
-                runId,
-                platform: Platform.OS,
-                durationMs: Number(durationMs.toFixed(1)),
-                plaintextCharacters: plaintext.length,
-            });
-
-            setResult(
-                [
-                    "Independent fixture test passed.",
-                    `Platform: ${Platform.OS}`,
-                    `Decrypt: ${durationMs.toFixed(1)} ms`,
-                ].join("\n")
-            );
-        } catch (error) {
-            logError("independent fixture test failed", error);
-            setResult(describeError(error));
-        } finally {
-            log("independent fixture test finished", {
-                runId,
-                platform: Platform.OS,
-            });
-
-            setRunning(false);
-        }
+    if (plaintext !== FIXTURE_PLAINTEXT) {
+      throw new Error("Frozen fixture plaintext did not match.");
     }
 
-    async function runWrongPassphraseTest() {
-        const runId = Date.now();
+    return [
+      "Independent Archive-v3 fixture passed.",
+      `Platform: ${Platform.OS}`,
+      `Decrypt: ${durationMs.toFixed(1)} ms`,
+    ].join("\n");
+  }
 
-        log("wrong-passphrase fixture test requested", {
-            runId,
-            platform: Platform.OS,
-        });
+  async function rejectWrongKey(): Promise<string> {
+    try {
+      await decryptHeader(`${FIXTURE_KEY}-wrong`, FIXTURE);
+    } catch (error) {
+      if (error instanceof ArchiveDecryptError) {
+        return [
+          "Wrong recovery-key test passed.",
+          `Platform: ${Platform.OS}`,
+        ].join("\n");
+      }
 
-        setRunning(true);
-        setResult("Testing wrong-passphrase rejection…");
-
-        await yieldToUI();
-
-        try {
-            if (!isNative) {
-                setResult(
-                    `Skipped: this diagnostic requires Android or iOS. Current platform: ${Platform.OS}.`
-                );
-                return;
-            }
-
-            const started = performance.now();
-
-            await decryptHeader(
-                `${INDEPENDENT_FIXTURE_PASSPHRASE}-wrong`,
-                INDEPENDENT_FIXTURE
-            );
-
-            const durationMs = performance.now() - started;
-
-            log("security failure: wrong passphrase decrypted fixture", {
-                runId,
-                platform: Platform.OS,
-                durationMs: Number(durationMs.toFixed(1)),
-            });
-
-            setResult(
-                [
-                    "FAILED: wrong passphrase unexpectedly decrypted the fixture.",
-                    `Platform: ${Platform.OS}`,
-                    `Decrypt: ${durationMs.toFixed(1)} ms`,
-                ].join("\n")
-            );
-        } catch (error) {
-            if (error instanceof ArchiveDecryptError) {
-                log("wrong passphrase rejected as expected", {
-                    runId,
-                    platform: Platform.OS,
-                    errorType: error.name,
-                });
-
-                setResult(
-                    [
-                        "Wrong-passphrase test passed.",
-                        `Platform: ${Platform.OS}`,
-                    ].join("\n")
-                );
-                return;
-            }
-
-            logError("wrong-passphrase fixture test failed unexpectedly", error);
-            setResult(describeError(error));
-        } finally {
-            log("wrong-passphrase fixture test finished", {
-                runId,
-                platform: Platform.OS,
-            });
-
-            setRunning(false);
-        }
+      throw error;
     }
 
-    return (
-        <DebugScreen
-            title="Archive crypto"
-            description={`Verify Archive-v3 compatibility using a frozen external fixture. Platform: ${Platform.OS}.`}
-        >
-            <DebugSection title="Native checks">
-                <DebugAction
-                    label="Test independent fixture"
-                    disabled={running || !isNative}
-                    onPress={() => {
-                        void runIndependentFixtureTest();
-                    }}
-                />
+    throw new Error("Wrong recovery key decrypted the fixture.");
+  }
 
-                <DebugAction
-                    label="Test wrong passphrase"
-                    disabled={running || !isNative}
-                    onPress={() => {
-                        void runWrongPassphraseTest();
-                    }}
-                />
-            </DebugSection>
+  return (
+    <DebugScreen
+      title="Archive-v3 crypto"
+      description={`Verify frozen interoperability and authenticated rejection. Platform: ${Platform.OS}.`}
+    >
+      <DebugSection title="Native checks">
+        <DebugAction
+          label="Decrypt frozen Archive-v3 fixture"
+          disabled={running || !isNative}
+          onPress={() =>
+            void run("Decrypting fixture…", decryptFixture)
+          }
+        />
+        <DebugAction
+          label="Reject wrong recovery key"
+          disabled={running || !isNative}
+          onPress={() =>
+            void run("Testing wrong key…", rejectWrongKey)
+          }
+        />
+      </DebugSection>
 
-            <DebugResult
-                running={running}
-                value={result}
-            />
-        </DebugScreen>
-    );
+      <DebugResult running={running} value={result} />
+    </DebugScreen>
+  );
 }
 
 function describeError(error: unknown): string {
-    if (error instanceof ArchiveDecryptError) {
-        return "Archive decryption failed.";
-    }
+  if (error instanceof ArchiveDecryptError) {
+    return "Archive decryption failed.";
+  }
 
-    if (error instanceof Error) {
-        return `Diagnostic failed: ${error.message}`;
-    }
+  if (error instanceof Error) {
+    return `Diagnostic failed: ${error.message}`;
+  }
 
-    return "Diagnostic failed with an unknown error.";
+  return "Diagnostic failed with an unknown error.";
 }
