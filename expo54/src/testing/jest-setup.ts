@@ -20,14 +20,15 @@ if (typeof global.structuredClone === "undefined") {
   global.structuredClone = (object) => JSON.parse(JSON.stringify(object));
 }
 
-// this package is giving me syntax errors only in jest, can't figure it out, but we don't need real uuids for tests.
-// string matches zod's uuid validation.
-jest.mock("uuid", () => {
-  let i = 0;
-  return {
-    v4: () => `00000000-0000-4000-8000-${`${i++}`.padStart(12, "0")}`,
-  };
-});
+// provide a polyfill for crypto.randomUUID since it's not available in Node.js/Jest
+if (typeof globalThis.crypto === "undefined" || typeof globalThis.crypto.randomUUID !== "function") {
+  let counter = 0;
+  if (globalThis.crypto === undefined) {
+    (globalThis as any).crypto = {};
+  }
+  (globalThis.crypto as any).randomUUID = () =>
+    `00000000-0000-4000-8000-${`${counter++}`.padStart(12, "0")}`;
+}
 
 // silence some dumb warning
 process.env.EXPO_OS = Platform.OS;
@@ -52,6 +53,42 @@ jest.mock("expo-secure-store", () => {
     },
     deleteItemAsync: async (key: string) => {
       store.delete(key);
+    },
+  };
+});
+// expo-crypto's native module isn't linked in the jest environment. Mock
+// getRandomBytesAsync with real randomness (via Node's crypto) so tests
+// that check for salt/nonce uniqueness are meaningful, not just wired.
+jest.mock("expo-crypto", () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const nodeCrypto = require("crypto");
+
+  return {
+    getRandomBytesAsync: async (byteCount: number) => {
+      const buf = nodeCrypto.randomBytes(byteCount);
+      return new Uint8Array(buf);
+    },
+  };
+});
+
+// react-native-quick-crypto's native module isn't linked in the jest
+// environment. Mock pbkdf2 using Node's own (native) crypto.pbkdf2 so
+// archive-crypto tests exercise genuine PBKDF2 behavior, not a stub —
+// same rationale as the expo-crypto mock above.
+jest.mock("react-native-quick-crypto", () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const nodeCrypto = require("crypto");
+
+  return {
+    pbkdf2: (
+      password: Uint8Array,
+      salt: Uint8Array,
+      iterations: number,
+      keylen: number,
+      digest: string,
+      callback: (err: Error | null, derivedKey?: Buffer) => void
+    ) => {
+      nodeCrypto.pbkdf2(password, salt, iterations, keylen, digest, callback);
     },
   };
 });

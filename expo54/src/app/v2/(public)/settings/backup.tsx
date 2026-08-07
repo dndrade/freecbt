@@ -1,129 +1,52 @@
+import { backupFlags } from "@/src/features/backup/backup-flags";
+import { EncryptedBackupExport } from "@/src/features/backup/encrypted-backup-export";
+import { EncryptedBackupImport } from "@/src/features/backup/encrypted-backup-import";
+import { LegacyBackupExport } from "@/src/features/backup/legacy-backup-export";
+import { LegacyBackupImport } from "@/src/features/backup/legacy-backup-import";
 import { LoadModel, ModelLoadedProps } from "@/src/hooks/use-model";
-import { Action, Archive, Model } from "@/src/model";
-import { DownloadOrShareLink } from "@/src/platform/sharing/download-or-share";
-import {
-  BACKUP_EXPORT_FILENAME,
-  BACKUP_EXPORT_MIME_TYPE,
-  BACKUP_IMPORT_MIME_TYPES,
-} from "@/src/platform/sharing/backup-mime";
-import * as DocumentPicker from "expo-document-picker";
-import * as FileSystem from "expo-file-system";
-import React, { useState } from "react";
-import { Text, TouchableOpacity, View } from "react-native";
+import React from "react";
+import { Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function Backup() {
   return <LoadModel ready={Ready} />;
 }
+
 export function Ready(props: ModelLoadedProps) {
-  const { model, dispatch, style: s, translate: t } = props;
-  const parser = Archive.createParsers(model.distortionData);
-  const toArchive = () => parser.fromString.encode(Model.toArchive(model));
-  return (
-    <SafeAreaView style={[s.view]}>
-      <View style={[s.container]}>
-        <Text style={[s.text, s.my2]}>
-          {t("backup_screen.export.description")}
-        </Text>
-        <ExportLink toArchive={toArchive} style={s} translate={t} />
-        <Text style={[s.text, s.my2]}>
-          {t("backup_screen.import.description")}
-        </Text>
-        <ImportButton
-          parser={parser}
-          toArchive={toArchive}
-          dispatch={dispatch}
-          style={s}
-          translate={t}
-        />
-      </View>
-    </SafeAreaView>
-  );
-}
-
-function ExportLink(
-  props: Pick<ModelLoadedProps, "style" | "translate"> & {
-    toArchive: () => string;
-  }
-) {
-  const { style: s, translate: t, toArchive } = props;
-  return (
-    <DownloadOrShareLink
-      name={BACKUP_EXPORT_FILENAME}
-      body={toArchive}
-      type={BACKUP_EXPORT_MIME_TYPE}
-      UTI="org.erosson.freecbt.backup"
-      translate={t}
-      error={(e) => <Text style={[s.errorText]}>{e}</Text>}
-      share={(onPress) => (
-        <TouchableOpacity style={[s.button, s.my2]} onPress={onPress}>
-          <Text style={[s.buttonText]}>
-            {t("backup_screen.export.share.button")}
-          </Text>
-        </TouchableOpacity>
-      )}
-      download={() => (
-        <TouchableOpacity style={[s.button, s.my2]}>
-          <Text style={[s.buttonText]}>
-            {t("backup_screen.export.file.button")}
-          </Text>
-        </TouchableOpacity>
-      )}
-    />
-  );
-}
-
-function ImportButton(
-  props: Pick<ModelLoadedProps, "dispatch" | "style" | "translate"> & {
-    parser: ReturnType<typeof Archive.createParsers>;
-    toArchive: () => string;
-  }
-) {
   const { style: s, translate: t } = props;
-  const [importResult, setImportResult] = useState<string>("");
-  return (
-    <>
-      <TouchableOpacity
-        style={[s.button, s.my2]}
-        onPress={() => onImport({ ...props, setImportResult })}
-      >
-        <Text style={[s.buttonText]}>
-          {t("backup_screen.import.file.button")}
-        </Text>
-      </TouchableOpacity>
-      <Text style={[s.text]}>{importResult}</Text>
-    </>
-  );
-}
 
-async function onImport(
-  props: Pick<ModelLoadedProps, "dispatch" | "translate"> & {
-    setImportResult: (s: string) => void;
-    parser: ReturnType<typeof Archive.createParsers>;
-    toArchive: () => string;
-  }
-) {
-  const { toArchive, parser, dispatch, setImportResult, translate: t } = props;
-  const res = await DocumentPicker.getDocumentAsync({
-    type: [...BACKUP_IMPORT_MIME_TYPES],
-  });
-  if (res.canceled || !res.assets[0]) return;
-  const [asset] = res.assets;
-  const body =
-    // web
-    (await asset.file?.text()) ??
-    // mobile
-    (await new FileSystem.File(asset.uri).text());
-  // console.log("file", body);
-  if (toArchive().trim() === body.trim()) {
-    setImportResult(t("backup_screen.import.noop"));
-  } else {
-    const imported = parser.fromString.safeDecode(body);
-    if (imported.success) {
-      dispatch(Action.importArchive(imported.data));
-      setImportResult(t("backup_screen.import.success"));
-    } else {
-      setImportResult(t("backup_screen.import.file.failure"));
-    }
-  }
+  const ExportControl = backupFlags.encryptedBackup
+      ? EncryptedBackupExport
+      : LegacyBackupExport;
+
+  const ImportControl = backupFlags.encryptedBackup
+      ? EncryptedBackupImport
+      : LegacyBackupImport;
+
+  return (
+      <SafeAreaView style={[s.view]}>
+        <View style={[s.container]}>
+          <Text style={[s.text, s.my2]}>
+            {t("backup_screen.export.description")}
+          </Text>
+
+          <ExportControl
+              model={props.model}
+              style={props.style}
+              translate={props.translate}
+          />
+
+          <Text style={[s.text, s.my2]}>
+            {t("backup_screen.import.description")}
+          </Text>
+
+          <ImportControl
+              model={props.model}
+              dispatch={props.dispatch}
+              style={props.style}
+              translate={props.translate}
+          />
+        </View>
+      </SafeAreaView>
+  );
 }

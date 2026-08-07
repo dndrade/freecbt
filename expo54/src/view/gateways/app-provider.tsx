@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import {
   configureReanimatedLogger,
   ReanimatedLogLevel,
@@ -7,7 +8,8 @@ import { I18nProvider } from "../../i18n/use-i18n";
 import { ModelProvider, useModel } from "../../hooks/use-model";
 import { Model } from "../../model";
 import { AuthGateway } from "@/src/features/lock/auth-gateway";
-import { OnboardingGateway } from "./onboarding-gateway";
+import { OnboardingGateway } from "./onboarding-gateway"
+import { registerDevMenu } from "@/src/debug/register-dev-menu";
 
 export function ModelI18nProvider(props: { children: React.ReactNode }) {
   const [m] = useModel();
@@ -15,6 +17,11 @@ export function ModelI18nProvider(props: { children: React.ReactNode }) {
   return <I18nProvider locale={locale}>{props.children}</I18nProvider>;
 }
 export function AppProvider(props: { children: React.ReactNode }) {
+  useEffect(() => {
+    if (__DEV__) {
+      void registerDevMenu();
+    }
+  }, []);
   configureReanimatedLogger({
     level: ReanimatedLogLevel.warn,
     // 2025/11 - react-native-reanimated-carousel logs some warnings I cannot fix. mute them for now.

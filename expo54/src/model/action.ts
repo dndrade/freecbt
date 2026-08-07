@@ -1,5 +1,5 @@
 import type { LocaleTag } from "@/src/i18n/use-i18n";
-import * as Archive from "./thoughts-archive";
+import * as Archive from "./archive/thoughts-archive";
 import * as Model from "./model";
 import * as Settings from "./settings";
 import * as Thought from "./thought";

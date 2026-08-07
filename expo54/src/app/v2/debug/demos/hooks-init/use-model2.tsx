@@ -23,8 +23,8 @@ import {
   defaultLocale,
   TranslateFn,
   useTranslate,
-} from "../../../../../i18n/use-i18n";
-import { Style, useStyle } from "../../../../../hooks/use-style";
+} from "@/src/i18n/use-i18n";
+import { Style, useStyle } from "@/src/hooks/use-style";
 import {
   Action,
   Distortion,
@@ -180,6 +180,16 @@ function updateReady(m: Model.Ready, a: Action.Action): Model.Ready {
     case "set-session-authed": {
       return { ...m, sessionAuthed: a.value };
     }
+    case "set-reminders": {
+      return {
+        ...m,
+        settings: {
+          ...m.settings,
+          reminders: a.value,
+        },
+      };
+    }
+
     default:
       throw new Error(`no such action: ${a satisfies never}`);
   }

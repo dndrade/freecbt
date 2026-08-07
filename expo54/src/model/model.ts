@@ -7,7 +7,7 @@ import * as Cmd from "./cmd";
 import * as Distortion from "./distortion";
 import * as Settings from "./settings";
 import * as Thought from "./thought";
-import * as Archive from "./thoughts-archive";
+import * as Archive from "./archive/thoughts-archive";
 
 export type Model = Loading | Ready;
 export type Loading = typeof loading;
@@ -139,7 +139,7 @@ function updateReady(m: Ready, a: Action.Action): readonly [Model, Cmd.List] {
     }
     case "import-archive": {
       const thoughts = new Map(
-        a.value.thoughts.map((t) => [Thought.key(t), t] as const)
+          a.value.thoughts.map((t) => [Thought.key(t), t] as const)
       );
       const m2: Model = { ...m, thoughts };
       return [

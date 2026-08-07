@@ -1,5 +1,6 @@
 import { Distortion, Model, Settings, Thought } from "@/src/model";
 import { AsyncStorageStatic } from "@react-native-async-storage/async-storage";
+import * as Crypto from "expo-crypto";
 import { z } from "zod";
 
 export interface SecureStoreLike {
@@ -7,6 +8,50 @@ export interface SecureStoreLike {
   setItemAsync(key: string, value: string): Promise<void>;
   deleteItemAsync(key: string): Promise<void>;
 }
+
+export const secureBackupRecoveryKeySecureKey =
+    "freecbt-secure-backup-recovery-key";
+const SECURE_BACKUP_RECOVERY_KEY_BYTES = 32;
+
+export type RandomBytes = (byteCount: number) => Promise<Uint8Array>;
+
+function encodeRecoveryKey(bytes: Uint8Array): string {
+  return Array.from(bytes, (byte) => byte.toString(16).padStart(2, "0")).join(
+      ""
+  );
+}
+
+export function secureBackupRecoveryKey(
+    secureStorage: SecureStoreLike,
+    randomBytes: RandomBytes = Crypto.getRandomBytesAsync
+) {
+  async function create(): Promise<string> {
+    const bytes = await randomBytes(SECURE_BACKUP_RECOVERY_KEY_BYTES);
+    if (bytes.length !== SECURE_BACKUP_RECOVERY_KEY_BYTES) {
+      throw new Error("recovery-key generation returned an invalid byte count");
+    }
+
+    const recoveryKey = encodeRecoveryKey(bytes);
+    await secureStorage.setItemAsync(
+        secureBackupRecoveryKeySecureKey,
+        recoveryKey
+    );
+    return recoveryKey;
+  }
+
+  async function read(): Promise<string | null> {
+    return await secureStorage.getItemAsync(secureBackupRecoveryKeySecureKey);
+  }
+
+  async function remove(): Promise<void> {
+    await secureStorage.deleteItemAsync(secureBackupRecoveryKeySecureKey);
+  }
+
+  return { create, read, delete: remove };
+}
+export type SecureBackupRecoveryKey = ReturnType<
+    typeof secureBackupRecoveryKey
+>;
 
 export function settings(
   storage: AsyncStorageStatic,

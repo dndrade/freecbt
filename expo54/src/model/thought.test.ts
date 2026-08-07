@@ -1,10 +1,9 @@
-import { v4 as uuidv4 } from "uuid";
 import { DistortionData, Thought } from ".";
 
 export const T = Thought.createParsers(DistortionData);
 
 const fixture: Thought.Json = {
-  uuid: uuidv4(),
+  uuid: crypto.randomUUID(),
   createdAt: new Date(0).toISOString(),
   updatedAt: new Date(0).toISOString(),
   automaticThought: "auto",

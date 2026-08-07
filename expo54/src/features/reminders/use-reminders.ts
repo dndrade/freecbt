@@ -10,8 +10,6 @@ export function useReminders() {
     // as of 2025/12, expo-notifications doesn't support web: https://docs.expo.dev/guides/using-push-notifications-services/#tips-and-important-considerations
     // TODO: not sure why android wasn't enabled, but wait til the big v2 release is done to enable it
     isSupported: () => Platform.OS === "ios",
-    // isSupported: () => false,
-    // isSupported: () => true,
     async enable(dispatch: (a: Action.Action) => void, t: TranslateFn) {
       await enable(t);
       dispatch(Action.setReminders(true));
@@ -67,7 +65,6 @@ async function enable(t: TranslateFn): Promise<boolean> {
       // { channelId: "default", repeats: true, seconds: 86400 },
     });
   }
-  // setSetting(NOTIFICATIONS_KEY, JSON.stringify(enabled));
   return enabled;
 }
 
