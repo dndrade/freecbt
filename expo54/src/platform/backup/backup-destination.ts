@@ -39,6 +39,7 @@ export type BackupFileSystem = {
     join(directoryUri: string, filename: string): string;
     exists(fileUri: string): Promise<boolean>;
     create(fileUri: string): Promise<void>;
+    read(fileUri: string): Promise<string>;
     write(fileUri: string, body: string): Promise<void>;
     delete(fileUri: string): Promise<void>;
 };

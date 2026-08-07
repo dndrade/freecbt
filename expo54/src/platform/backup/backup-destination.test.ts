@@ -123,6 +123,7 @@ function fakeFileSystem(overrides: Partial<BackupFileSystem> = {}): {
     join: jest.Mock<string, [string, string]>;
     exists: jest.Mock<Promise<boolean>, [string]>;
     create: jest.Mock<Promise<void>, [string]>;
+    read: jest.Mock<Promise<string>, [string]>;
     write: jest.Mock<Promise<void>, [string, string]>;
     remove: jest.Mock<Promise<void>, [string]>;
 } {
@@ -132,6 +133,7 @@ function fakeFileSystem(overrides: Partial<BackupFileSystem> = {}): {
     );
     const exists = jest.fn(async (_fileUri: string) => false);
     const create = jest.fn(async (_fileUri: string) => {});
+    const read = jest.fn(async (_fileUri: string) => "body");
     const write = jest.fn(
         async (_fileUri: string, _body: string) => {}
     );
@@ -142,6 +144,7 @@ function fakeFileSystem(overrides: Partial<BackupFileSystem> = {}): {
             join,
             exists,
             create,
+            read,
             write,
             delete: remove,
             ...overrides,
@@ -149,6 +152,7 @@ function fakeFileSystem(overrides: Partial<BackupFileSystem> = {}): {
         join,
         exists,
         create,
+        read,
         write,
         remove,
     };

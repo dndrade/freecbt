@@ -42,6 +42,7 @@ export type SecureBackupBase = {
 
 export type SecureBackupWithDestination = SecureBackupBase & {
     createBackup(value: Archive.Archive): Promise<WrittenBackupFile>;
+    restoreBackupFile(fileUri: string): Promise<Archive.Archive>;
 };
 
 export function secureBackup(
@@ -172,9 +173,17 @@ export function secureBackup(
         });
     }
 
+    async function restoreBackupFile(
+        fileUri: string
+    ): Promise<Archive.Archive> {
+        const body = await backupDestination.fileSystem.read(fileUri);
+        return await restoreArchive(body);
+    }
+
     return {
         ...base,
         createBackup,
+        restoreBackupFile,
     };
 }
 

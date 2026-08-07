@@ -38,6 +38,7 @@ describe("createSecureBackup", () => {
             join: jest.fn(),
             exists: jest.fn(),
             create: jest.fn(),
+            read: jest.fn(),
             write: jest.fn(),
             delete: jest.fn(),
         };
@@ -48,6 +49,7 @@ describe("createSecureBackup", () => {
             exportArchiveV3: jest.fn(),
             restoreArchive: jest.fn(),
             createBackup: jest.fn(),
+            restoreBackupFile: jest.fn(),
         };
 
         jest

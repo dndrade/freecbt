@@ -85,6 +85,7 @@ describe("EncryptedBackupExport", () => {
             exportArchiveV3,
             restoreArchive: jest.fn(),
             createBackup: jest.fn(),
+            restoreBackupFile: jest.fn(),
         });
 
         jest.mocked(Model.toArchive).mockReturnValue(archive as never);

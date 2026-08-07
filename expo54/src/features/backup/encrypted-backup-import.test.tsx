@@ -130,6 +130,7 @@ describe("EncryptedBackupImport", () => {
             exportArchiveV3: jest.fn(),
             restoreArchive,
             createBackup: jest.fn(),
+            restoreBackupFile: jest.fn(),
         });
 
         jest.mocked(Action.importArchive).mockReturnValue({

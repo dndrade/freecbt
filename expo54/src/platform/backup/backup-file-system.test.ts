@@ -12,6 +12,7 @@ import {
 
 const directoryCreate = jest.fn();
 const fileCreate = jest.fn();
+const fileText = jest.fn();
 const fileWrite = jest.fn();
 const fileDelete = jest.fn();
 
@@ -36,6 +37,7 @@ jest.mock("expo-file-system", () => {
         uri: string;
         exists = false;
         create = fileCreate;
+        text = fileText;
         write = fileWrite;
         delete = fileDelete;
 
@@ -130,6 +132,17 @@ describe("createExpoBackupFileSystem", () => {
             intermediates: false,
             overwrite: false,
         });
+    });
+
+    test("reads the exact file as text", async () => {
+        fileText.mockResolvedValue("encrypted-body");
+        const fileSystem = createExpoBackupFileSystem();
+
+        await expect(
+            fileSystem.read("file:///documents/backup")
+        ).resolves.toBe("encrypted-body");
+
+        expect(fileText).toHaveBeenCalledTimes(1);
     });
 
     test("writes the supplied archive body", async () => {

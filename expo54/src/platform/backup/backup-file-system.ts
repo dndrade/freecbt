@@ -49,6 +49,10 @@ export function createExpoBackupFileSystem(): BackupFileSystem {
             });
         },
 
+        async read(fileUri) {
+            return await new File(fileUri).text();
+        },
+
         async write(fileUri, body) {
             new File(fileUri).write(body);
         },

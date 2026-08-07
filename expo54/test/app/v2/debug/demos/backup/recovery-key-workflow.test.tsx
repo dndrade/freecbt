@@ -8,7 +8,7 @@ import React from "react";
 import { Pressable, Text, View } from "react-native";
 import { Model } from "@/src/model";
 import { createSecureBackup } from "@/src/platform/backup/secure-backup-runtime";
-import RecoveryKeyWorkflow from "./recovery-key-workflow";
+import RecoveryKeyWorkflow from "@/src/app/v2/debug/demos/backup/recovery-key-workflow";
 
 const model = {
     distortionData: {},
@@ -144,6 +144,7 @@ describe("RecoveryKeyWorkflow persistent backup", () => {
             exportArchiveV3: jest.fn(),
             restoreArchive: jest.fn(),
             createBackup,
+            restoreBackupFile: jest.fn(),
         });
 
         jest.mocked(Model.toArchive).mockReturnValue(archive as never);
