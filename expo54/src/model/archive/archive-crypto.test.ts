@@ -178,6 +178,23 @@ describe("encryptJson / decryptHeader", () => {
     expect(nonces.size).toBe(20);
   });
 
+  test("round-trips Unicode archive text (accents, combining marks, emoji, CJK) byte-for-byte", async () => {
+      const unicodePlaintext = JSON.stringify({
+          thoughts: [
+              {
+                    automaticThought: "café".normalize("NFD"),
+                    challenge: "🎉 emoji surrogate pair",
+                    alternativeThought: "日本語のテキスト",
+              },
+          ],
+      });
+
+        const header = await encryptJson(RECOVERY_KEY, unicodePlaintext);
+        const decrypted = await decryptHeader(RECOVERY_KEY, header);
+
+        expect(decrypted).toBe(unicodePlaintext);
+  });
+
   test("wrong recovery key fails with the generic decrypt error", async () => {
     const header = await encryptJson(RECOVERY_KEY, plaintext);
     await expect(decryptHeader(DIFFERENT_RECOVERY_KEY, header)).rejects.toThrow(
