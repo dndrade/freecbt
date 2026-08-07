@@ -120,22 +120,23 @@ function deferred<T>() {
 }
 
 describe("EncryptedBackupImport", () => {
-  beforeEach(() => {
-    jest.clearAllMocks();
+    beforeEach(() => {
+        jest.clearAllMocks();
 
-    jest.mocked(createSecureBackup).mockReturnValue({
-      getRecoveryKeyStatus: jest.fn(),
-      setupRecoveryKey: jest.fn(),
-      revealRecoveryKey: jest.fn(),
-      exportArchiveV3: jest.fn(),
-      restoreArchive,
+        jest.mocked(createSecureBackup).mockReturnValue({
+            getRecoveryKeyStatus: jest.fn(),
+            setupRecoveryKey: jest.fn(),
+            revealRecoveryKey: jest.fn(),
+            exportArchiveV3: jest.fn(),
+            restoreArchive,
+            createBackup: jest.fn(),
+        });
+
+        jest.mocked(Action.importArchive).mockReturnValue({
+            type: "import-archive",
+            archive: restoredArchive,
+        } as never);
     });
-
-    jest.mocked(Action.importArchive).mockReturnValue({
-      type: "import-archive",
-      archive: restoredArchive,
-    } as never);
-  });
 
   test("shows the import action without passphrase controls", () => {
     render(<TestHarness />);
