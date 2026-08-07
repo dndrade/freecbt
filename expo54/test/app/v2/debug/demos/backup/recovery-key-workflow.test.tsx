@@ -6,19 +6,37 @@ import {
 } from "@testing-library/react-native";
 import React from "react";
 import { Pressable, Text, View } from "react-native";
-import { Model } from "@/src/model";
+import {
+    Action,
+    Model,
+} from "@/src/model";
 import { createSecureBackup } from "@/src/platform/backup/secure-backup-runtime";
 import RecoveryKeyWorkflow from "@/src/app/v2/debug/demos/backup/recovery-key-workflow";
+
+const dispatch = jest.fn();
 
 const model = {
     distortionData: {},
 };
 
 const archive = {
-    thoughts: [],
+    thoughts: [
+        {
+            uuid: "thought-1",
+        },
+    ],
+};
+
+const restoredArchive = {
+    thoughts: [
+        {
+            uuid: "thought-1",
+        },
+    ],
 };
 
 const createBackup = jest.fn();
+const restoreBackupFile = jest.fn();
 const getRecoveryKeyStatus = jest.fn();
 const revealRecoveryKey = jest.fn();
 
@@ -37,7 +55,7 @@ jest.mock("@/src/hooks/use-model", () => ({
         return (
             <Ready
                 model={model}
-                dispatch={jest.fn()}
+                dispatch={dispatch}
                 style={{}}
                 translate={(key: string) => key}
             />
@@ -50,6 +68,10 @@ jest.mock("@/src/model", () => {
 
     return {
         ...actual,
+        Action: {
+            ...actual.Action,
+            importArchive: jest.fn(),
+        },
         Model: {
             ...actual.Model,
             toArchive: jest.fn(),
@@ -132,10 +154,11 @@ describe("RecoveryKeyWorkflow persistent backup", () => {
         getRecoveryKeyStatus.mockResolvedValue("configured");
         revealRecoveryKey.mockResolvedValue("recovery-key");
         createBackup.mockResolvedValue({
-            filename: "FreeCBT-backup-2026-08-07.json",
+            filename: "FreeCBT-backup-2026-08-07",
             fileUri:
-                "file:///documents/FreeCBT-backups/FreeCBT-backup-2026-08-07.json",
+                "file:///documents/FreeCBT-backups/FreeCBT-backup-2026-08-07",
         });
+        restoreBackupFile.mockResolvedValue(restoredArchive);
 
         jest.mocked(createSecureBackup).mockReturnValue({
             getRecoveryKeyStatus,
@@ -144,13 +167,17 @@ describe("RecoveryKeyWorkflow persistent backup", () => {
             exportArchiveV3: jest.fn(),
             restoreArchive: jest.fn(),
             createBackup,
-            restoreBackupFile: jest.fn(),
+            restoreBackupFile,
         });
 
         jest.mocked(Model.toArchive).mockReturnValue(archive as never);
+        jest.mocked(Action.importArchive).mockReturnValue({
+            action: "import-archive",
+            value: restoredArchive,
+        } as never);
     });
 
-    test("creates and reports the persistent Archive-v3 file", async () => {
+    test("creates, restores, verifies, and dispatches the persistent backup", async () => {
         render(<RecoveryKeyWorkflow />);
 
         fireEvent.press(
@@ -168,7 +195,6 @@ describe("RecoveryKeyWorkflow persistent backup", () => {
         );
 
         await waitFor(() => {
-            expect(revealRecoveryKey).toHaveBeenCalledTimes(1);
             expect(screen.getByTestId("debug-result").props.children).toBe(
                 "Recovery key revealed."
             );
@@ -189,15 +215,96 @@ describe("RecoveryKeyWorkflow persistent backup", () => {
         );
 
         await waitFor(() => {
-            expect(Model.toArchive).toHaveBeenCalledWith(model);
             expect(createBackup).toHaveBeenCalledWith(archive);
+            expect(screen.getByTestId("debug-result").props.children).toContain(
+                "Persistent Archive-v3 backup created."
+            );
+        });
+
+        fireEvent.press(
+            screen.getByText("Restore the persistent backup")
+        );
+
+        await waitFor(() => {
+            expect(restoreBackupFile).toHaveBeenCalledWith(
+                "file:///documents/FreeCBT-backups/FreeCBT-backup-2026-08-07"
+            );
+            expect(Action.importArchive).toHaveBeenCalledWith(
+                restoredArchive
+            );
+            expect(dispatch).toHaveBeenCalledWith({
+                action: "import-archive",
+                value: restoredArchive,
+            });
         });
 
         expect(screen.getByTestId("debug-result").props.children).toContain(
-            "Filename: FreeCBT-backup-2026-08-07.json"
+            "Thoughts verified: 1"
         );
         expect(screen.getByTestId("debug-result").props.children).toContain(
-            "URI: file:///documents/FreeCBT-backups/"
+            "Import action dispatched."
         );
+    });
+
+    test("does not dispatch when restored thought identities differ", async () => {
+        restoreBackupFile.mockResolvedValue({
+            thoughts: [
+                {
+                    uuid: "different-thought",
+                },
+            ],
+        });
+
+        render(<RecoveryKeyWorkflow />);
+
+        fireEvent.press(
+            screen.getByText("Check recovery-key status")
+        );
+        await waitFor(() =>
+            expect(screen.getByTestId("debug-result").props.children).toBe(
+                "Recovery key exists."
+            )
+        );
+
+        fireEvent.press(
+            screen.getByText("Reveal stored recovery key")
+        );
+        await waitFor(() =>
+            expect(screen.getByTestId("debug-result").props.children).toBe(
+                "Recovery key revealed."
+            )
+        );
+
+        fireEvent.press(
+            screen.getByText("I saved the recovery key")
+        );
+        await waitFor(() =>
+            expect(screen.getByTestId("debug-result").props.children).toBe(
+                "Recovery-key saving confirmed."
+            )
+        );
+
+        fireEvent.press(
+            screen.getByText("Create persistent Archive-v3 backup")
+        );
+        await waitFor(() => {
+            expect(createBackup).toHaveBeenCalledTimes(1);
+            expect(
+                screen.getByTestId("debug-result").props.children
+            ).toContain("Persistent Archive-v3 backup created.");
+        });
+
+        fireEvent.press(
+            screen.getByText("Restore the persistent backup")
+        );
+
+        await waitFor(() => {
+            expect(screen.getByTestId("debug-result").props.children).toContain(
+                "FAILED: restored thought identity mismatch"
+            );
+        });
+
+        expect(Action.importArchive).not.toHaveBeenCalled();
+        expect(dispatch).not.toHaveBeenCalled();
     });
 });

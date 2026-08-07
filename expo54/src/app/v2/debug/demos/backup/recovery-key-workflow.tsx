@@ -13,7 +13,12 @@ import {
     LoadModel,
     type ModelLoadedProps,
 } from "@/src/hooks/use-model";
-import { Model } from "@/src/model";
+import {
+    Action,
+    Archive,
+    Model,
+} from "@/src/model";
+import type { WrittenBackupFile } from "@/src/platform/backup/backup-destination";
 import { createSecureBackup } from "@/src/platform/backup/secure-backup-runtime";
 import React, { useMemo, useState } from "react";
 
@@ -31,6 +36,8 @@ function Ready(props: ModelLoadedProps) {
     const [recoveryKey, setRecoveryKey] =
         useState<string | null>(null);
     const [confirmedSaved, setConfirmedSaved] = useState(false);
+    const [lastBackup, setLastBackup] =
+        useState<WrittenBackupFile | null>(null);
     const [running, setRunning] = useState(false);
     const [result, setResult] = useState("No workflow action yet.");
 
@@ -88,6 +95,7 @@ function Ready(props: ModelLoadedProps) {
                             setKeyStatus(status);
                             setRecoveryKey(null);
                             setConfirmedSaved(false);
+                            setLastBackup(null);
                             setResult(
                                 status === "configured"
                                     ? "Recovery key exists."
@@ -107,6 +115,7 @@ function Ready(props: ModelLoadedProps) {
                             setRecoveryKey(value);
                             setKeyStatus("configured");
                             setConfirmedSaved(false);
+                            setLastBackup(null);
                             setResult("Recovery key created and revealed.");
                         })
                     }
@@ -168,6 +177,7 @@ function Ready(props: ModelLoadedProps) {
                                 Model.toArchive(props.model)
                             );
 
+                            setLastBackup(written);
                             setResult(
                                 [
                                     "Persistent Archive-v3 backup created.",
@@ -180,7 +190,46 @@ function Ready(props: ModelLoadedProps) {
                 />
             </DebugSection>
 
-            <DebugSection title="4. Archive-v3 restore">
+            <DebugSection title="4. Persistent Archive-v3 restore">
+                <DebugAction
+                    label="Restore the persistent backup"
+                    detail={
+                        lastBackup === null
+                            ? "Create a persistent backup first."
+                            : `Reads and restores ${lastBackup.filename}.`
+                    }
+                    disabled={
+                        running ||
+                        !readyForArchiveV3 ||
+                        lastBackup === null
+                    }
+                    onPress={() =>
+                        void run("Restoring persistent backup…", async () => {
+                            if (lastBackup === null) {
+                                throw new Error("no persistent backup is available");
+                            }
+
+                            const expected = Model.toArchive(props.model);
+                            const restored = await backup.restoreBackupFile(
+                                lastBackup.fileUri
+                            );
+
+                            verifyArchiveIdentity(expected, restored);
+                            props.dispatch(Action.importArchive(restored));
+
+                            setResult(
+                                [
+                                    "Persistent Archive-v3 backup restored.",
+                                    `Filename: ${lastBackup.filename}`,
+                                    `URI: ${lastBackup.fileUri}`,
+                                    `Thoughts verified: ${restored.thoughts.length}`,
+                                    "Import action dispatched.",
+                                ].join("\n")
+                            );
+                        })
+                    }
+                />
+
                 {readyForArchiveV3 && (
                     <EncryptedBackupImport
                         model={props.model}
@@ -194,4 +243,26 @@ function Ready(props: ModelLoadedProps) {
             <DebugResult running={running} value={result} />
         </DebugScreen>
     );
+}
+
+function verifyArchiveIdentity(
+    expected: Archive.Archive,
+    restored: Archive.Archive
+): void {
+    if (expected.thoughts.length !== restored.thoughts.length) {
+        throw new Error(
+            `restored thought count mismatch: expected ${expected.thoughts.length}, received ${restored.thoughts.length}`
+        );
+    }
+
+    for (let index = 0; index < expected.thoughts.length; index += 1) {
+        const expectedThought = expected.thoughts[index];
+        const restoredThought = restored.thoughts[index];
+
+        if (expectedThought.uuid !== restoredThought.uuid) {
+            throw new Error(
+                `restored thought identity mismatch at index ${index}`
+            );
+        }
+    }
 }
