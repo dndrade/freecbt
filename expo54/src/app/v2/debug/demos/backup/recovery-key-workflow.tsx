@@ -1,5 +1,4 @@
 import { SecureBackup } from "@/src";
-import { createSecureBackup } from "@/src/platform/backup/secure-backup-runtime";
 import { RecoveryKeyDisplay } from "@/src/debug/ui/backup/recovery-key-display";
 import {
     type WorkflowKeyStatus,
@@ -9,12 +8,13 @@ import { DebugAction } from "@/src/debug/ui/debug-action";
 import { DebugResult } from "@/src/debug/ui/debug-result";
 import { DebugScreen } from "@/src/debug/ui/debug-screen";
 import { DebugSection } from "@/src/debug/ui/debug-section";
-import { EncryptedBackupExport } from "@/src/features/backup/encrypted-backup-export";
 import { EncryptedBackupImport } from "@/src/features/backup/encrypted-backup-import";
 import {
     LoadModel,
     type ModelLoadedProps,
 } from "@/src/hooks/use-model";
+import { Model } from "@/src/model";
+import { createSecureBackup } from "@/src/platform/backup/secure-backup-runtime";
 import React, { useMemo, useState } from "react";
 
 export default function RecoveryKeyWorkflow() {
@@ -67,7 +67,7 @@ function Ready(props: ModelLoadedProps) {
     return (
         <DebugScreen
             title="Recovery-key workflow"
-            description="Run the production Archive-v3 setup procedure in order."
+            description="Run the production Archive-v3 setup and persistent backup procedure in order."
             metadata={
                 <WorkflowStatus
                     style={props.style}
@@ -83,8 +83,7 @@ function Ready(props: ModelLoadedProps) {
                     disabled={running}
                     onPress={() =>
                         void run("Checking recovery-key status…", async () => {
-                            const status =
-                                await backup.getRecoveryKeyStatus();
+                            const status = await backup.getRecoveryKeyStatus();
 
                             setKeyStatus(status);
                             setRecoveryKey(null);
@@ -119,14 +118,11 @@ function Ready(props: ModelLoadedProps) {
                     onPress={() =>
                         void run("Reading recovery key…", async () => {
                             try {
-                                const value =
-                                    await backup.revealRecoveryKey();
+                                const value = await backup.revealRecoveryKey();
 
                                 setRecoveryKey(value);
                                 setResult("Recovery key revealed.");
-                            } catch (
-                                error
-                                ) {
+                            } catch (error) {
                                 if (
                                     error instanceof
                                     SecureBackup.MissingRecoveryKeyError
@@ -161,14 +157,27 @@ function Ready(props: ModelLoadedProps) {
                 />
             </DebugSection>
 
-            <DebugSection title="3. Archive-v3 export">
-                {readyForArchiveV3 && (
-                    <EncryptedBackupExport
-                        model={props.model}
-                        style={props.style}
-                        translate={props.translate}
-                    />
-                )}
+            <DebugSection title="3. Persistent Archive-v3 backup">
+                <DebugAction
+                    label="Create persistent Archive-v3 backup"
+                    detail="Writes a new encrypted file to the app-owned FreeCBT-backups directory."
+                    disabled={running || !readyForArchiveV3}
+                    onPress={() =>
+                        void run("Creating persistent backup…", async () => {
+                            const written = await backup.createBackup(
+                                Model.toArchive(props.model)
+                            );
+
+                            setResult(
+                                [
+                                    "Persistent Archive-v3 backup created.",
+                                    `Filename: ${written.filename}`,
+                                    `URI: ${written.fileUri}`,
+                                ].join("\n")
+                            );
+                        })
+                    }
+                />
             </DebugSection>
 
             <DebugSection title="4. Archive-v3 restore">
