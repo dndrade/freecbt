@@ -1,13 +1,17 @@
-import { Archive, Model } from "@/src/model";
+import { createSecureBackup } from "@/src/platform/backup/secure-backup-runtime";
+import { Model } from "@/src/model";
 import { DownloadOrShareLink } from "@/src/platform/sharing/download-or-share";
 import {
     BACKUP_EXPORT_FILENAME,
     BACKUP_EXPORT_MIME_TYPE,
 } from "@/src/platform/sharing/backup-mime";
 import React, { useState } from "react";
-import { ActivityIndicator, Text, TouchableOpacity } from "react-native";
+import {
+    ActivityIndicator,
+    Text,
+    TouchableOpacity,
+} from "react-native";
 import type { BackupExportControlProps } from "./backup-control-contract";
-import { PassphraseForm } from "./passphrase-form";
 
 type ExportPhase =
     | { phase: "idle" }
@@ -19,17 +23,13 @@ export function EncryptedBackupExport(props: BackupExportControlProps) {
     const { model, style: s, translate: t } = props;
     const [state, setState] = useState<ExportPhase>({ phase: "idle" });
 
-    const encodeEncrypted = Archive.createEncodeEncrypted(model.distortionData);
+    const backup = createSecureBackup(model.distortionData);
 
-    async function submitPassphrase(passphrase: string): Promise<void> {
+    async function prepareEncryptedBackup(): Promise<void> {
         setState({ phase: "encrypting" });
 
         try {
-            const body = await encodeEncrypted(
-                Model.toArchive(model),
-                passphrase
-            );
-
+            const body = await backup.exportArchiveV3(Model.toArchive(model));
             setState({ phase: "ready", body });
         } catch {
             setState({
@@ -41,15 +41,16 @@ export function EncryptedBackupExport(props: BackupExportControlProps) {
 
     if (state.phase === "idle") {
         return (
-            <PassphraseForm
-                mode="export"
-                onSubmit={(passphrase) => {
-                    void submitPassphrase(passphrase);
+            <TouchableOpacity
+                style={[s.button, s.my2]}
+                onPress={() => {
+                    void prepareEncryptedBackup();
                 }}
-                onCancel={() => {}}
-                style={s}
-                translate={t}
-            />
+            >
+                <Text style={[s.buttonText]}>
+                    {t("backup_screen.export.share.button")}
+                </Text>
+            </TouchableOpacity>
         );
     }
 
