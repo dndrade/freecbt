@@ -1,5 +1,5 @@
 import { Archive, DistortionData, Thought } from "..";
-import { PARAMS, CURRENT_PARAMS_VERSION } from "./archive-crypto";
+import { PARAMS, CURRENT_PARAMS_VERSION } from "./archive-format";
 import * as CryptoModule from "./archive-crypto";
 import { MAX_ENCODED_PAYLOAD_CHARS } from "./archive-size-limits";
 

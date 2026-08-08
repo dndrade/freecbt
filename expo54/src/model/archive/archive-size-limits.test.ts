@@ -6,6 +6,8 @@ import {
   MAX_THOUGHT_COUNT,
 } from "./archive-size-limits";
 
+import { constants as bufferConstants } from "buffer";
+
 const SAFETY_MULTIPLIER = 8;
 const ASSUMED_MAX_THOUGHTS = 10_000;
 
@@ -90,14 +92,12 @@ describe("archive size limits", () => {
   // that size, so `.length > MAX_...` can never be reached, let alone be
   // true. Both limits must stay meaningfully below the engine's actual
   // string-length ceiling so the checks that use them are reachable.
-  test("both char limits stay safely below this runtime's string-length ceiling", () => {
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const MAX_STRING_LENGTH = (
-      require("buffer").constants as { MAX_STRING_LENGTH: number }
-    ).MAX_STRING_LENGTH;
-    expect(MAX_DECODED_TEXT_CHARS).toBeLessThan(MAX_STRING_LENGTH);
-    expect(MAX_ENCODED_PAYLOAD_CHARS).toBeLessThan(MAX_STRING_LENGTH);
-  });
+    test("both char limits stay safely below this runtime's string-length ceiling", () => {
+        const MAX_STRING_LENGTH = bufferConstants.MAX_STRING_LENGTH;
+
+        expect(MAX_DECODED_TEXT_CHARS).toBeLessThan(MAX_STRING_LENGTH);
+        expect(MAX_ENCODED_PAYLOAD_CHARS).toBeLessThan(MAX_STRING_LENGTH);
+    });
 
   // Builds a 300-thought archive with varied (non-trivially-compressible)
   // text through the real encoder and checks it comfortably fits under

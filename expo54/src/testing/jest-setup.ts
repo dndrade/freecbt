@@ -60,15 +60,28 @@ jest.mock("expo-secure-store", () => {
 // getRandomBytesAsync with real randomness (via Node's crypto) so tests
 // that check for salt/nonce uniqueness are meaningful, not just wired.
 jest.mock("expo-crypto", () => {
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const nodeCrypto = require("crypto");
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const nodeCrypto = require("crypto");
 
-  return {
-    getRandomBytesAsync: async (byteCount: number) => {
-      const buf = nodeCrypto.randomBytes(byteCount);
-      return new Uint8Array(buf);
-    },
-  };
+    return {
+        getRandomBytesAsync: async (byteCount: number) => {
+            const buf = nodeCrypto.randomBytes(byteCount);
+            return new Uint8Array(buf);
+        },
+
+        digest: async (_algorithm: string, data: BufferSource) => {
+            const bytes = Buffer.from(
+                data instanceof ArrayBuffer
+                    ? data
+                    : data.buffer.slice(
+                        data.byteOffset,
+                        data.byteOffset + data.byteLength
+                    )
+            );
+
+            return nodeCrypto.createHash("sha256").update(bytes).digest().buffer;
+        },
+    };
 });
 
 // react-native-quick-crypto's native module isn't linked in the jest

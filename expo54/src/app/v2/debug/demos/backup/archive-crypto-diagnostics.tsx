@@ -3,10 +3,12 @@ import { DebugResult } from "@/src/debug/ui/debug-result";
 import { DebugScreen } from "@/src/debug/ui/debug-screen";
 import { DebugSection } from "@/src/debug/ui/debug-section";
 import {
-  ArchiveDecryptError,
-  decryptHeader,
-  EncryptedHeaderV3,
+    ArchiveDecryptError,
+    decryptHeader,
 } from "@/src/model/archive/archive-crypto";
+import type {
+    EncryptedHeaderV3,
+} from "@/src/model/archive/archive-format";
 import { Redirect } from "expo-router";
 import React, { useState } from "react";
 import { Platform } from "react-native";
@@ -15,13 +17,14 @@ const FIXTURE_KEY = "independent fixture passphrase 123";
 const FIXTURE_PLAINTEXT = JSON.stringify({ thoughts: [] });
 
 const FIXTURE: EncryptedHeaderV3 = {
-  v: "Archive-v3",
-  kdf: "PBKDF2-SHA256",
-  paramsVersion: 1,
-  iterations: 600_000,
-  salt: "AQIDBAUGBwgJCgsMDQ4PEA==",
-  nonce: "EBESExQVFhcYGRob",
-  ciphertext: "O2E5Mejqeutn3i+YrjTwOWTPX6YIeIgJVT6NVSwTng==",
+    v: "Archive-v3",
+    kdf: "PBKDF2-SHA256",
+    paramsVersion: 1,
+    iterations: 600_000,
+    fp: "/xEAmgTZ+T8y+gMEkwxDwULSU0nR2Y+ab+/CiiFVDWQ=",
+    salt: "AQIDBAUGBwgJCgsMDQ4PEA==",
+    nonce: "EBESExQVFhcYGRob",
+    ciphertext: "O2E5Mejqeutn3i+YrjTwx4SjxoXb/AERLGsyRStFxw==",
 };
 
 export default function ArchiveCryptoDiagnostics() {

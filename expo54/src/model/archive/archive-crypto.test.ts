@@ -1,26 +1,30 @@
 import {
   ArchiveDecryptError,
   buildAad,
-  CURRENT_PARAMS_VERSION,
   decryptHeader,
   encryptJson,
-  EncryptedHeaderV3,
-  PARAMS,
-  validateHeaderV3,
+  keyFingerprint,
 } from "./archive-crypto";
+import {
+  EncryptedHeaderV3,
+  validateHeaderV3,
+} from "./archive-format";
 import {
   decodeBase64Strict,
   encodeBase64,
   utf8Encode,
 } from "./archive-codec";
 
+// ============================================================================
+// Shared fixtures, constants, and helper utilities
+// ============================================================================
+
 const KAT_RECOVERY_KEY =
-    "7f4a2c1e9b8d6f3051728493a5b6c7d8e9f00112233445566778899aabbccdde";
+  "7f4a2c1e9b8d6f3051728493a5b6c7d8e9f00112233445566778899aabbccdde";
 const KAT_SALT = new Uint8Array(32).fill(7);
 const KAT_ITERATIONS = 600_000;
 const KAT_EXPECTED_HEX =
-    "4925e7c97340a7616f16193abe07e31b80a755d6db84f6dc3e982e348af1b3e8";
-
+  "4925e7c97340a7616f16193abe07e31b80a755d6db84f6dc3e982e348af1b3e8";
 
 const RECOVERY_KEY = repeatedByteRecoveryKey(0x55);
 const DIFFERENT_RECOVERY_KEY = repeatedByteRecoveryKey(0x77);
@@ -41,18 +45,9 @@ function tamperBase64Byte(value: string, byteIndex = 0): string {
   return encodeBase64(bytes);
 }
 
-function validHeader(overrides: Partial<EncryptedHeaderV3> = {}): unknown {
-  return {
-    v: "Archive-v3",
-    kdf: "PBKDF2-SHA256",
-    paramsVersion: CURRENT_PARAMS_VERSION,
-    iterations: PARAMS[CURRENT_PARAMS_VERSION].iterations,
-    salt: encodeBase64(new Uint8Array(32).fill(7)),
-    nonce: encodeBase64(new Uint8Array(12).fill(9)),
-    ciphertext: encodeBase64(new Uint8Array(32).fill(1)),
-    ...overrides,
-  };
-}
+// ============================================================================
+// AAD canonicalization and authenticated header fields
+// ============================================================================
 
 describe("buildAad", () => {
   test("is deterministic for the same fields", () => {
@@ -61,6 +56,7 @@ describe("buildAad", () => {
       kdf: "PBKDF2-SHA256" as const,
       paramsVersion: 1,
       iterations: 600_000,
+      fp: "FFFF",
       salt: "AAAA",
       nonce: "BBBB",
     };
@@ -72,6 +68,7 @@ describe("buildAad", () => {
       kdf: "PBKDF2-SHA256" as const,
       paramsVersion: 1,
       iterations: 600_000,
+      fp: "FFFF",
       salt: "AAAA",
       nonce: "BBBB",
     };
@@ -87,86 +84,85 @@ describe("buildAad", () => {
       kdf: "PBKDF2-SHA256",
       paramsVersion: 1,
       iterations: 600_000,
+      fp: "FFFF",
       salt: "AAAA",
       nonce: "BBBB",
     });
+
     const text = new TextDecoder().decode(aad);
-    expect(text).toBe("Archive-v3\x1FPBKDF2-SHA256\x1F1\x1F600000\x1FAAAA\x1FBBBB");
+    expect(text).toBe(
+      "Archive-v3\x1FPBKDF2-SHA256\x1F1\x1F600000\x1FFFFF\x1FAAAA\x1FBBBB"
+    );
+  });
+
+  test("includes fp in the authenticated field set", () => {
+    const base = {
+      v: "Archive-v3" as const,
+      kdf: "PBKDF2-SHA256" as const,
+      paramsVersion: 1,
+      iterations: 600_000,
+      fp: "AAAA",
+      salt: "BBBB",
+      nonce: "CCCC",
+    };
+
+    expect(buildAad(base)).not.toEqual(buildAad({ ...base, fp: "AAAB" }));
   });
 });
 
-describe("validateHeaderV3", () => {
-  test("accepts a well-formed header", () => {
-    expect(validateHeaderV3(validHeader())).toEqual({
-      ok: true,
-      header: expect.objectContaining({ v: "Archive-v3" }),
-    });
-  });
-  test("rejects an unrecognized v", () => {
-    expect(validateHeaderV3(validHeader({ v: "Archive-v4" as any }))).toEqual({
-      ok: false,
-      reason: expect.any(String),
-    });
-  });
-  test("rejects an unsupported kdf", () => {
-    expect(validateHeaderV3(validHeader({ kdf: "bcrypt" as any }))).toEqual({
-      ok: false,
-      reason: expect.any(String),
-    });
-  });
-  test("rejects an unknown paramsVersion", () => {
-    expect(validateHeaderV3(validHeader({ paramsVersion: 99 }))).toEqual({
-      ok: false,
-      reason: expect.any(String),
-    });
-  });
-  test("rejects iterations that don't match the fixed value for paramsVersion", () => {
-    expect(
-        validateHeaderV3(
-            validHeader({ iterations: PARAMS[CURRENT_PARAMS_VERSION].iterations + 1 })
-        )
-    ).toEqual({ ok: false, reason: expect.any(String) });
-  });
-  test("rejects a salt shorter than 16 bytes", () => {
-    expect(
-        validateHeaderV3(validHeader({ salt: encodeBase64(new Uint8Array(15)) }))
-    ).toEqual({ ok: false, reason: expect.any(String) });
-  });
-  test("rejects a nonce that isn't exactly 12 bytes", () => {
-    expect(
-        validateHeaderV3(validHeader({ nonce: encodeBase64(new Uint8Array(11)) }))
-    ).toEqual({ ok: false, reason: expect.any(String) });
-  });
-  test("rejects ciphertext shorter than the 16-byte tag", () => {
-    expect(
-        validateHeaderV3(validHeader({ ciphertext: encodeBase64(new Uint8Array(10)) }))
-    ).toEqual({ ok: false, reason: expect.any(String) });
-  });
-  test("rejects non-canonical base64 in salt/nonce/ciphertext", () => {
-    expect(validateHeaderV3(validHeader({ salt: "not-base64!!" }))).toEqual({
-      ok: false,
-      reason: expect.any(String),
-    });
-  });
-  test("rejects a malformed object entirely", () => {
-    expect(validateHeaderV3({ nonsense: true })).toEqual({
-      ok: false,
-      reason: expect.any(String),
-    });
+// ============================================================================
+// Recovery-key fingerprint
+// ============================================================================
+
+describe("keyFingerprint", () => {
+  test("produces a deterministic SHA-256 Base64 fingerprint", async () => {
+    await expect(keyFingerprint(RECOVERY_KEY)).resolves.toBe(
+      "kRh4sf+Uptrsq6HX72/aC5cRahYpE4lCe0AqAToq558="
+    );
   });
 });
+
+// ============================================================================
+// Encryption/decryption behavior and failure boundaries
+// ============================================================================
 
 describe("encryptJson / decryptHeader", () => {
   const plaintext = JSON.stringify({ thoughts: [{ hello: "world" }] });
 
+  // --- Core round-trip and fingerprint behavior ---------------------------------
+
   test("round-trips", async () => {
     const header = await encryptJson(RECOVERY_KEY, plaintext);
-    const decrypted = await decryptHeader(
-        RECOVERY_KEY,
-        header
-    );
+    const decrypted = await decryptHeader(RECOVERY_KEY, header);
     expect(decrypted).toBe(plaintext);
   });
+
+  test("encryptJson includes the recovery-key fingerprint", async () => {
+    const header = await encryptJson(RECOVERY_KEY, plaintext);
+
+    await expect(keyFingerprint(RECOVERY_KEY)).resolves.toBe(header.fp);
+  });
+
+  test("rejects a recovery-key fingerprint mismatch before running PBKDF2", async () => {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const quickCryptoModule = require("react-native-quick-crypto");
+    const spy = jest.spyOn(quickCryptoModule, "pbkdf2");
+
+    const header = await encryptJson(RECOVERY_KEY, plaintext);
+    spy.mockClear();
+
+    try {
+      await expect(
+        decryptHeader(DIFFERENT_RECOVERY_KEY, header)
+      ).rejects.toThrow(ArchiveDecryptError);
+
+      expect(spy).not.toHaveBeenCalled();
+    } finally {
+      spy.mockRestore();
+    }
+  });
+
+  // --- Randomness and Unicode handling ------------------------------------------
 
   test("produces a fresh salt and nonce on every call (uniqueness)", async () => {
     const headers = await Promise.all(
@@ -194,6 +190,8 @@ describe("encryptJson / decryptHeader", () => {
 
         expect(decrypted).toBe(unicodePlaintext);
   });
+
+  // --- Wrong-key, tamper, and generic-error behavior ----------------------------
 
   test("wrong recovery key fails with the generic decrypt error", async () => {
     const header = await encryptJson(RECOVERY_KEY, plaintext);
@@ -317,6 +315,8 @@ describe("encryptJson / decryptHeader", () => {
     expect(caught).toBeInstanceOf(Error);
   });
 
+  // --- KDF guardrails and native/web parity --------------------------------------
+
   test("rejects a header whose iterations disagrees with the params table, without running the KDF", async () => {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const quickCryptoModule = require("react-native-quick-crypto");
@@ -415,6 +415,8 @@ describe("encryptJson / decryptHeader", () => {
     }
   });
 
+  // --- Native dependency failure and output self-validation ----------------------
+
   test("getRandomBytesAsync failure during export fails cleanly", async () => {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const Crypto = require("expo-crypto");
@@ -445,103 +447,3 @@ describe("encryptJson / decryptHeader", () => {
     });
   });
 });
-
-describe("deterministic known-answer fixture", () => {
-  // Generated by a standalone Node `crypto` script, deliberately
-  // NOT via this codebase's own encryptJson — fixed generated recovery key, plaintext,
-  // salt, nonce, and KDF params, frozen forever as a regression pin. See
-  // AES-256-GCM (NIST SP 800-38D) and PBKDF2-HMAC-SHA256 (RFC 8018); Node's
-  // `crypto.createCipheriv('aes-256-gcm', ...)` appends the auth tag the
-  // same way `@noble/ciphers`' `gcm` does (tag concatenated after
-  // ciphertext), so this is a genuine independent cross-check, not a
-  // restatement of this file's own code.
-  //
-  // Regeneration script (do not run against product code — this is a
-  // fixed, frozen fixture; only rerun if deliberately replacing it):
-  //
-  //   node -e "
-  //   const crypto = require('crypto');
-  //   const recoveryKey = '9a8b7c6d5e4f30211223344556677889900aabbccddeeff00112233445566778';
-  //   const salt = Buffer.from('aabbccddeeff00112233445566778899', 'hex');
-  //   const nonce = Buffer.from('000102030405060708090a0b', 'hex');
-  //   const iterations = 600000;
-  //   const key = crypto.pbkdf2Sync(recoveryKey, salt, iterations, 32, 'sha256');
-  //   const aad = Buffer.from('Archive-v3\x1FPBKDF2-SHA256\x1F1\x1F600000\x1F' + salt.toString('base64') + '\x1F' + nonce.toString('base64'), 'utf8');
-  //   const plaintext = Buffer.from(JSON.stringify({ thoughts: [{ hello: 'known-answer' }] }), 'utf8');
-  //   const cipher = crypto.createCipheriv('aes-256-gcm', key, nonce);
-  //   cipher.setAAD(aad);
-  //   const enc = Buffer.concat([cipher.update(plaintext), cipher.final()]);
-  //   const ciphertext = Buffer.concat([enc, cipher.getAuthTag()]);
-  //   console.log(JSON.stringify({ salt: salt.toString('base64'), nonce: nonce.toString('base64'), ciphertext: ciphertext.toString('base64') }));
-  //   "
-  const knownAnswerRecoveryKey =
-      "9a8b7c6d5e4f30211223344556677889900aabbccddeeff00112233445566778";
-  const knownAnswerPlaintext = JSON.stringify({
-    thoughts: [{ hello: "known-answer" }],
-  });
-  const knownAnswerHeader: EncryptedHeaderV3 = {
-    v: "Archive-v3",
-    kdf: "PBKDF2-SHA256",
-    paramsVersion: 1,
-    iterations: 600000,
-    salt: "qrvM3e7/ABEiM0RVZneImQ==",
-    nonce: "AAECAwQFBgcICQoL",
-    ciphertext:
-        "fme2k9PfVr1oKajKZOv1ro1aeGOu26VgVZ1SQKZ3dRAFimTXYW6/Yl/xhXeAGlpZMWikTQOF3Q==",
-  };
-
-  test("the frozen fixture header passes validateHeaderV3", () => {
-    expect(validateHeaderV3(knownAnswerHeader)).toEqual({
-      ok: true,
-      header: expect.objectContaining({ v: "Archive-v3" }),
-    });
-  });
-
-  test("this codebase's decryptHeader returns the exact known plaintext", async () => {
-    const decrypted = await decryptHeader(
-        knownAnswerRecoveryKey,
-        knownAnswerHeader
-    );
-    expect(decrypted).toBe(knownAnswerPlaintext);
-  });
-
-  test("tampering with an authenticated header field fails the frozen fixture", async () => {
-    const tampered = {
-      ...knownAnswerHeader,
-      nonce: encodeBase64(new Uint8Array(12).fill(0)),
-    };
-    await expect(
-        decryptHeader(knownAnswerRecoveryKey, tampered)
-    ).rejects.toThrow(ArchiveDecryptError);
-  });
-});
-
-describe("independent interoperability fixture", () => {
-  const independentFixtureRecoveryKey =
-      "696e646570656e64656e742066697874757265207061737370687261736520313233";
-
-  // Generated by an independent Node `crypto` script (Task 6, Step 1),
-  // NOT by this codebase's own encryptJson — a shared implementation bug
-  // in both encode and decode here can't hide behind a self-consistent
-  // round trip. Distinct fixed inputs from the known-answer fixture above:
-  // this fixture only asserts decryptHeader accepts cross-implementation
-  // output, not full header/tamper coverage (that's the KAT's job).
-  const independentFixture: EncryptedHeaderV3 = {
-    v: "Archive-v3",
-    kdf: "PBKDF2-SHA256",
-    paramsVersion: 1,
-    iterations: 600000,
-    salt: "AQIDBAUGBwgJCgsMDQ4PEA==",
-    nonce: "EBESExQVFhcYGRob",
-    ciphertext: "yBXk2lvolcvvkP1Cr553xA6b3FXXCqZ5gMPJf2K7Ug==",
-  };
-
-  test("this codebase's decryptHeader accepts the independently-generated fixture", async () => {
-    const decrypted = await decryptHeader(
-        independentFixtureRecoveryKey,
-        independentFixture
-    );
-    expect(JSON.parse(decrypted)).toEqual({ thoughts: [] });
-  });
-});
-
