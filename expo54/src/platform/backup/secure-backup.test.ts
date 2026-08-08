@@ -384,6 +384,23 @@ describe("secureBackup restoreArchive", () => {
         expect(keys.create).not.toHaveBeenCalled();
         expect(keys.remove).not.toHaveBeenCalled();
     });
+
+    test("restores Archive-v3 with a manually supplied recovery key", async () => {
+        const parser = Archive.createParsers(DistortionData);
+        const encrypted = await parser.encodeEncrypted(
+            fixtureArchive(),
+            RECOVERY_KEY
+        );
+        const keys = fakeRecoveryKeys();
+        const backup = secureBackup(DistortionData, keys.storage);
+
+        await expect(
+            backup.restoreArchive(encrypted, RECOVERY_KEY)
+        ).resolves.toEqual(fixtureArchive());
+
+        expect(keys.read).not.toHaveBeenCalled();
+        expect(keys.create).not.toHaveBeenCalled();
+    });
 });
 
 describe("secureBackup restoreBackupFile", () => {
@@ -448,6 +465,34 @@ describe("secureBackup restoreBackupFile", () => {
             backup.restoreBackupFile("file:///backups/unreadable")
         ).rejects.toBe(readError);
 
+        expect(keys.read).not.toHaveBeenCalled();
+        expect(keys.create).not.toHaveBeenCalled();
+    });
+
+    test("restores Archive-v3 file with a manually supplied recovery key", async () => {
+        const parser = Archive.createParsers(DistortionData);
+        const encrypted = await parser.encodeEncrypted(
+            fixtureArchive(),
+            RECOVERY_KEY
+        );
+        const files = fakeDestination(encrypted);
+        const keys = fakeRecoveryKeys();
+        const backup = secureBackup(
+            DistortionData,
+            keys.storage,
+            files.destination
+        );
+
+        await expect(
+            backup.restoreBackupFile(
+                "file:///backups/archive-v3",
+                RECOVERY_KEY
+            )
+        ).resolves.toEqual(fixtureArchive());
+
+        expect(files.read).toHaveBeenCalledWith(
+            "file:///backups/archive-v3"
+        );
         expect(keys.read).not.toHaveBeenCalled();
         expect(keys.create).not.toHaveBeenCalled();
     });
