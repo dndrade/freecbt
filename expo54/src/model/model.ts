@@ -138,18 +138,32 @@ function updateReady(m: Ready, a: Action.Action): readonly [Model, Cmd.List] {
       return [m2, [Cmd.deleteThought(k)]];
     }
     case "import-archive": {
-      const thoughts = new Map(
-          a.value.thoughts.map((t) => [Thought.key(t), t] as const)
-      );
-      const m2: Model = { ...m, thoughts };
-      return [
-        m2,
-        [
-          ...thoughtsList(m).map((t) => Cmd.deleteThought(Thought.key(t))),
-          ...a.value.thoughts.map((t) => Cmd.writeThought(t)),
-        ],
-      ];
+        const thoughts = new Map(m.thoughts);
+
+        for (const t of a.value.thoughts) {
+            thoughts.set(Thought.key(t), t);
+        }
+
+        const m2: Model = { ...m, thoughts };
+
+        return [
+            m2,
+            a.value.thoughts.map((t) => Cmd.writeThought(t)),
+        ];
     }
+    // case "import-archive": {
+    //   const thoughts = new Map(
+    //       a.value.thoughts.map((t) => [Thought.key(t), t] as const)
+    //   );
+    //   const m2: Model = { ...m, thoughts };
+    //   return [
+    //     m2,
+    //     [
+    //       ...thoughtsList(m).map((t) => Cmd.deleteThought(Thought.key(t))),
+    //       ...a.value.thoughts.map((t) => Cmd.writeThought(t)),
+    //     ],
+    //   ];
+    // }
     default:
       throw new Error(`no such action: ${a satisfies never}`);
   }
