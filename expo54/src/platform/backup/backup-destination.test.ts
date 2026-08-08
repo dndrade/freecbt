@@ -2,6 +2,7 @@ import {
     BACKUP_FILENAME_PREFIX,
     BackupDestinationUnavailableError,
     BackupFileAlreadyExistsError,
+    BackupWriteVerificationError,
     type BackupFileSystem,
     createBackupFilename,
     resolveBackupDestination,
@@ -114,82 +115,62 @@ describe("resolveBackupDestination", () => {
             BackupDestinationUnavailableError
         );
 
+        expect(isAccessible).toHaveBeenCalledTimes(1);
         expect(isAccessible).toHaveBeenCalledWith("file:///default");
     });
 });
 
-function fakeFileSystem(overrides: Partial<BackupFileSystem> = {}): {
-    fileSystem: BackupFileSystem;
-    join: jest.Mock<string, [string, string]>;
-    exists: jest.Mock<Promise<boolean>, [string]>;
-    create: jest.Mock<Promise<void>, [string]>;
-    read: jest.Mock<Promise<string>, [string]>;
-    write: jest.Mock<Promise<void>, [string, string]>;
-    remove: jest.Mock<Promise<void>, [string]>;
-} {
-    const join = jest.fn(
-        (directoryUri: string, filename: string) =>
-            `${directoryUri}/${filename}`
-    );
-    const exists = jest.fn(async (_fileUri: string) => false);
-    const create = jest.fn(async (_fileUri: string) => {});
-    const read = jest.fn(async (_fileUri: string) => "body");
-    const write = jest.fn(
-        async (_fileUri: string, _body: string) => {}
-    );
-    const remove = jest.fn(async (_fileUri: string) => {});
-
+function fakeFileSystem(
+    overrides: Partial<jest.Mocked<BackupFileSystem>> = {}
+): jest.Mocked<BackupFileSystem> {
     return {
-        fileSystem: {
-            join,
-            exists,
-            create,
-            read,
-            write,
-            delete: remove,
-            ...overrides,
-        },
-        join,
-        exists,
-        create,
-        read,
-        write,
-        remove,
+        join: jest.fn(
+            (directoryUri: string, filename: string) =>
+                `${directoryUri}/${filename}`
+        ),
+        exists: jest.fn(async (_fileUri: string) => false),
+        create: jest.fn(async (_fileUri: string) => {}),
+        read: jest.fn(
+            async (_fileUri: string) => "encrypted-body"
+        ),
+        write: jest.fn(
+            async (_fileUri: string, _body: string) => {}
+        ),
+        delete: jest.fn(async (_fileUri: string) => {}),
+        ...overrides,
     };
 }
 
 describe("writeBackupFile", () => {
-    test("creates and writes a new backup file", async () => {
-        const fs = fakeFileSystem();
+    test("creates, writes, and verifies a new backup file", async () => {
+        const fileSystem = fakeFileSystem();
+        const fileUri = "file:///backups/FreeCBT-backup-2026";
 
         await expect(
             writeBackupFile({
                 directoryUri: "file:///backups",
                 filename: "FreeCBT-backup-2026",
                 body: "encrypted-body",
-                fileSystem: fs.fileSystem,
+                fileSystem,
             })
         ).resolves.toEqual({
-            fileUri: "file:///backups/FreeCBT-backup-2026",
+            fileUri,
             filename: "FreeCBT-backup-2026",
         });
 
-        expect(fs.exists).toHaveBeenCalledWith(
-            "file:///backups/FreeCBT-backup-2026"
-        );
-        expect(fs.create).toHaveBeenCalledWith(
-            "file:///backups/FreeCBT-backup-2026"
-        );
-        expect(fs.write).toHaveBeenCalledWith(
-            "file:///backups/FreeCBT-backup-2026",
+        expect(fileSystem.exists).toHaveBeenCalledWith(fileUri);
+        expect(fileSystem.create).toHaveBeenCalledWith(fileUri);
+        expect(fileSystem.write).toHaveBeenCalledWith(
+            fileUri,
             "encrypted-body"
         );
-        expect(fs.remove).not.toHaveBeenCalled();
+        expect(fileSystem.read).toHaveBeenCalledWith(fileUri);
+        expect(fileSystem.delete).not.toHaveBeenCalled();
     });
 
     test("refuses to overwrite an existing backup", async () => {
-        const fs = fakeFileSystem({
-            exists: jest.fn(async () => true),
+        const fileSystem = fakeFileSystem({
+            exists: jest.fn(async (_fileUri: string) => true),
         });
 
         await expect(
@@ -197,19 +178,20 @@ describe("writeBackupFile", () => {
                 directoryUri: "file:///backups",
                 filename: "existing-backup",
                 body: "encrypted-body",
-                fileSystem: fs.fileSystem,
+                fileSystem,
             })
         ).rejects.toBeInstanceOf(BackupFileAlreadyExistsError);
 
-        expect(fs.create).not.toHaveBeenCalled();
-        expect(fs.write).not.toHaveBeenCalled();
-        expect(fs.remove).not.toHaveBeenCalled();
+        expect(fileSystem.create).not.toHaveBeenCalled();
+        expect(fileSystem.write).not.toHaveBeenCalled();
+        expect(fileSystem.read).not.toHaveBeenCalled();
+        expect(fileSystem.delete).not.toHaveBeenCalled();
     });
 
     test("cleans up a created file when writing fails", async () => {
         const writeError = new Error("write failed");
-        const fs = fakeFileSystem({
-            write: jest.fn(async () => {
+        const fileSystem = fakeFileSystem({
+            write: jest.fn(async (_fileUri: string, _body: string) => {
                 throw writeError;
             }),
         });
@@ -219,19 +201,20 @@ describe("writeBackupFile", () => {
                 directoryUri: "file:///backups",
                 filename: "failed-backup",
                 body: "encrypted-body",
-                fileSystem: fs.fileSystem,
+                fileSystem,
             })
         ).rejects.toBe(writeError);
 
-        expect(fs.remove).toHaveBeenCalledWith(
+        expect(fileSystem.delete).toHaveBeenCalledWith(
             "file:///backups/failed-backup"
         );
+        expect(fileSystem.read).not.toHaveBeenCalled();
     });
 
     test("does not delete when file creation fails", async () => {
         const createError = new Error("create failed");
-        const fs = fakeFileSystem({
-            create: jest.fn(async () => {
+        const fileSystem = fakeFileSystem({
+            create: jest.fn(async (_fileUri: string) => {
                 throw createError;
             }),
         });
@@ -241,23 +224,53 @@ describe("writeBackupFile", () => {
                 directoryUri: "file:///backups",
                 filename: "failed-backup",
                 body: "encrypted-body",
-                fileSystem: fs.fileSystem,
+                fileSystem,
             })
         ).rejects.toBe(createError);
 
-        expect(fs.write).not.toHaveBeenCalled();
-        expect(fs.remove).not.toHaveBeenCalled();
+        expect(fileSystem.write).not.toHaveBeenCalled();
+        expect(fileSystem.read).not.toHaveBeenCalled();
+        expect(fileSystem.delete).not.toHaveBeenCalled();
+    });
+
+    test("cleans up and preserves the read error when verification read fails", async () => {
+        const readError = new Error("read failed");
+        const fileSystem = fakeFileSystem({
+            read: jest.fn(async (_fileUri: string) => {
+                throw readError;
+            }),
+        });
+
+        await expect(
+            writeBackupFile({
+                directoryUri: "file:///backups",
+                filename: "failed-read",
+                body: "encrypted-body",
+                fileSystem,
+            })
+        ).rejects.toBe(readError);
+
+        expect(fileSystem.delete).toHaveBeenCalledWith(
+            "file:///backups/failed-read"
+        );
     });
 
     test("preserves the write error when cleanup also fails", async () => {
         const writeError = new Error("write failed");
-        const fs = fakeFileSystem({
-            write: jest.fn(async () => {
-                throw writeError;
-            }),
-            delete: jest.fn(async () => {
-                throw new Error("cleanup failed");
-            }),
+        const fileSystem = fakeFileSystem({
+            write: jest.fn(
+                async (
+                    _fileUri: string,
+                    _body: string
+                ): Promise<void> => {
+                    throw writeError;
+                }
+            ),
+            delete: jest.fn(
+                async (_fileUri: string): Promise<void> => {
+                    throw new Error("cleanup failed");
+                }
+            ),
         });
 
         await expect(
@@ -265,8 +278,36 @@ describe("writeBackupFile", () => {
                 directoryUri: "file:///backups",
                 filename: "failed-backup",
                 body: "encrypted-body",
-                fileSystem: fs.fileSystem,
+                fileSystem,
             })
         ).rejects.toBe(writeError);
+    });
+
+    test("fails with a verification error and cleans up when written content does not read back exactly", async () => {
+        const fileSystem = fakeFileSystem({
+            read: jest.fn(
+                async (_fileUri: string): Promise<string> =>
+                    "corrupted-body"
+            ),
+        });
+        const fileUri = "file:///backups/failed-verification";
+
+        const result = writeBackupFile({
+            directoryUri: "file:///backups",
+            filename: "failed-verification",
+            body: "encrypted-body",
+            fileSystem,
+        });
+
+        await expect(result).rejects.toBeInstanceOf(
+            BackupWriteVerificationError
+        );
+        await expect(result).rejects.toMatchObject({
+            code: "BACKUP_WRITE_VERIFICATION_FAILED",
+            fileUri,
+        });
+
+        expect(fileSystem.read).toHaveBeenCalledWith(fileUri);
+        expect(fileSystem.delete).toHaveBeenCalledWith(fileUri);
     });
 });
