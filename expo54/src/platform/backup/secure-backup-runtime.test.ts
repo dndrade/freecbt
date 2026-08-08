@@ -41,6 +41,7 @@ describe("createSecureBackup", () => {
             read: jest.fn(),
             write: jest.fn(),
             delete: jest.fn(),
+            listFiles: jest.fn(async () => []),
         };
         const repository = {
             getRecoveryKeyStatus: jest.fn(),

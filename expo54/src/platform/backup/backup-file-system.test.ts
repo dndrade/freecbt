@@ -1,5 +1,6 @@
 import {
     Directory,
+    File,
     Paths,
 } from "expo-file-system";
 import {
@@ -8,60 +9,21 @@ import {
     createExpoBackupFileSystem,
     ensureDefaultBackupDirectory,
     getDefaultBackupDirectoryUri,
+    pruneOldBackups,
 } from "./backup-file-system";
+import {
+    directoryCreate,
+    directoryList,
+    fileCreate,
+    fileText,
+    fileWrite,
+    fileDelete,
+} from "../../testing/mocks/expo-file-system"
 
-const directoryCreate = jest.fn();
-const fileCreate = jest.fn();
-const fileText = jest.fn();
-const fileWrite = jest.fn();
-const fileDelete = jest.fn();
+jest.mock("expo-file-system", () =>
+    jest.requireActual("../../testing/mocks/expo-file-system")
+);
 
-jest.mock("expo-file-system", () => {
-    class MockDirectory {
-        uri: string;
-        exists = true;
-        create = directoryCreate;
-
-        constructor(...parts: ({ uri: string } | string)[]) {
-            this.uri = parts
-                .map((part) =>
-                    typeof part === "string" ? part : part.uri
-                )
-                .join("/")
-                .replace(/\/{2,}/g, "/")
-                .replace("file:/", "file:///");
-        }
-    }
-
-    class MockFile {
-        uri: string;
-        exists = false;
-        create = fileCreate;
-        text = fileText;
-        write = fileWrite;
-        delete = fileDelete;
-
-        constructor(...parts: ({ uri: string } | string)[]) {
-            this.uri = parts
-                .map((part) =>
-                    typeof part === "string" ? part : part.uri
-                )
-                .join("/")
-                .replace(/\/{2,}/g, "/")
-                .replace("file:/", "file:///");
-        }
-    }
-
-    return {
-        Paths: {
-            document: {
-                uri: "file:///documents",
-            },
-        },
-        Directory: MockDirectory,
-        File: MockFile,
-    };
-});
 
 describe("default backup directory", () => {
     beforeEach(() => {
@@ -161,6 +123,37 @@ describe("createExpoBackupFileSystem", () => {
 
         await fileSystem.delete("file:///documents/backup");
 
+        expect(fileDelete).toHaveBeenCalledWith(
+            "file:///documents/backup"
+        );
+    });
+
+    test("prunes FreeCBT backups beyond the two most recent", async () => {
+        const fileSystem = createExpoBackupFileSystem();
+
+        directoryList.mockReturnValue([
+            new File(
+                "file:///documents/FreeCBT-backups/FreeCBT-backup-2026-08-06T03-00-00-000Z"
+            ),
+            new File(
+                "file:///documents/FreeCBT-backups/FreeCBT-backup-2026-08-08T03-00-00-000Z"
+            ),
+            new File(
+                "file:///documents/FreeCBT-backups/FreeCBT-backup-2026-08-07T03-00-00-000Z"
+            ),
+            new File(
+                "file:///documents/FreeCBT-backups/notes.txt"
+            ),
+        ]);
+
+        await pruneOldBackups(
+            "file:///documents/FreeCBT-backups",
+            fileSystem
+        );
+
         expect(fileDelete).toHaveBeenCalledTimes(1);
+        expect(fileDelete).toHaveBeenCalledWith(
+            "file:///documents/FreeCBT-backups/FreeCBT-backup-2026-08-06T03-00-00-000Z"
+        );
     });
 });

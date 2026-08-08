@@ -3,11 +3,12 @@ import {
     BackupDestinationUnavailableError,
     BackupFileAlreadyExistsError,
     BackupWriteVerificationError,
-    type BackupFileSystem,
     createBackupFilename,
     resolveBackupDestination,
     writeBackupFile,
-} from "./backup-destination";
+} from "./backup-destination"
+
+import { fakeBackupFileSystem } from "@/src/testing/mocks/backup-file-system";
 
 describe("createBackupFilename", () => {
     test("creates a deterministic timestamped filename", () => {
@@ -120,30 +121,9 @@ describe("resolveBackupDestination", () => {
     });
 });
 
-function fakeFileSystem(
-    overrides: Partial<jest.Mocked<BackupFileSystem>> = {}
-): jest.Mocked<BackupFileSystem> {
-    return {
-        join: jest.fn(
-            (directoryUri: string, filename: string) =>
-                `${directoryUri}/${filename}`
-        ),
-        exists: jest.fn(async (_fileUri: string) => false),
-        create: jest.fn(async (_fileUri: string) => {}),
-        read: jest.fn(
-            async (_fileUri: string) => "encrypted-body"
-        ),
-        write: jest.fn(
-            async (_fileUri: string, _body: string) => {}
-        ),
-        delete: jest.fn(async (_fileUri: string) => {}),
-        ...overrides,
-    };
-}
-
 describe("writeBackupFile", () => {
     test("creates, writes, and verifies a new backup file", async () => {
-        const fileSystem = fakeFileSystem();
+        const fileSystem = fakeBackupFileSystem();
         const fileUri = "file:///backups/FreeCBT-backup-2026";
 
         await expect(
@@ -169,7 +149,7 @@ describe("writeBackupFile", () => {
     });
 
     test("refuses to overwrite an existing backup", async () => {
-        const fileSystem = fakeFileSystem({
+        const fileSystem = fakeBackupFileSystem({
             exists: jest.fn(async (_fileUri: string) => true),
         });
 
@@ -190,7 +170,7 @@ describe("writeBackupFile", () => {
 
     test("cleans up a created file when writing fails", async () => {
         const writeError = new Error("write failed");
-        const fileSystem = fakeFileSystem({
+        const fileSystem = fakeBackupFileSystem({
             write: jest.fn(async (_fileUri: string, _body: string) => {
                 throw writeError;
             }),
@@ -213,7 +193,7 @@ describe("writeBackupFile", () => {
 
     test("does not delete when file creation fails", async () => {
         const createError = new Error("create failed");
-        const fileSystem = fakeFileSystem({
+        const fileSystem = fakeBackupFileSystem({
             create: jest.fn(async (_fileUri: string) => {
                 throw createError;
             }),
@@ -235,7 +215,7 @@ describe("writeBackupFile", () => {
 
     test("cleans up and preserves the read error when verification read fails", async () => {
         const readError = new Error("read failed");
-        const fileSystem = fakeFileSystem({
+        const fileSystem = fakeBackupFileSystem({
             read: jest.fn(async (_fileUri: string) => {
                 throw readError;
             }),
@@ -257,7 +237,7 @@ describe("writeBackupFile", () => {
 
     test("preserves the write error when cleanup also fails", async () => {
         const writeError = new Error("write failed");
-        const fileSystem = fakeFileSystem({
+        const fileSystem = fakeBackupFileSystem({
             write: jest.fn(
                 async (
                     _fileUri: string,
@@ -284,7 +264,7 @@ describe("writeBackupFile", () => {
     });
 
     test("fails with a verification error and cleans up when written content does not read back exactly", async () => {
-        const fileSystem = fakeFileSystem({
+        const fileSystem = fakeBackupFileSystem({
             read: jest.fn(
                 async (_fileUri: string): Promise<string> =>
                     "corrupted-body"
