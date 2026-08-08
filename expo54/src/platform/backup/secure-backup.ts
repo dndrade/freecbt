@@ -38,12 +38,18 @@ export type SecureBackupBase = {
     setupRecoveryKey(): Promise<string>;
     revealRecoveryKey(): Promise<string>;
     exportArchiveV3(value: Archive.Archive): Promise<string>;
-    restoreArchive(text: string): Promise<Archive.Archive>;
+    restoreArchive(
+        text: string,
+        manualKey?: string
+    ): Promise<Archive.Archive>;
 };
 
 export type SecureBackupWithDestination = SecureBackupBase & {
     createBackup(value: Archive.Archive): Promise<WrittenBackupFile>;
-    restoreBackupFile(fileUri: string): Promise<Archive.Archive>;
+    restoreBackupFile(
+        fileUri: string,
+        manualKey?: string
+    ): Promise<Archive.Archive>;
 };
 
 export function secureBackup(
@@ -120,7 +126,10 @@ export function secureBackup(
         return await archive.encodeEncrypted(value, recoveryKey);
     }
 
-    async function restoreArchive(text: string): Promise<Archive.Archive> {
+    async function restoreArchive(
+        text: string,
+        manualKey?: string
+    ): Promise<Archive.Archive> {
         const decoded = archive.decodeFile(text);
 
         if (decoded.kind === "invalid") {
@@ -131,7 +140,7 @@ export function secureBackup(
             return decoded.archive;
         }
 
-        const recoveryKey = await recoveryKeys.read();
+        const recoveryKey = manualKey ?? await recoveryKeys.read();
 
         if (recoveryKey === null) {
             throw new MissingRecoveryKeyError();
@@ -182,10 +191,11 @@ export function secureBackup(
     }
 
     async function restoreBackupFile(
-        fileUri: string
+        fileUri: string,
+        manualKey?: string
     ): Promise<Archive.Archive> {
         const body = await backupDestination.fileSystem.read(fileUri);
-        return await restoreArchive(body);
+        return await restoreArchive(body, manualKey);
     }
 
     return {
