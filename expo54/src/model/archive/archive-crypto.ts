@@ -6,30 +6,17 @@ import { gcm } from "@noble/ciphers/aes.js";
 import * as Crypto from "expo-crypto";
 import { Platform } from "react-native";
 import { pbkdf2 as nativePbkdf2 } from "react-native-quick-crypto";
-import { z } from "zod";
 import {
   decodeBase64Strict,
   encodeBase64,
   utf8DecodeStrict,
   utf8Encode,
 } from "./archive-codec";
-
-/**
- * Maximum accepted Base64 string length for each encrypted-header field
- * before attempting Base64 decoding.
- *
- * This is a defense-in-depth validation limit. It is independent of, and
- * intentionally smaller than, the archive-level size limits handled by the
- * higher-level backup parser.
- *
- * Checking encoded length before decoding prevents pathological inputs from
- * forcing unnecessary allocation or decoding work during header validation.
- *
- * Eight MiB of Base64 text is intentionally generous for a legitimate
- * FreeCBT encrypted archive field while remaining bounded against hostile
- * input.
- */
-const MAX_FIELD_BASE64_CHARS = 8 * 1024 * 1024;
+import {
+  CURRENT_PARAMS_VERSION,
+  EncryptedHeaderV3,
+  PARAMS,
+} from "./archive-format";
 
 /**
  * ASCII Unit Separator used between fields in the canonical
@@ -42,105 +29,9 @@ const MAX_FIELD_BASE64_CHARS = 8 * 1024 * 1024;
 const AAD_SEPARATOR = "\x1F";
 
 /**
- * Immutable PBKDF2 parameter sets indexed by Archive-v3 `paramsVersion`.
- *
- * A file-provided iteration count must never be trusted independently.
- * Validation must:
- *
- * 1. Look up the expected iteration count using `paramsVersion`.
- * 2. Reject unsupported parameter versions.
- * 3. Reject headers whose `iterations` value does not exactly match the
- *    code-defined value for that version.
- *
- * This prevents an attacker from supplying an excessive iteration count and
- * forcing resource-intensive PBKDF2 work before authentication.
- *
- * Version 1 uses 600,000 PBKDF2-HMAC-SHA256 iterations. Device benchmarking
- * must verify whether a parameter set meets the intended interactive
- * performance target on the slowest supported device.
- *
- * Existing entries are permanent compatibility records and must never be
- * edited. Archives created with parameter version 1 must remain decryptable
- * using exactly 600,000 iterations.
- *
- * When introducing a new calibrated parameter set:
- *
- * - add a new numeric key;
- * - retain every previous entry unchanged;
- * - update `CURRENT_PARAMS_VERSION` to the new key;
- * - preserve decryption support for all earlier versions.
- *
- * A first-pass calibration may be calculated using:
- *
- * `Math.round(currentIterations * (targetMs / measuredMs))`
- *
- * That result still requires security review and device verification before
- * becoming a new format parameter set.
- */
-export const PARAMS: Readonly<
-    Record<number, Readonly<{ iterations: number }>>
-> = {
-  1: { iterations: 600_000 },
-};
-
-/**
- * Parameter-set version used when creating new Archive-v3 backups.
- *
- * Changing this value affects only newly encrypted archives. Decryption must
- * continue to support all versions present in `PARAMS`.
- */
-export const CURRENT_PARAMS_VERSION = 1;
-
-/**
- * Strict schema for the serialized Archive-v3 encrypted header.
- *
- * Unknown fields are rejected so the authenticated format remains explicit
- * and versioned.
- */
-export const EncryptedHeaderV3 = z
-    .object({
-      v: z.literal("Archive-v3"),
-      kdf: z.literal("PBKDF2-SHA256"),
-      paramsVersion: z.number().int(),
-      iterations: z.number().int(),
-      salt: z.string(),
-      nonce: z.string(),
-      ciphertext: z.string(),
-    })
-    .strict();
-
-export type EncryptedHeaderV3 = z.infer<typeof EncryptedHeaderV3>;
-
-export type HeaderValidation =
-    | { ok: true; header: EncryptedHeaderV3 }
-    | { ok: false; reason: string };
-
-/**
- * Minimum accepted salt length after Base64 decoding.
- */
-const SALT_MIN_BYTES = 16;
-
-/**
- * Maximum accepted salt length after Base64 decoding.
- *
- * This prevents unexpectedly large salt inputs from reaching the KDF.
- */
-const SALT_MAX_BYTES = 64;
-
-/**
  * Required AES-GCM nonce length in bytes.
- *
- * Archive-v3 uses a fresh 96-bit nonce for every encryption operation.
  */
 const NONCE_BYTES = 12;
-
-/**
- * AES-GCM authentication-tag length in bytes.
- *
- * Ciphertext shorter than this cannot contain a complete authentication tag
- * and is rejected before decryption.
- */
-const GCM_TAG_BYTES = 16;
 
 /**
  * Salt length generated for newly encrypted Archive-v3 backups.
@@ -175,6 +66,7 @@ export function buildAad(h: {
   kdf: "PBKDF2-SHA256";
   paramsVersion: number;
   iterations: number;
+  fp: string;
   salt: string;
   nonce: string;
 }): Uint8Array {
@@ -183,6 +75,7 @@ export function buildAad(h: {
     h.kdf,
     String(h.paramsVersion),
     String(h.iterations),
+    h.fp,
     h.salt,
     h.nonce,
   ];
@@ -190,114 +83,6 @@ export function buildAad(h: {
   return new TextEncoder().encode(parts.join(AAD_SEPARATOR));
 }
 
-/**
- * Validates all unauthenticated Archive-v3 header input before PBKDF2 runs.
- *
- * This function deliberately performs structural, parameter, encoded-length,
- * canonical-Base64, and decoded-length checks before any expensive key
- * derivation. Callers should use the returned validated header for decryption.
- */
-export function validateHeaderV3(obj: unknown): HeaderValidation {
-  const parsed = EncryptedHeaderV3.safeParse(obj);
-
-  if (!parsed.success) {
-    return { ok: false, reason: "malformed header" };
-  }
-
-  const h = parsed.data;
-  const params = PARAMS[h.paramsVersion];
-
-  if (params === undefined) {
-    return { ok: false, reason: "unsupported paramsVersion" };
-  }
-
-  if (h.iterations !== params.iterations) {
-    return {
-      ok: false,
-      reason: "iterations does not match paramsVersion",
-    };
-  }
-
-  if (h.salt.length > MAX_FIELD_BASE64_CHARS) {
-    return {
-      ok: false,
-      reason: "salt base64 exceeds length limit",
-    };
-  }
-
-  if (h.nonce.length > MAX_FIELD_BASE64_CHARS) {
-    return {
-      ok: false,
-      reason: "nonce base64 exceeds length limit",
-    };
-  }
-
-  if (h.ciphertext.length > MAX_FIELD_BASE64_CHARS) {
-    return {
-      ok: false,
-      reason: "ciphertext base64 exceeds length limit",
-    };
-  }
-
-  const saltBytes = decodeBase64Strict(h.salt);
-
-  if (saltBytes === null || encodeBase64(saltBytes) !== h.salt) {
-    return {
-      ok: false,
-      reason: "salt is not canonical base64",
-    };
-  }
-
-  const nonceBytes = decodeBase64Strict(h.nonce);
-
-  if (nonceBytes === null || encodeBase64(nonceBytes) !== h.nonce) {
-    return {
-      ok: false,
-      reason: "nonce is not canonical base64",
-    };
-  }
-
-  const ciphertextBytes = decodeBase64Strict(h.ciphertext);
-
-  if (
-      ciphertextBytes === null ||
-      encodeBase64(ciphertextBytes) !== h.ciphertext
-  ) {
-    return {
-      ok: false,
-      reason: "ciphertext is not canonical base64",
-    };
-  }
-
-  if (
-      saltBytes.length < SALT_MIN_BYTES ||
-      saltBytes.length > SALT_MAX_BYTES
-  ) {
-    return {
-      ok: false,
-      reason: "salt length out of range",
-    };
-  }
-
-  if (nonceBytes.length !== NONCE_BYTES) {
-    return {
-      ok: false,
-      reason: "nonce length invalid",
-    };
-  }
-
-  if (ciphertextBytes.length < GCM_TAG_BYTES) {
-    return {
-      ok: false,
-      reason: "ciphertext shorter than the auth tag",
-    };
-  }
-
-  return {
-    ok: true,
-    header: h,
-  };
-}
 
 /**
  * Generic decryption failure exposed to callers.
@@ -422,6 +207,27 @@ async function deriveKey(
 }
 
 /**
+ * Returns the deterministic SHA-256 fingerprint stored in Archive-v3 headers.
+ *
+ * The recovery key is encoded as UTF-8, hashed, Base64-encoded, and the
+ * temporary UTF-8 buffer is wiped before returning.
+ */
+export async function keyFingerprint(recoveryKey: string): Promise<string> {
+  const recoveryKeyBytes = utf8Encode(recoveryKey);
+
+  try {
+    const digest = await Crypto.digest(
+      "SHA-256" as Crypto.CryptoDigestAlgorithm,
+      recoveryKeyBytes as BufferSource
+    );
+
+    return encodeBase64(new Uint8Array(digest));
+  } finally {
+    recoveryKeyBytes.fill(0);
+  }
+}
+
+/**
  * Encrypts a serialized archive JSON document into an Archive-v3 header.
  *
  * A fresh random salt and nonce are generated for every encryption. The
@@ -477,6 +283,8 @@ export async function encryptJson(
 
     plaintextBytes = plaintextMeasurement.value;
 
+    const fp = await keyFingerprint(recoveryKey);
+
     const headerMeasurement = measureDevelopmentSync(
         "archive.header.prepare",
         () => ({
@@ -484,6 +292,7 @@ export async function encryptJson(
           kdf: KDF_NAME,
           paramsVersion,
           iterations,
+          fp,
           salt: encodeBase64(salt),
           nonce: encodeBase64(nonce),
         }),
@@ -588,6 +397,12 @@ export async function decryptHeader(
       params === undefined ||
       header.iterations !== params.iterations
   ) {
+    throw new ArchiveDecryptError();
+  }
+
+  const fp = await keyFingerprint(recoveryKey);
+
+  if (fp !== header.fp) {
     throw new ArchiveDecryptError();
   }
 
