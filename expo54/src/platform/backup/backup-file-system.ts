@@ -3,9 +3,14 @@ import {
     File,
     Paths,
 } from "expo-file-system";
-import type { BackupFileSystem } from "./backup-destination";
+import {
+    BACKUP_FILENAME_PREFIX,
+    type BackupFileSystem,
+} from "./backup-destination";
 
 export const DEFAULT_BACKUP_DIRECTORY_NAME = "FreeCBT-backups";
+
+export const MAX_RETAINED_BACKUPS = 2;
 
 // TODO(iOS): persistent user-selected directories are not supported yet.
 // Directory picker access is session-scoped on iOS.
@@ -57,8 +62,33 @@ export function createExpoBackupFileSystem(): BackupFileSystem {
             new File(fileUri).write(body);
         },
 
+        async listFiles(directoryUri) {
+            return new Directory(directoryUri)
+                .list()
+                .filter((entry): entry is File => entry instanceof File)
+                .map((file) => ({
+                    uri: file.uri,
+                    name: file.name,
+                }));
+        },
+
         async delete(fileUri) {
             new File(fileUri).delete();
         },
     };
+}
+
+export async function pruneOldBackups(
+    directoryUri: string,
+    fileSystem: BackupFileSystem
+): Promise<void> {
+    const backups = (await fileSystem.listFiles(directoryUri))
+        .filter((file) =>
+            file.name.startsWith(`${BACKUP_FILENAME_PREFIX}-`)
+        )
+        .sort((a, b) => b.name.localeCompare(a.name));
+
+    for (const backup of backups.slice(MAX_RETAINED_BACKUPS)) {
+        await fileSystem.delete(backup.uri);
+    }
 }

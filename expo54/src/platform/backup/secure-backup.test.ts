@@ -1,7 +1,7 @@
 import * as LZ from "lz-string";
 import { Archive, DistortionData, Thought } from "@/src/model";
 import type { SecureBackupRecoveryKey } from "@/src/platform/storage/storage";
-import type { BackupFileSystem } from "./backup-destination";
+import { fakeBackupFileSystem } from "@/src/testing/mocks/backup-file-system";
 import {
     InvalidBackupArchiveError,
     MissingRecoveryKeyError,
@@ -68,19 +68,27 @@ function wrapArchiveJson(value: unknown): string {
 function fakeDestination(body: string): {
     destination: SecureBackupDestination;
     read: jest.Mock<Promise<string>, [string]>;
+    write: jest.Mock<Promise<void>, [string, string]>;
+    listFiles: jest.Mock<
+        Promise<readonly { uri: string; name: string }[]>,
+        [string]
+    >;
+    deleteFile: jest.Mock<Promise<void>, [string]>;
 } {
     const read = jest.fn(async (_fileUri: string) => body);
-    const fileSystem: BackupFileSystem = {
-        join: jest.fn(
-            (directoryUri: string, filename: string) =>
-                `${directoryUri}/${filename}`
-        ),
-        exists: jest.fn(async () => false),
-        create: jest.fn(async () => {}),
+    const write = jest.fn(async (_fileUri: string, _body: string) => {});
+    const listFiles = jest.fn(
+        async (_directoryUri: string) =>
+            [] as readonly { uri: string; name: string }[]
+    );
+    const deleteFile = jest.fn(async (_fileUri: string) => {});
+
+    const fileSystem = fakeBackupFileSystem({
         read,
-        write: jest.fn(async () => {}),
-        delete: jest.fn(async () => {}),
-    };
+        write,
+        delete: deleteFile,
+        listFiles,
+    });
 
     return {
         destination: {
@@ -91,6 +99,9 @@ function fakeDestination(body: string): {
             now: () => new Date("2026-08-07T03:00:00.000Z"),
         },
         read,
+        write,
+        listFiles,
+        deleteFile,
     };
 }
 
@@ -239,6 +250,60 @@ describe("secureBackup exportArchiveV3", () => {
                 await expect(decoded.decrypt(RECOVERY_KEY)).resolves.toEqual(archive);
             }
         }
+    });
+});
+
+describe("secureBackup createBackup", () => {
+    test("prunes old backups after a successful verified write", async () => {
+        const keys = fakeRecoveryKeys(RECOVERY_KEY);
+        const files = fakeDestination("");
+        const backup = secureBackup(
+            DistortionData,
+            keys.storage,
+            files.destination
+        );
+
+        files.read.mockImplementation(
+            async (_fileUri: string) =>
+                files.write.mock.calls.at(-1)?.[1] ?? ""
+        );
+
+        await backup.createBackup(fixtureArchive());
+
+        expect(files.write).toHaveBeenCalledTimes(1);
+        expect(files.listFiles).toHaveBeenCalledWith(
+            "file:///backups"
+        );
+
+        const writeOrder =
+            files.write.mock.invocationCallOrder[0];
+        const listOrder =
+            files.listFiles.mock.invocationCallOrder[0];
+
+        expect(listOrder).toBeGreaterThan(writeOrder);
+    });
+
+    test("does not prune old backups when the backup write fails", async () => {
+        const keys = fakeRecoveryKeys(RECOVERY_KEY);
+        const files = fakeDestination("");
+        const backup = secureBackup(
+            DistortionData,
+            keys.storage,
+            files.destination
+        );
+
+        const writeError = new Error("write failed");
+        files.write.mockRejectedValue(writeError);
+
+        await expect(
+            backup.createBackup(fixtureArchive())
+        ).rejects.toBe(writeError);
+
+        expect(files.listFiles).not.toHaveBeenCalled();
+
+        expect(files.deleteFile).toHaveBeenCalledWith(
+            "file:///backups/FreeCBT-backup-2026-08-07T03-00-00-000Z"
+        );
     });
 });
 

@@ -7,6 +7,7 @@ import {
     writeBackupFile,
 } from "./backup-destination";
 import type { SecureBackupRecoveryKey } from "@/src/platform/storage/storage";
+import { pruneOldBackups } from "./backup-file-system";
 
 export class MissingRecoveryKeyError extends Error {
     constructor() {
@@ -165,12 +166,19 @@ export function secureBackup(
         });
         const filename = createBackupFilename(backupDestination.now());
 
-        return await writeBackupFile({
+        const written = await writeBackupFile({
             directoryUri: resolved.directoryUri,
             filename,
             body,
             fileSystem: backupDestination.fileSystem,
         });
+
+        await pruneOldBackups(
+            resolved.directoryUri,
+            backupDestination.fileSystem
+        );
+
+        return written;
     }
 
     async function restoreBackupFile(

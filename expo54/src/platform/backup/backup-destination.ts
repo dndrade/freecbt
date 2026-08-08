@@ -59,6 +59,10 @@ export type BackupFileSystem = {
     read(fileUri: string): Promise<string>;
     write(fileUri: string, body: string): Promise<void>;
     delete(fileUri: string): Promise<void>;
+
+    listFiles(directoryUri: string): Promise<
+        readonly { uri: string; name: string }[]
+    >;
 };
 
 export type WriteBackupFileOptions = {
