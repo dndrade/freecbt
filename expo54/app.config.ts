@@ -32,6 +32,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       "android.permission.READ_EXTERNAL_STORAGE",
       "android.permission.WRITE_EXTERNAL_STORAGE",
     ],
+    allowBackup: false,
     icon: "./assets/android.png",
     adaptiveIcon: {
       foregroundImage: "./assets/android-adaptive.png",
