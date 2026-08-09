@@ -4,6 +4,7 @@ import * as Distortion from "../distortion";
 import * as Thought from "../thought";
 import {
     ArchiveDecryptError,
+    RecoveryKeyFingerprintMismatchError,
     decryptHeader,
     encryptJson,
 } from "./archive-crypto";
@@ -178,7 +179,11 @@ function buildDecodeFile(fromJson: ArchiveFromJson) {
                     let plaintext: string;
                     try {
                         plaintext = await decryptHeader(recoveryKey, header);
-                    } catch {
+                    } catch (error) {
+                        if (error instanceof RecoveryKeyFingerprintMismatchError) {
+                            throw error;
+                        }
+
                         throw new ArchiveDecryptError();
                     }
                     let innerObj: unknown;

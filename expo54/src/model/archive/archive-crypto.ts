@@ -85,11 +85,12 @@ export function buildAad(h: {
 
 
 /**
- * Generic decryption failure exposed to callers.
+ * Generic decryption failure exposed to callers after recovery-key
+ * fingerprint validation succeeds.
  *
- * The error intentionally does not reveal whether failure came from a wrong
- * passphrase, malformed ciphertext, AAD mismatch, authentication failure, or
- * invalid plaintext encoding.
+ * The error intentionally does not reveal whether failure came from malformed
+ * ciphertext, AAD mismatch, authentication failure, or invalid plaintext
+ * encoding.
  */
 export class ArchiveDecryptError extends Error {
   constructor() {
@@ -103,6 +104,18 @@ export class ArchiveDecryptError extends Error {
      */
     Object.setPrototypeOf(this, ArchiveDecryptError.prototype);
   }
+}
+
+export class RecoveryKeyFingerprintMismatchError extends Error {
+    constructor() {
+        super("recovery key fingerprint does not match archive");
+
+        this.name = "RecoveryKeyFingerprintMismatchError";
+        Object.setPrototypeOf(
+            this,
+            RecoveryKeyFingerprintMismatchError.prototype
+        );
+    }
 }
 
 /**
@@ -364,8 +377,10 @@ export async function encryptJson(
  * @param recoveryKey Generated recovery key. Never logged.
  * @param header Validated Archive-v3 encrypted header.
  * @returns The decrypted archive JSON string.
- * @throws {ArchiveDecryptError} When validation, authentication, decryption,
- * or UTF-8 decoding fails.
+ * @throws {RecoveryKeyFingerprintMismatchError} When the supplied recovery
+ * key fingerprint does not match the archive header.
+ * @throws {ArchiveDecryptError} When subsequent validation, authentication,
+ * decryption, or UTF-8 decoding fails.
  */
 export async function decryptHeader(
     recoveryKey: string,
@@ -388,22 +403,22 @@ export async function decryptHeader(
   const { salt, nonce, ciphertext } = decodeMeasurement.value;
 
   if (salt === null || nonce === null || ciphertext === null) {
-    throw new ArchiveDecryptError();
+        throw new ArchiveDecryptError();
   }
 
   const params = PARAMS[header.paramsVersion];
 
   if (
-      params === undefined ||
-      header.iterations !== params.iterations
+        params === undefined ||
+        header.iterations !== params.iterations
   ) {
-    throw new ArchiveDecryptError();
+        throw new ArchiveDecryptError();
   }
 
   const fp = await keyFingerprint(recoveryKey);
 
   if (fp !== header.fp) {
-    throw new ArchiveDecryptError();
+        throw new RecoveryKeyFingerprintMismatchError();
   }
 
   let key: Uint8Array | null = null;
