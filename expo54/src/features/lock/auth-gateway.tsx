@@ -1,8 +1,9 @@
+import { ImagePath, PinInput, Screen, Section } from "@/src/components";
 import { LoadModel, ModelLoadedProps } from "@/src/hooks/use-model";
 import { Action } from "@/src/model";
+import { Button, Typography } from "heroui-native";
 import React, { useEffect, useState } from "react";
-import { AppState, Button, Text, TextInput, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { AppState, Image } from "react-native";
 
 export function AuthGateway(props: {
   children: React.ReactNode;
@@ -13,18 +14,18 @@ export function AuthGateway(props: {
     />
   );
 }
+
 function AuthReady(props: ModelLoadedProps & { children: React.ReactNode }) {
-  const { model, dispatch, style: s, translate: t } = props;
+  const { model, dispatch, translate: t } = props;
   const [value, setValue] = useState<string>("");
 
-  function onSubmit() {
-    // reset text entry. this won't matter if auth succeeds
-    setValue("");
-    if (value === model.settings.pincode) {
-      // successful auth
+  function trySubmit(candidate: string) {
+    if (candidate === model.settings.pincode) {
+      setValue("");
       dispatch(Action.setSessionAuthed(true));
     }
   }
+
   // remove auth if the app is in the background, because it's easy to not close it all the way
   useEffect(() => {
     AppState.addEventListener("change", (st) => {
@@ -33,54 +34,41 @@ function AuthReady(props: ModelLoadedProps & { children: React.ReactNode }) {
       }
     });
   });
-  // console.log("pincode", model.settings.pincode, model.sessionAuthed);
+
   if (model.settings.pincode === null || model.sessionAuthed) {
     return props.children;
-  } else {
-    return (
-      <LockForm
-        style={s}
-        header={t("lock_screen.auth")}
-        value={value}
-        setValue={setValue}
-        onSubmit={onSubmit}
-      />
-    );
   }
-}
 
-export function LockForm(props: {
-  value: string;
-  setValue: (s: string) => void;
-  onSubmit: () => void;
-  style: ModelLoadedProps["style"];
-  header: string;
-}) {
-  const { value, setValue, onSubmit, header, style: s } = props;
-  function onChangeText(newValue: string) {
-    // numbers only
-    setValue(newValue.replace(/[^0-9]/g, ""));
-  }
   return (
-    <SafeAreaView style={[s.centeredView]}>
-      <View style={[s.container, s.itemsCenter]}>
-        <Text style={[s.header]}>{header}</Text>
-        <TextInput
-          style={[s.bg, s.border, s.rounded, s.text, s.header, s.textCenter]}
-          keyboardType="number-pad"
-          secureTextEntry={true}
-          maxLength={4}
-          value={value}
-          autoFocus={true}
-          onChangeText={onChangeText}
-          onSubmitEditing={onSubmit}
-          // don't attempt to blur
-          submitBehavior="submit"
-          // that wasn't good enough, keep focus
-          onBlur={(e) => e.target.focus()}
+    <Screen>
+      <Section className="items-center gap-4">
+        <Image source={ImagePath.logo} className="h-8" resizeMode="contain" />
+        <Image
+          source={ImagePath.lockIllustration}
+          className="h-48 w-48"
+          resizeMode="contain"
         />
-        <Button title="submit" onPress={onSubmit} />
-      </View>
-    </SafeAreaView>
+        <Typography type="h2">{t("lock_screen.gate_title")}</Typography>
+        <Typography type="body" color="muted">
+          {t("lock_screen.gate_subtitle")}
+        </Typography>
+        <PinInput
+          value={value}
+          onChange={(v) => setValue(v.replace(/[^0-9]/g, ""))}
+          onComplete={trySubmit}
+        />
+        <Button onPress={() => trySubmit(value)}>
+          {t("lock_screen.unlock_button")}
+        </Button>
+        <Typography type="body-sm" className="text-accent">
+          {t("lock_screen.forgot_pin")}
+        </Typography>
+        <Section className="bg-surface-secondary rounded-lg p-3">
+          <Typography type="body-xs" color="muted">
+            {t("lock_screen.reset_warning")}
+          </Typography>
+        </Section>
+      </Section>
+    </Screen>
   );
 }
