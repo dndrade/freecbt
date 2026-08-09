@@ -1,6 +1,7 @@
 import { Archive, DistortionData, Thought } from "..";
 import { PARAMS, CURRENT_PARAMS_VERSION } from "./archive-format";
 import * as CryptoModule from "./archive-crypto";
+import { RecoveryKeyFingerprintMismatchError } from "./archive-crypto";
 import { MAX_ENCODED_PAYLOAD_CHARS } from "./archive-size-limits";
 
 
@@ -141,9 +142,9 @@ describe("decodeFile / encodeEncrypted dispatch", () => {
     const result = A.decodeFile(encoded);
     expect(result.kind).toBe("encrypted");
     if (result.kind === "encrypted") {
-      await expect(
-          result.decrypt(DIFFERENT_RECOVERY_KEY)
-      ).rejects.toThrow();
+        await expect(
+            result.decrypt(DIFFERENT_RECOVERY_KEY)
+        ).rejects.toThrow(RecoveryKeyFingerprintMismatchError);
     }
   });
 

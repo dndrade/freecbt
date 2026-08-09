@@ -299,9 +299,15 @@
       }
     },
     "import": {
-      "description": "Restoring a backup file will erase any existing FreeCBT data, replacing it with data from the backup, so consider making another backup first.",
+      "description": "Restoring a backup adds its thoughts to your existing FreeCBT data. If a thought has the same ID as one already on this device, the backup version replaces that thought. Other existing thoughts are kept.",
       "structural_error": "This file isn't a valid FreeCBT backup.",
-      "decrypt_error": "Couldn't unlock this backup. Check the passphrase. If it is correct, the backup file may be damaged or incomplete.",
+      "decrypt_error": "Couldn't unlock this backup. Check the recovery key. If it is correct, the backup file may be damaged or incomplete.",
+      "needs_key": "This backup needs a recovery key. Enter the recovery key you saved when the backup was created.",
+      "fingerprint_mismatch": "The recovery key stored on this device does not match this backup. Enter the recovery key that belongs to this backup.",
+      "recovery_key": {
+        "label": "Recovery key",
+        "submit": "Restore with recovery key"
+      },
       "clipboard": {
         "button": "Import your FreeCBT data from the clipboard",
         "failure": "Import failed. Are you sure you pasted the entire FreeCBT backup text?"
@@ -323,7 +329,7 @@
       "submit": "Continue",
       "cancel": "Cancel"
     }
-  },
+},
   "export_screen": {
     "header": "FreeCBT->",
     "description": "View your FreeCBT data in other formats. You cannot import these files back into FreeCBT later.",
