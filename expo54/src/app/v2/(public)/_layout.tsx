@@ -40,16 +40,7 @@ function Nav({ style: s, translate: t }: ModelLoadedProps) {
         }}
       />
       <Drawer.Screen
-        name="settings/export"
-        options={{
-          drawerLabel: t("nav.export"),
-          drawerIcon: () => <Feather style={s.text} name="share-2" />,
-          title: t("export_screen.header"),
-          headerShown: false,
-        }}
-      />
-      <Drawer.Screen
-        name="settings/index"
+        name="settings"
         options={{
           drawerLabel: t("accessibility.settings_button"),
           drawerIcon: () => <Feather style={s.text} name="settings" />,
@@ -71,53 +62,6 @@ function Nav({ style: s, translate: t }: ModelLoadedProps) {
       <Drawer.Screen
         {...hidden("help/intro", t("explanation_screen.intro"), {
           // no nav: the intro has a nice style designed without nav
-          headerShown: false,
-        })}
-      />
-      <Drawer.Screen
-        {...hidden("settings/lock", t("settings.pincode.button.set"), {
-          // no nav, for now: set vs. update page titles are different
-          // (easy to fix if we split into two pages, though? or make this title dynamic?)
-          headerShown: false,
-        })}
-      />
-      <Drawer.Screen
-        {...hidden("settings/general", t("settings.general.header"), {
-          headerShown: false,
-        })}
-      />
-      <Drawer.Screen
-        {...hidden("settings/appearance", t("settings.appearance.header"), {
-          headerShown: false,
-        })}
-      />
-      <Drawer.Screen
-        {...hidden("settings/journal", t("settings.journal.header"), {
-          headerShown: false,
-        })}
-      />
-      <Drawer.Screen
-        {...hidden("settings/data/index", t("settings.data.header"), {
-          headerShown: false,
-        })}
-      />
-      <Drawer.Screen
-        {...hidden("settings/data/backup/index", t("nav.backup"), {
-          headerShown: false,
-        })}
-      />
-      <Drawer.Screen
-        {...hidden("settings/wellbeing/index", t("settings.wellbeing.header"), {
-          headerShown: false,
-        })}
-      />
-      <Drawer.Screen
-        {...hidden("settings/support/index", t("settings.support.header"), {
-          headerShown: false,
-        })}
-      />
-      <Drawer.Screen
-        {...hidden("settings/about/index", t("settings.about.header"), {
           headerShown: false,
         })}
       />
