@@ -2,7 +2,7 @@ import { Routes } from "@/src";
 import { LoadModel, ModelLoadedProps } from "@/src/hooks/use-model";
 import { Action } from "@/src/model";
 import { PinInput, Screen, Section } from "@/src/components";
-import { Typography } from "heroui-native";
+import { SettingsHeader } from "@/src/components/settings";
 import { Redirect } from "expo-router";
 import React, { useState } from "react";
 
@@ -92,8 +92,8 @@ function PinStep(props: {
   const { header, value, setValue, onComplete } = props;
   return (
     <Screen>
-      <Section className="items-center gap-4">
-        <Typography type="h3">{header}</Typography>
+      <SettingsHeader title={header} />
+      <Section className="items-center gap-4 mt-6">
         <PinInput
           value={value}
           onChange={(v) => setValue(v.replace(/[^0-9]/g, ""))}
