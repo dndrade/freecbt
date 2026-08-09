@@ -1,10 +1,5 @@
 import { createSecureBackup } from "@/src/platform/backup/secure-backup-runtime";
 import { Model } from "@/src/model";
-import { DownloadOrShareLink } from "@/src/platform/sharing/download-or-share";
-import {
-    BACKUP_EXPORT_FILENAME,
-    BACKUP_EXPORT_MIME_TYPE,
-} from "@/src/platform/sharing/backup-mime";
 import React, { useState } from "react";
 import {
     ActivityIndicator,
@@ -15,8 +10,13 @@ import type { BackupExportControlProps } from "./backup-control-contract";
 
 type ExportPhase =
     | { phase: "idle" }
-    | { phase: "encrypting" }
-    | { phase: "ready"; body: string }
+    | { phase: "creating" }
+    | {
+    phase: "created";
+    fileUri: string;
+    filename: string;
+    recoveryKey: string;
+}
     | { phase: "error"; message: string };
 
 export function EncryptedBackupExport(props: BackupExportControlProps) {
@@ -26,15 +26,35 @@ export function EncryptedBackupExport(props: BackupExportControlProps) {
     const backup = createSecureBackup(model.distortionData);
 
     async function prepareEncryptedBackup(): Promise<void> {
-        setState({ phase: "encrypting" });
+        setState({ phase: "creating" });
+
+        let written;
 
         try {
-            const body = await backup.exportArchiveV3(Model.toArchive(model));
-            setState({ phase: "ready", body });
+            written = await backup.createBackup(Model.toArchive(model));
         } catch {
             setState({
                 phase: "error",
                 message: t("backup_screen.export.share.unavailable"),
+            });
+            return;
+        }
+
+        try {
+            const recoveryKey = await backup.revealRecoveryKey();
+
+            setState({
+                phase: "created",
+                fileUri: written.fileUri,
+                filename: written.filename,
+                recoveryKey,
+            });
+        } catch {
+            setState({
+                phase: "error",
+                message: t(
+                    "backup_screen.export.recovery_key.unavailable"
+                ),
             });
         }
     }
@@ -54,7 +74,7 @@ export function EncryptedBackupExport(props: BackupExportControlProps) {
         );
     }
 
-    if (state.phase === "encrypting") {
+    if (state.phase === "creating") {
         return <ActivityIndicator />;
     }
 
@@ -63,27 +83,30 @@ export function EncryptedBackupExport(props: BackupExportControlProps) {
     }
 
     return (
-        <DownloadOrShareLink
-            name={BACKUP_EXPORT_FILENAME}
-            body={() => state.body}
-            type={BACKUP_EXPORT_MIME_TYPE}
-            UTI="org.erosson.freecbt.backup"
-            translate={t}
-            error={(error) => <Text style={[s.errorText]}>{error}</Text>}
-            share={(onPress) => (
-                <TouchableOpacity style={[s.button, s.my2]} onPress={onPress}>
-                    <Text style={[s.buttonText]}>
-                        {t("backup_screen.export.share.button")}
-                    </Text>
-                </TouchableOpacity>
-            )}
-            download={() => (
-                <TouchableOpacity style={[s.button, s.my2]}>
-                    <Text style={[s.buttonText]}>
-                        {t("backup_screen.export.file.button")}
-                    </Text>
-                </TouchableOpacity>
-            )}
-        />
+        <>
+            <Text style={[s.text]}>
+                {t("backup_screen.export.success")}
+            </Text>
+
+            <Text style={[s.header]}>
+                {t("backup_screen.export.recovery_key.header")}
+            </Text>
+
+            <Text style={[s.text, s.my2]}>
+                {t("backup_screen.export.recovery_key.warning")}
+            </Text>
+
+            <Text style={[s.text]}>
+                {t("backup_screen.export.recovery_key.label")}
+            </Text>
+
+            <Text selectable style={[s.text, s.my2]}>
+                {state.recoveryKey}
+            </Text>
+
+            <Text style={[s.text]}>
+                {state.filename}
+            </Text>
+        </>
     );
 }
