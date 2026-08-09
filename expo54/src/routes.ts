@@ -26,7 +26,7 @@ export function lockUpdateV2(): Href {
   return "/v2/settings/lock";
 }
 export function backupV2(): Href {
-  return "/v2/settings/backup";
+  return "/v2/settings/data/backup";
 }
 export function exportV2(): Href {
   return "/v2/settings/export";
