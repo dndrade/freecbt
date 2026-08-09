@@ -350,6 +350,11 @@
   "lock_screen": {
     "auth": "Please enter your passcode.",
     "update": "Please set a passcode.",
-    "confirm": "Please re-enter your passcode to confirm."
+    "confirm": "Please re-enter your passcode to confirm.",
+    "gate_title": "FreeCBT is locked",
+    "gate_subtitle": "Enter your 4-digit PIN to continue.",
+    "unlock_button": "Unlock",
+    "forgot_pin": "Forgot your PIN?",
+    "reset_warning": "If you reset your PIN, some local access may be affected."
   }
 }
