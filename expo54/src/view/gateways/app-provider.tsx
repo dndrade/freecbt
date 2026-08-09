@@ -10,12 +10,14 @@ import { Model } from "../../model";
 import { AuthGateway } from "@/src/features/lock/auth-gateway";
 import { OnboardingGateway } from "./onboarding-gateway"
 import { registerDevMenu } from "@/src/debug/register-dev-menu";
+import { ThemeSync } from "@/src/theme/theme-sync";
 
 export function ModelI18nProvider(props: { children: React.ReactNode }) {
   const [m] = useModel();
   const locale = Model.locale(m);
   return <I18nProvider locale={locale}>{props.children}</I18nProvider>;
 }
+
 export function AppProvider(props: { children: React.ReactNode }) {
   useEffect(() => {
     if (__DEV__) {
@@ -30,6 +32,8 @@ export function AppProvider(props: { children: React.ReactNode }) {
   });
   return (
     <ModelProvider>
+      <ThemeSync />
+
       <ModelI18nProvider>
         <OnboardingGateway>
           <AuthGateway>

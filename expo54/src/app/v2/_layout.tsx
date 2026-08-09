@@ -1,5 +1,4 @@
 import "../../../global.css";
-
 import { AppProvider } from "@/src/view/gateways/app-provider";
 import { Slot } from "expo-router";
 import { HeroUINativeProvider } from "heroui-native/provider";

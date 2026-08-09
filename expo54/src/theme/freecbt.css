@@ -1,0 +1,103 @@
+@theme {
+    --font-normal: system-ui;
+    --font-medium: system-ui;
+    --font-semibold: system-ui;
+
+    /* Brand palette (identical light/dark) */
+    --brand-blue: oklch(0.580 0.183 271);
+    --brand-pink: oklch(0.748 0.137 349);
+    --brand-yellow: oklch(0.846 0.123 86);
+    --brand-purple: oklch(0.514 0.118 293);
+}
+
+@layer theme {
+    @variant light {
+        /* Base */
+        --background: oklch(0.991 0 0);
+        --foreground: oklch(0 0 0);
+
+        /* Surfaces */
+        --surface: oklch(0.969 0.007 261);
+        --surface-foreground: var(--foreground);
+
+        --surface-secondary: oklch(0.956 0.016 275);
+        --surface-secondary-foreground: var(--foreground);
+
+        --surface-tertiary: oklch(0.940 0.018 275);
+        --surface-tertiary-foreground: var(--foreground);
+
+        /* Overlays */
+        --overlay: oklch(1 0 0);
+        --overlay-foreground: var(--foreground);
+        --backdrop: oklch(0 0 0 / 20%);
+
+        /* Muted / Default */
+        --muted: oklch(0.540 0.020 270);
+
+        --default: oklch(0.956 0.016 275);
+        --default-foreground: var(--foreground);
+
+        /* Brand */
+        --accent: var(--brand-blue);
+        --accent-foreground: oklch(1 0 0);
+
+        /* Fields */
+        --field-background: oklch(1 0 0);
+        --field-foreground: var(--foreground);
+        --field-placeholder: var(--muted);
+        --field-border: oklch(0 0 0 / 20%);
+
+        /* Structure */
+        --border: oklch(0 0 0 / 20%);
+        --separator: oklch(0 0 0 / 20%);
+
+        /* Interaction */
+        --focus: var(--accent);
+        --link: var(--accent);
+    }
+
+    @variant dark {
+        /* Base */
+        --background: oklch(0.107 0 0);
+        --foreground: oklch(1 0 0);
+
+        /* Surfaces */
+        --surface: oklch(1 0 0 / 20%);
+        --surface-foreground: var(--foreground);
+
+        --surface-secondary: oklch(0.580 0.183 271 / 40%);
+        --surface-secondary-foreground: oklch(0.956 0.016 275);
+
+        --surface-tertiary: oklch(0.250 0.025 275);
+        --surface-tertiary-foreground: var(--foreground);
+
+        /* Overlays */
+        --overlay: oklch(0.180 0 0);
+        --overlay-foreground: var(--foreground);
+        --backdrop: oklch(0 0 0 / 50%);
+
+        /* Muted / Default */
+        --muted: oklch(0.680 0.015 270);
+
+        --default: oklch(0.220 0.020 275);
+        --default-foreground: var(--foreground);
+
+        /* Brand */
+        --accent: oklch(0.664 0.144 273);
+        --accent-foreground: oklch(1 0 0);
+
+        /* Fields */
+        --field-background: oklch(0 0 0);
+        --field-foreground: var(--foreground);
+        --field-placeholder: var(--muted);
+        --field-border: oklch(1 0 0 / 25%);
+
+        /* Structure */
+        --border: oklch(1 0 0 / 25%);
+        --separator: oklch(1 0 0 / 25%);
+
+        /* Interaction */
+        --focus: var(--accent);
+        --link: var(--accent);
+    }
+}
