@@ -21,27 +21,56 @@ function encodeRecoveryKey(bytes: Uint8Array): string {
   );
 }
 
+function isValidRecoveryKey(value: string): boolean {
+    return /^[0-9a-f]{64}$/.test(value);
+}
+
 export function secureBackupRecoveryKey(
     secureStorage: SecureStoreLike,
     randomBytes: RandomBytes = Crypto.getRandomBytesAsync
 ) {
-  async function create(): Promise<string> {
-    const bytes = await randomBytes(SECURE_BACKUP_RECOVERY_KEY_BYTES);
-    if (bytes.length !== SECURE_BACKUP_RECOVERY_KEY_BYTES) {
-      throw new Error("recovery-key generation returned an invalid byte count");
+    async function create(): Promise<string> {
+        const bytes = await randomBytes(SECURE_BACKUP_RECOVERY_KEY_BYTES);
+
+        if (bytes.length !== SECURE_BACKUP_RECOVERY_KEY_BYTES) {
+            throw new Error("recovery-key generation returned an invalid byte count");
+        }
+
+        const recoveryKey = encodeRecoveryKey(bytes);
+
+        await secureStorage.setItemAsync(
+            secureBackupRecoveryKeySecureKey,
+            recoveryKey
+        );
+
+        const persisted = await secureStorage.getItemAsync(
+            secureBackupRecoveryKeySecureKey
+        );
+
+        if (persisted !== recoveryKey) {
+            throw new Error(
+                "recovery key failed SecureStore read-back verification"
+            );
+        }
+
+        return recoveryKey;
     }
 
-    const recoveryKey = encodeRecoveryKey(bytes);
-    await secureStorage.setItemAsync(
-        secureBackupRecoveryKeySecureKey,
-        recoveryKey
-    );
-    return recoveryKey;
-  }
+    async function read(): Promise<string | null> {
+          const recoveryKey = await secureStorage.getItemAsync(
+                secureBackupRecoveryKeySecureKey
+          );
 
-  async function read(): Promise<string | null> {
-    return await secureStorage.getItemAsync(secureBackupRecoveryKeySecureKey);
-  }
+          if (recoveryKey === null) {
+                return null;
+          }
+
+          if (!isValidRecoveryKey(recoveryKey)) {
+                throw new Error("stored recovery key has an invalid format");
+          }
+
+          return recoveryKey;
+    }
 
   async function remove(): Promise<void> {
     await secureStorage.deleteItemAsync(secureBackupRecoveryKeySecureKey);
