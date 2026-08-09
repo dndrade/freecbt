@@ -1,12 +1,19 @@
 import { Distortion, Model, Settings, Thought } from "@/src/model";
 import { AsyncStorageStatic } from "@react-native-async-storage/async-storage";
 import * as Crypto from "expo-crypto";
+import * as SecureStore from "expo-secure-store";
 import { z } from "zod";
 
 export interface SecureStoreLike {
-  getItemAsync(key: string): Promise<string | null>;
-  setItemAsync(key: string, value: string): Promise<void>;
-  deleteItemAsync(key: string): Promise<void>;
+    getItemAsync(key: string): Promise<string | null>;
+    setItemAsync(
+        key: string,
+        value: string,
+        options?: {
+            keychainAccessible?: number;
+        }
+    ): Promise<void>;
+    deleteItemAsync(key: string): Promise<void>;
 }
 
 export const secureBackupRecoveryKeySecureKey =
@@ -40,7 +47,10 @@ export function secureBackupRecoveryKey(
 
         await secureStorage.setItemAsync(
             secureBackupRecoveryKeySecureKey,
-            recoveryKey
+            recoveryKey,
+            {
+                keychainAccessible: SecureStore.WHEN_UNLOCKED_THIS_DEVICE_ONLY,
+            }
         );
 
         const persisted = await secureStorage.getItemAsync(

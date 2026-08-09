@@ -45,16 +45,27 @@ jest.mock("expo-router", () => ({
 // (which now uses SecureStore for the pincode) see real get/set/delete
 // semantics instead.
 jest.mock("expo-secure-store", () => {
-  const store = new Map<string, string>();
-  return {
-    getItemAsync: async (key: string) => store.get(key) ?? null,
-    setItemAsync: async (key: string, value: string) => {
-      store.set(key, value);
-    },
-    deleteItemAsync: async (key: string) => {
-      store.delete(key);
-    },
-  };
+    const store = new Map<string, string>();
+
+    return {
+        WHEN_UNLOCKED_THIS_DEVICE_ONLY: 1,
+
+        getItemAsync: async (key: string) => store.get(key) ?? null,
+
+        setItemAsync: async (
+            key: string,
+            value: string,
+            _options?: {
+                keychainAccessible?: number;
+            }
+        ) => {
+            store.set(key, value);
+        },
+
+        deleteItemAsync: async (key: string) => {
+            store.delete(key);
+        },
+    };
 });
 // expo-crypto's native module isn't linked in the jest environment. Mock
 // getRandomBytesAsync with real randomness (via Node's crypto) so tests
