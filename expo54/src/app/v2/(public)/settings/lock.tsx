@@ -23,18 +23,18 @@ function emptyForm(): LockUpdateForm {
 function Ready({ dispatch, translate: t }: ModelLoadedProps) {
   const [form, setForm] = useState(emptyForm());
 
-  function onSubmit() {
+  function onSubmit(candidate: string) {
     switch (form.status) {
       case "enter": {
-        if (/^[0-9]{4}$/.test(form.code)) {
-          setForm({ code: form.code, confirm: "", status: "confirm" });
+        if (/^[0-9]{4}$/.test(candidate)) {
+          setForm({ code: candidate, confirm: "", status: "confirm" });
         } else {
           setForm(emptyForm());
         }
         return;
       }
       case "confirm": {
-        if (form.code === form.confirm) {
+        if (form.code === candidate) {
           dispatch(Action.setPincode(form.code));
           setForm({ ...emptyForm(), status: "done" });
         } else {
@@ -87,7 +87,7 @@ function PinStep(props: {
   header: string;
   value: string;
   setValue: (s: string) => void;
-  onComplete: () => void;
+  onComplete: (candidate: string) => void;
 }) {
   const { header, value, setValue, onComplete } = props;
   return (

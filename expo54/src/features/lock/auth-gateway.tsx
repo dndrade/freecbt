@@ -20,8 +20,9 @@ function AuthReady(props: ModelLoadedProps & { children: React.ReactNode }) {
   const [value, setValue] = useState<string>("");
 
   function trySubmit(candidate: string) {
+    // reset text entry. this won't matter if auth succeeds
+    setValue("");
     if (candidate === model.settings.pincode) {
-      setValue("");
       dispatch(Action.setSessionAuthed(true));
     }
   }
@@ -56,6 +57,7 @@ function AuthReady(props: ModelLoadedProps & { children: React.ReactNode }) {
           value={value}
           onChange={(v) => setValue(v.replace(/[^0-9]/g, ""))}
           onComplete={trySubmit}
+          autoFocus
         />
         <Button onPress={() => trySubmit(value)}>
           {t("lock_screen.unlock_button")}

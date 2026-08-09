@@ -1,13 +1,14 @@
-import { InputOTP, REGEXP_ONLY_DIGITS } from "heroui-native";
+import { InputOTP, REGEXP_ONLY_DIGITS, useInputOTP } from "heroui-native";
 
 export interface PinInputProps {
   value: string;
   onChange: (value: string) => void;
   onComplete?: (value: string) => void;
+  autoFocus?: boolean;
 }
 
 export function PinInput(props: PinInputProps) {
-  const { value, onChange, onComplete } = props;
+  const { value, onChange, onComplete, autoFocus } = props;
   return (
     <InputOTP
       maxLength={4}
@@ -15,13 +16,26 @@ export function PinInput(props: PinInputProps) {
       value={value}
       onChange={onChange}
       onComplete={onComplete}
+      textInputProps={autoFocus ? { autoFocus: true } : undefined}
     >
-      <InputOTP.Group>
-        <InputOTP.Slot index={0} />
-        <InputOTP.Slot index={1} />
-        <InputOTP.Slot index={2} />
-        <InputOTP.Slot index={3} />
-      </InputOTP.Group>
+      <PinInputSlots />
     </InputOTP>
+  );
+}
+
+// Masks each filled slot with a dot instead of the literal digit, since this
+// input is used on lock screens where the PIN must not be shown in plaintext.
+function PinInputSlots() {
+  const { slots } = useInputOTP();
+  return (
+    <InputOTP.Group>
+      {slots.map((slot, index) => (
+        <InputOTP.Slot key={index} index={index}>
+          <InputOTP.SlotPlaceholder />
+          <InputOTP.SlotValue>{slot.char ? "•" : undefined}</InputOTP.SlotValue>
+          <InputOTP.SlotCaret />
+        </InputOTP.Slot>
+      ))}
+    </InputOTP.Group>
   );
 }
