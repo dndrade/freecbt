@@ -177,6 +177,51 @@
         "_test": ")tset( hsilgnE-esreveR"
       }
     },
+    "hub": {
+      "general": { "label": "General" },
+      "appearance": { "label": "Appearance" },
+      "journal": { "label": "Journal" },
+      "data": { "label": "Data", "description": "Backup, restore, export" },
+      "wellbeing": { "label": "Wellbeing", "description": "Crisis lines, learn about CBT" },
+      "support": { "label": "Support", "description": "Help center, contact us, privacy" },
+      "about": { "label": "About" }
+    },
+    "general": {
+      "header": "General",
+      "notifications": { "label": "Notifications" },
+      "applock": { "label": "App Lock", "description": "Require a pincode to open" },
+      "language": { "label": "Language" }
+    },
+    "appearance": {
+      "header": "Appearance",
+      "theme": { "label": "Theme" }
+    },
+    "journal": {
+      "header": "Journal",
+      "history": { "label": "History button labels" }
+    },
+    "data": {
+      "header": "Data",
+      "backup": { "label": "Backup & Restore", "description": "Save or restore your FreeCBT data" },
+      "export": { "label": "Export journal", "description": "Save as Markdown, CSV, or JSON" }
+    },
+    "wellbeing": {
+      "header": "Wellbeing",
+      "learn": { "label": "Learn about CBT", "description": "What it is and how it works" },
+      "crisis": { "label": "Crisis Resources", "description": "Hotlines and emergency contacts", "todo": "Crisis resource content is not available in this build yet." }
+    },
+    "support": {
+      "header": "Support",
+      "help": { "label": "Help Center" },
+      "contact": { "label": "Contact Us", "description": "Report an issue on GitHub" },
+      "issue": { "label": "Report an issue", "description": "GitHub issues" }
+    },
+    "about": {
+      "header": "About",
+      "version": "Version {{version}}",
+      "source": { "label": "Source code" },
+      "acknowledgements": { "label": "Acknowledgements", "todo": "Acknowledgements are not available in this build yet." }
+    },
     "privacy": "Privacy Policy",
     "terms": "Terms of Service"
   },
