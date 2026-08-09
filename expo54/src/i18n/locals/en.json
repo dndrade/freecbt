@@ -277,7 +277,14 @@
   "backup_screen": {
     "header": "FreeCBT<-",
     "export": {
-      "description": "To backup your FreeCBT data, \"share\" it someplace safe, such as emailing it to yourself. You'll set a passphrase to encrypt it, so it can only be read by re-entering that passphrase inside FreeCBT.",
+      "success": "Backup created successfully.",
+      "recovery_key": {
+        "header": "Save your recovery key",
+        "warning": "You will need this recovery key to restore this backup on another device. Save it somewhere safe outside FreeCBT.",
+        "label": "Recovery key",
+        "unavailable": "Backup created, but the recovery key could not be displayed."
+      },
+      "description": "Create an encrypted backup of your FreeCBT data. The backup is saved on this device, and you will receive a recovery key needed to restore it.",
       "clipboard": {
         "button": "Export your FreeCBT data to the clipboard",
         "success": "Copied to clipboard!"
@@ -287,8 +294,8 @@
         "success": "Copied to file!"
       },
       "share": {
-        "button": "Export and share your FreeCBT data",
-        "unavailable": "Error: sharing not available on this device"
+        "button": "Create encrypted backup",
+        "unavailable": "Backup could not be created."
       }
     },
     "import": {

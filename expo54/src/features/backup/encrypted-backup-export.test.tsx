@@ -6,7 +6,7 @@ import {
     waitFor,
 } from "@testing-library/react-native";
 import React from "react";
-import { ActivityIndicator, Text, View } from "react-native";
+import { ActivityIndicator } from "react-native";
 import { createSecureBackup } from "@/src/platform/backup/secure-backup-runtime";
 import { useStyle } from "@/src/hooks/use-style";
 import { Model } from "@/src/model";
@@ -28,14 +28,8 @@ jest.mock("@/src/model", () => {
     };
 });
 
-jest.mock("@/src/platform/sharing/download-or-share", () => ({
-    DownloadOrShareLink: (props: { body: () => string }) => (
-        <View testID="download-or-share-link">
-            <Text testID="encrypted-backup-body">{props.body()}</Text>
-        </View>
-    ),
-}));
-
+const createBackup = jest.fn();
+const revealRecoveryKey = jest.fn();
 const exportArchiveV3 = jest.fn();
 
 const archive = {
@@ -81,10 +75,10 @@ describe("EncryptedBackupExport", () => {
         jest.mocked(createSecureBackup).mockReturnValue({
             getRecoveryKeyStatus: jest.fn(),
             setupRecoveryKey: jest.fn(),
-            revealRecoveryKey: jest.fn(),
+            revealRecoveryKey,
             exportArchiveV3,
             restoreArchive: jest.fn(),
-            createBackup: jest.fn(),
+            createBackup,
             restoreBackupFile: jest.fn(),
         });
 
@@ -102,8 +96,13 @@ describe("EncryptedBackupExport", () => {
         expect(screen.queryByTestId("passphrase-confirm")).toBeNull();
     });
 
-    test("pressing export passes Model.toArchive(model) to exportArchiveV3", async () => {
-        exportArchiveV3.mockResolvedValue("encrypted-backup");
+    test("pressing export passes Model.toArchive(model) to createBackup", async () => {
+        createBackup.mockResolvedValue({
+            fileUri: "file:///backups/FreeCBT-backup-test",
+            filename: "FreeCBT-backup-test",
+        });
+
+        revealRecoveryKey.mockResolvedValue("a1".repeat(32));
 
         render(<TestHarness />);
 
@@ -113,13 +112,17 @@ describe("EncryptedBackupExport", () => {
 
         await waitFor(() => {
             expect(Model.toArchive).toHaveBeenCalledWith(model);
-            expect(exportArchiveV3).toHaveBeenCalledWith(archive);
+            expect(createBackup).toHaveBeenCalledWith(archive);
         });
     });
 
-    test("shows a loading indicator while encryption is pending", async () => {
-        const pending = deferred<string>();
-        exportArchiveV3.mockReturnValue(pending.promise);
+    test("shows a loading indicator while backup creation is pending", async () => {
+        const pending = deferred<{
+            fileUri: string;
+            filename: string;
+        }>();
+
+        createBackup.mockReturnValue(pending.promise);
 
         render(<TestHarness />);
 
@@ -128,21 +131,49 @@ describe("EncryptedBackupExport", () => {
         );
 
         await waitFor(() => {
-            expect(screen.UNSAFE_getByType(ActivityIndicator)).toBeTruthy();
+            expect(
+                screen.UNSAFE_getByType(ActivityIndicator)
+            ).toBeTruthy();
         });
 
         await act(async () => {
-            pending.resolve("encrypted-backup");
+            pending.resolve({
+                fileUri: "file:///backups/FreeCBT-backup-test",
+                filename: "FreeCBT-backup-test",
+            });
             await pending.promise;
         });
-
-        expect(
-            screen.getByTestId("download-or-share-link")
-        ).toBeTruthy();
     });
 
-    test("successful encryption exposes the prepared backup", async () => {
-        exportArchiveV3.mockResolvedValue("encrypted-backup");
+    test("reveals the recovery key after backup creation succeeds", async () => {
+        createBackup.mockResolvedValue({
+            fileUri: "file:///backups/FreeCBT-backup-test",
+            filename: "FreeCBT-backup-test",
+        });
+
+        revealRecoveryKey.mockResolvedValue("a1".repeat(32));
+
+        render(<TestHarness />);
+
+        fireEvent.press(
+            screen.getByText("backup_screen.export.share.button")
+        );
+
+        await waitFor(() => {
+            expect(createBackup).toHaveBeenCalledWith(archive);
+            expect(revealRecoveryKey).toHaveBeenCalledTimes(1);
+        });
+    });
+
+    test("shows the recovery key after backup creation succeeds", async () => {
+        const recoveryKey = "a1".repeat(32);
+
+        createBackup.mockResolvedValue({
+            fileUri: "file:///backups/FreeCBT-backup-test",
+            filename: "FreeCBT-backup-test",
+        });
+
+        revealRecoveryKey.mockResolvedValue(recoveryKey);
 
         render(<TestHarness />);
 
@@ -151,16 +182,33 @@ describe("EncryptedBackupExport", () => {
         );
 
         expect(
-            await screen.findByTestId("download-or-share-link")
+            await screen.findByText(
+                "backup_screen.export.recovery_key.header"
+            )
         ).toBeTruthy();
 
-        expect(screen.getByTestId("encrypted-backup-body").props.children).toBe(
-            "encrypted-backup"
-        );
+        expect(
+            screen.getByText(
+                "backup_screen.export.recovery_key.warning"
+            )
+        ).toBeTruthy();
+
+        expect(
+            screen.getByText(
+                "backup_screen.export.recovery_key.label"
+            )
+        ).toBeTruthy();
+
+        expect(screen.getByText(recoveryKey)).toBeTruthy();
     });
 
-    test("failed encryption displays the existing unavailable message", async () => {
-        exportArchiveV3.mockRejectedValue(new Error("encryption failed"));
+    test("shows backup creation success after the file is written", async () => {
+        createBackup.mockResolvedValue({
+            fileUri: "file:///backups/FreeCBT-backup-test",
+            filename: "FreeCBT-backup-test",
+        });
+
+        revealRecoveryKey.mockResolvedValue("a1".repeat(32));
 
         render(<TestHarness />);
 
@@ -169,9 +217,53 @@ describe("EncryptedBackupExport", () => {
         );
 
         expect(
-            await screen.findByText("backup_screen.export.share.unavailable")
+            await screen.findByText("backup_screen.export.success")
         ).toBeTruthy();
 
-        expect(screen.queryByTestId("download-or-share-link")).toBeNull();
+        expect(
+            screen.getByText("FreeCBT-backup-test")
+        ).toBeTruthy();
+    });
+
+    test("shows an error when the backup is created but the recovery key cannot be revealed", async () => {
+        createBackup.mockResolvedValue({
+            fileUri: "file:///backups/FreeCBT-backup-test",
+            filename: "FreeCBT-backup-test",
+        });
+
+        revealRecoveryKey.mockRejectedValue(
+            new Error("recovery key unavailable")
+        );
+
+        render(<TestHarness />);
+
+        fireEvent.press(
+            screen.getByText("backup_screen.export.share.button")
+        );
+
+        expect(
+            await screen.findByText(
+                "backup_screen.export.recovery_key.unavailable"
+            )
+        ).toBeTruthy();
+
+        expect(createBackup).toHaveBeenCalledWith(archive);
+        expect(revealRecoveryKey).toHaveBeenCalledTimes(1);
+    });
+
+    test("failed backup creation displays the existing unavailable message", async () => {
+        createBackup.mockRejectedValue(new Error("backup failed"));
+
+        render(<TestHarness />);
+
+        fireEvent.press(
+            screen.getByText("backup_screen.export.share.button")
+        );
+
+        expect(
+            await screen.findByText(
+                "backup_screen.export.share.unavailable"
+            )
+        ).toBeTruthy();
     });
 });
