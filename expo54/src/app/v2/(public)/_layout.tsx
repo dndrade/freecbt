@@ -5,6 +5,7 @@ import { DrawerNavigationOptions } from "@react-navigation/drawer";
 import { Drawer } from "expo-router/drawer";
 import React from "react";
 import { Platform, useWindowDimensions } from "react-native";
+import { useAppColors } from "@/src/components";
 
 export default function Layout() {
   return (
@@ -18,8 +19,9 @@ export default function Layout() {
 }
 
 function Nav({ style: s, translate: t }: ModelLoadedProps) {
+    const colors = useAppColors();
   return (
-    <Drawer screenOptions={useDrawerOptions(s)}>
+      <Drawer screenOptions={useDrawerOptions(s, colors)}>
       <Drawer.Screen
         name="thoughts/create"
         options={{
@@ -94,34 +96,35 @@ function Nav({ style: s, translate: t }: ModelLoadedProps) {
     </Drawer>
   );
 }
-export function useDrawerOptions(s: Style): DrawerNavigationOptions {
+export function useDrawerOptions(
+    s: Style,
+    colors: ReturnType<typeof useAppColors>
+): DrawerNavigationOptions {
   // https://docs.expo.dev/router/advanced/drawer/
   // https://reactnavigation.org/docs/drawer-navigator
   const dim = useWindowDimensions();
   const isLargeScreen = Platform.OS === "web" && dim.width > 1024;
   return {
-    headerStyle: {
-      backgroundColor: s.bg.backgroundColor,
-      borderBottomColor: s.border.borderColor,
-    },
+      headerStyle: {
+          backgroundColor: colors.background,
+          borderBottomColor: s.border.borderColor,
+      },
     // isLargeScreen hides the drawer-open button on large screens.
     // hacky as hell, but I can't find a better way...!
-    headerTintColor: isLargeScreen ? s.bg.backgroundColor : s.header.color,
+    headerTintColor: isLargeScreen ? colors.background : colors.foreground,
     headerTitleStyle: {
-      color: s.header.color,
-      fontSize: s.header.fontSize,
-      fontWeight: s.header.fontWeight,
-    },
+          color: colors.foreground,
+          fontSize: s.header.fontSize,
+          fontWeight: s.header.fontWeight,},
     drawerStyle: {
-      backgroundColor: s.bg.backgroundColor,
-      borderWidth: s.border.borderWidth,
-      borderColor: s.border.borderColor,
-      borderRightColor: s.border.borderColor, // used only on large-screen web
-      borderLeftWidth: 0,
+          backgroundColor: colors.background,
+          borderWidth: s.border.borderWidth,
+          borderColor: colors.border,
+          borderRightColor: colors.border,
+          borderLeftWidth: 0,
     },
-    drawerLabelStyle: { color: s.text.color },
-    drawerActiveTintColor: s.bgSelected.backgroundColor,
-    drawerInactiveTintColor: s.text.color,
+    drawerLabelStyle: { color: colors.foreground },
+    drawerInactiveTintColor: colors.foreground,
     drawerType: isLargeScreen ? "permanent" : undefined,
   };
 }
