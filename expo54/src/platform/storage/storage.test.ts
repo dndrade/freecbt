@@ -2,6 +2,7 @@ import { Storage } from "../..";
 import { Archive, DistortionData, Settings, Thought } from "../../model";
 import { AsyncStorageStatic } from "@react-native-async-storage/async-storage";
 import { z } from "zod";
+import * as SecureStore from "expo-secure-store";
 
 function fakeAsyncStorage(initial: Record<string, string> = {}) {
     const store = new Map(Object.entries(initial));
@@ -77,6 +78,30 @@ describe("secureBackupRecoveryKey", () => {
         ).toBe(generated);
     });
 
+    test("create passes keychainAccessible when persisting the recovery key", async () => {
+        const setItemAsync = jest.fn(async () => {});
+        const secure: Storage.SecureStoreLike = {
+            getItemAsync: async () => "07".repeat(32),
+            setItemAsync,
+            deleteItemAsync: async () => {},
+        };
+
+        const recoveryKey = Storage.secureBackupRecoveryKey(
+            secure,
+            async () => new Uint8Array(32).fill(7)
+        );
+
+        await recoveryKey.create();
+
+        expect(setItemAsync).toHaveBeenCalledWith(
+            Storage.secureBackupRecoveryKeySecureKey,
+            "07".repeat(32),
+            expect.objectContaining({
+                keychainAccessible: SecureStore.WHEN_UNLOCKED_THIS_DEVICE_ONLY,
+            })
+        );
+    });
+
     test("read returns a valid persisted recovery key", async () => {
         const secure = fakeSecureStore({
             [Storage.secureBackupRecoveryKeySecureKey]: validPersistedKey,
@@ -137,6 +162,7 @@ describe("secureBackupRecoveryKey", () => {
                 persisted.delete(k);
             },
         };
+
         const recoveryKey = Storage.secureBackupRecoveryKey(
             secure,
             async () => new Uint8Array(32).fill(7)
@@ -151,6 +177,7 @@ describe("secureBackupRecoveryKey", () => {
             setItemAsync: async () => {},
             deleteItemAsync: async () => {},
         };
+
         const recoveryKey = Storage.secureBackupRecoveryKey(
             secure,
             async () => new Uint8Array(32).fill(7)
@@ -173,6 +200,7 @@ describe("secureBackupRecoveryKey", () => {
     test("AsyncStorage never receives the recovery key", async () => {
         const async = fakeAsyncStorage();
         const secure = fakeSecureStore();
+
         const recoveryKey = Storage.secureBackupRecoveryKey(
             secure,
             async () => new Uint8Array(32).fill(9)
@@ -181,17 +209,21 @@ describe("secureBackupRecoveryKey", () => {
         const generated = await recoveryKey.create();
 
         expect(await async.getAllKeys()).toEqual([]);
-        expect(await async.getItem(Storage.secureBackupRecoveryKeySecureKey)).toBe(
-            null
-        );
+        expect(
+            await async.getItem(Storage.secureBackupRecoveryKeySecureKey)
+        ).toBe(null);
         expect(await recoveryKey.read()).toBe(generated);
     });
 
     test("RNG failure does not persist anything", async () => {
         const secure = fakeSecureStore();
-        const recoveryKey = Storage.secureBackupRecoveryKey(secure, async () => {
-            throw new Error("native RNG unavailable");
-        });
+
+        const recoveryKey = Storage.secureBackupRecoveryKey(
+            secure,
+            async () => {
+                throw new Error("native RNG unavailable");
+            }
+        );
 
         await expect(recoveryKey.create()).rejects.toThrow(
             "native RNG unavailable"
@@ -244,11 +276,20 @@ test("read: uses the SecureStore value when present, ignoring AsyncStorage", asy
 test("write: routes pincode through SecureStore, other settings through AsyncStorage", async () => {
     const async = fakeAsyncStorage();
     const secure = fakeSecureStore();
+    const setItemAsync = jest.spyOn(secure, "setItemAsync");
+
     const s = Storage.settings(async, secure);
+
     await s.write({ ...Settings.empty(), pincode: "4321", theme: "dark" });
+
     expect(await secure.getItemAsync(Settings.pincodeSecureKey)).toBe("4321");
     expect(await async.getItem(Settings.pincodeKey)).toBe(null);
     expect(await async.getItem(Settings.themeKey)).toBe("dark");
+
+    expect(setItemAsync).toHaveBeenCalledWith(
+        Settings.pincodeSecureKey,
+        "4321"
+    );
 });
 
 test("write: a null pincode deletes it from SecureStore", async () => {
