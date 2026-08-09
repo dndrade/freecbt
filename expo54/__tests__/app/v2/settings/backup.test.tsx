@@ -5,7 +5,7 @@ import {
 } from "@testing-library/react-native";
 import React from "react";
 import { Text } from "react-native";
-import { Ready } from "@/src/app/v2/(public)/settings/backup";
+import { Ready } from "@/src/app/v2/(public)/settings/data/backup";
 import { backupFlags } from "@/src/features/backup/backup-flags";
 import {
   ModelProvider,
