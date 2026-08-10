@@ -43,24 +43,3 @@ export function introV2(params: { onboarded?: boolean } = {}): Href {
 export function debugV2(): Href {
   return "/v2/debug";
 }
-export function generalV2(): Href {
-  return "/v2/settings/general";
-}
-export function appearanceV2(): Href {
-  return "/v2/settings/appearance";
-}
-export function journalV2(): Href {
-  return "/v2/settings/journal";
-}
-export function dataV2(): Href {
-  return "/v2/settings/data";
-}
-export function wellbeingV2(): Href {
-  return "/v2/settings/wellbeing";
-}
-export function supportV2(): Href {
-  return "/v2/settings/support";
-}
-export function aboutV2(): Href {
-  return "/v2/settings/about";
-}
