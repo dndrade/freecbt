@@ -7,5 +7,6 @@ export { SettingsHeader } from "./settings-header";
 export { SettingsRow } from "./settings-row";
 export type { SettingsRowProps } from "./settings-row";
 export { SettingsSheet, useDismissThenNavigate, useResetOnDismiss } from "./settings-sheet";
+export { SupportSheet } from "./support-sheet";
 export { WellbeingSheet } from "./wellbeing-sheet";
 export { GeneralSheet } from "./general-sheet";
