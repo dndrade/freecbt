@@ -1,3 +1,4 @@
+export { AboutSheet } from "./about-sheet";
 export { DataSheet } from "./data-sheet";
 export { IconTile } from "./icon-tile";
 export type { IconTileColor } from "./icon-tile";
