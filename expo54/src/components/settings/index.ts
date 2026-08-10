@@ -1,3 +1,4 @@
+export { DataSheet } from "./data-sheet";
 export { IconTile } from "./icon-tile";
 export type { IconTileColor } from "./icon-tile";
 export { SectionHeader } from "./section-header";
@@ -6,4 +7,5 @@ export { SettingsHeader } from "./settings-header";
 export { SettingsRow } from "./settings-row";
 export type { SettingsRowProps } from "./settings-row";
 export { SettingsSheet, useDismissThenNavigate, useResetOnDismiss } from "./settings-sheet";
+export { WellbeingSheet } from "./wellbeing-sheet";
 export { GeneralSheet } from "./general-sheet";
