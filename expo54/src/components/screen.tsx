@@ -1,4 +1,4 @@
-import { cn } from "heroui-native";
+import { cn, useThemeColor } from "heroui-native";
 import type { PropsWithChildren } from "react";
 import { ScrollView, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -15,6 +15,7 @@ export function Screen({
                            className,
                            contentClassName,
                        }: ScreenProps) {
+    const background = useThemeColor("background");
     const content = (
         <View
             className={cn(
@@ -28,7 +29,8 @@ export function Screen({
 
     return (
         <SafeAreaView
-            className={cn("flex-1 bg-background", className)}
+            className={cn("flex-1", className)}
+            style={{ flex: 1, backgroundColor: background }}
         >
             {scroll ? (
                 <ScrollView contentContainerClassName="grow">

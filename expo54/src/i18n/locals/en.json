@@ -111,7 +111,7 @@
     "empty": "No thoughts yet!"
   },
   "settings": {
-    "header": "FreeCBT*",
+    "header": "Settings",
     "theme": {
       "header": "*theme",
       "light": "Light",
@@ -213,7 +213,7 @@
     "support": {
       "header": "Support",
       "help": { "label": "Help Center" },
-      "contact": { "label": "Contact Us", "description": "Report an issue on GitHub" },
+      "contact": { "label": "Contact Us", "description": "Email the FreeCBT maintainer" },
       "issue": { "label": "Report an issue", "description": "GitHub issues" }
     },
     "about": {

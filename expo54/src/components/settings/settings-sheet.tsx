@@ -1,6 +1,7 @@
 import { BottomSheet } from "heroui-native";
 import { Href, useRouter } from "expo-router";
 import React, { useCallback, useEffect, useRef } from "react";
+import { View } from "react-native";
 
 export function SettingsSheet(props: {
   isOpen: boolean;
@@ -16,9 +17,19 @@ export function SettingsSheet(props: {
       <BottomSheet.Portal>
         <BottomSheet.Overlay />
         <BottomSheet.Content onClose={onClosed}>
-          <BottomSheet.Close />
-          <BottomSheet.Title>{title}</BottomSheet.Title>
-          {children}
+          <View className="px-4">
+            <View className="flex-row items-center">
+              <View className="min-w-11" />
+              <View className="flex-1 items-center">
+                <BottomSheet.Title className="text-foreground">{title}</BottomSheet.Title>
+              </View>
+              <BottomSheet.Close
+                accessibilityLabel="Close"
+                className="min-h-11 min-w-11 items-center justify-center"
+              />
+            </View>
+            {children}
+          </View>
         </BottomSheet.Content>
       </BottomSheet.Portal>
     </BottomSheet>

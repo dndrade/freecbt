@@ -28,6 +28,14 @@
     --color-brand-pink-foreground: var(--brand-pink-foreground);
     --color-brand-purple-foreground: var(--brand-purple-foreground);
     --color-brand-yellow-foreground: var(--brand-yellow-foreground);
+    --color-success: var(--success);
+    --color-success-foreground: var(--success-foreground);
+    --color-warning: var(--warning);
+    --color-warning-foreground: var(--warning-foreground);
+    --color-danger: var(--danger);
+    --color-danger-foreground: var(--danger-foreground);
+    --color-disabled: var(--disabled);
+    --color-disabled-foreground: var(--disabled-foreground);
 }
 
 @layer theme {
@@ -52,7 +60,7 @@
         --backdrop: oklch(0 0 0 / 20%);
 
         /* Muted / Default */
-        --muted: oklch(0.540 0.020 270);
+        --muted: #5f636f;
 
         --default: oklch(0.956 0.016 275);
         --default-foreground: var(--foreground);
@@ -60,6 +68,16 @@
         /* Brand */
         --accent: var(--brand-blue);
         --accent-foreground: oklch(1 0 0);
+
+        /* Semantic state roles */
+        --success: #027a48;
+        --success-foreground: #ffffff;
+        --warning: #b54708;
+        --warning-foreground: #ffffff;
+        --danger: #b42318;
+        --danger-foreground: #ffffff;
+        --disabled: #e5e7eb;
+        --disabled-foreground: #4b5563;
 
         /* Fields */
         --field-background: oklch(1 0 0);
@@ -105,6 +123,16 @@
         /* Brand */
         --accent: oklch(0.664 0.144 273);
         --accent-foreground: oklch(1 0 0);
+
+        /* Semantic state roles */
+        --success: #32d583;
+        --success-foreground: #062b1c;
+        --warning: #fdb022;
+        --warning-foreground: #2f1b00;
+        --danger: #f97066;
+        --danger-foreground: #3b0a08;
+        --disabled: #374151;
+        --disabled-foreground: #d1d5db;
 
         /* Fields */
         --field-background: oklch(0 0 0);

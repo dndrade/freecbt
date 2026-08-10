@@ -34,7 +34,7 @@ export function AboutSheet(props: {
           type="collapsed"
           iconName="info"
           iconColor="pink"
-          description={t("settings.about.version").replace("{{version}}", version)}
+          description={t("settings.about.version", { version })}
           onPress={() => setPresses(presses + 1)}
         />
         <Link href={sourceUrl as never} target="_blank" asChild>

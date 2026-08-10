@@ -41,7 +41,7 @@ function Ready(props: ModelLoadedProps) {
 
   return (
     <Screen>
-      <SettingsHeader title={t("settings.header")} />
+      <SettingsHeader title={t("settings.header")} showBack={false} />
       <SettingsCard className="mt-2">
         <SettingsRow
           type="nav"
@@ -65,23 +65,26 @@ function Ready(props: ModelLoadedProps) {
           onPress={() => setOpen("journal")}
         />
         <SettingsRow
-          type="collapsed"
+          type="nav"
           iconName="database"
           iconColor="yellow"
+          label={t("settings.hub.data.label")}
           description={t("settings.hub.data.description")}
           onPress={() => setOpen("data")}
         />
         <SettingsRow
-          type="collapsed"
+          type="nav"
           iconName="heart"
           iconColor="pink"
+          label={t("settings.hub.wellbeing.label")}
           description={t("settings.hub.wellbeing.description")}
           onPress={() => setOpen("wellbeing")}
         />
         <SettingsRow
-          type="collapsed"
+          type="nav"
           iconName="headphones"
           iconColor="purple"
+          label={t("settings.hub.support.label")}
           description={t("settings.hub.support.description")}
           onPress={() => setOpen("support")}
         />

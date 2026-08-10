@@ -62,7 +62,7 @@ export function SettingsRow(props: SettingsRowProps) {
           <>
             {label && <Text className="text-foreground text-[15px]">{label}</Text>}
             {description && (
-              <Text className="text-muted text-[11px] mt-[1px]">{description}</Text>
+              <Text className="text-muted text-[13px] mt-[1px]">{description}</Text>
             )}
           </>
         )}
