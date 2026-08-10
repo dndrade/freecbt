@@ -4,7 +4,7 @@ import { render, screen } from "@testing-library/react-native";
 import { HeroUINativeProvider } from "heroui-native/provider";
 import React from "react";
 import { Text } from "react-native";
-import { IconTile, foregroundVariable } from "./icon-tile";
+import { IconTile, foregroundVariable, backgroundClass } from "./icon-tile";
 
 // Mock useCSSVariable from uniwind.
 // RATIONALE: Uniwind's useCSSVariable hook resolves CSS variables at the Metro/Babel
@@ -81,6 +81,25 @@ describe("IconTile", () => {
     // Check that each variable name from foregroundVariable appears in the CSS file
     Object.values(foregroundVariable).forEach((varName) => {
       expect(cssContent).toContain(varName);
+    });
+  });
+
+  it("verifies that CSS variable names in backgroundClass exist in freecbt.css", () => {
+    // Read the actual CSS source file to ensure background class names stay in sync between
+    // icon-tile.tsx's backgroundClass map and the CSS variables that define them.
+    // This prevents silent drift if the --color-brand-* bridge block is removed from freecbt.css
+    // without updating backgroundClass.
+    const cssPath = path.join(__dirname, "../../../src/theme/freecbt.css");
+    const cssContent = fs.readFileSync(cssPath, "utf-8");
+
+    // Check that each background class maps to a corresponding CSS variable in the file
+    // (e.g., "bg-brand-pink" -> "--color-brand-pink")
+    Object.values(backgroundClass).forEach((bgClass) => {
+      // Extract the color part from "bg-brand-pink" -> "brand-pink"
+      const colorPart = bgClass.replace(/^bg-/, "");
+      // Construct the CSS variable name "--color-brand-pink"
+      const cssVarName = `--color-${colorPart}`;
+      expect(cssContent).toContain(cssVarName);
     });
   });
 });

@@ -4,7 +4,7 @@ import { View } from "react-native";
 
 export type IconTileColor = "pink" | "purple" | "yellow";
 
-const backgroundClass: Record<IconTileColor, string> = {
+export const backgroundClass: Record<IconTileColor, string> = {
   pink: "bg-brand-pink",
   purple: "bg-brand-purple",
   yellow: "bg-brand-yellow",
