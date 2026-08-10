@@ -1,8 +1,10 @@
+import fs from "fs";
+import path from "path";
 import { render, screen } from "@testing-library/react-native";
 import { HeroUINativeProvider } from "heroui-native/provider";
 import React from "react";
 import { Text } from "react-native";
-import { IconTile } from "./icon-tile";
+import { IconTile, foregroundVariable } from "./icon-tile";
 
 // Mock useCSSVariable from uniwind.
 // RATIONALE: Uniwind's useCSSVariable hook resolves CSS variables at the Metro/Babel
@@ -67,5 +69,18 @@ describe("IconTile", () => {
     );
     const probe = screen.getByTestId("probe");
     expect(probe.props.children).toBe("invalid");
+  });
+
+  it("verifies that CSS variable names in foregroundVariable exist in freecbt.css", () => {
+    // Read the actual CSS source file to ensure variable names stay in sync between
+    // icon-tile.tsx's foregroundVariable map and the CSS that defines them.
+    // This prevents silent drift if Task 1 or Task 2 rename variables without updating both files.
+    const cssPath = path.join(__dirname, "../../../src/theme/freecbt.css");
+    const cssContent = fs.readFileSync(cssPath, "utf-8");
+
+    // Check that each variable name from foregroundVariable appears in the CSS file
+    Object.values(foregroundVariable).forEach((varName) => {
+      expect(cssContent).toContain(varName);
+    });
   });
 });

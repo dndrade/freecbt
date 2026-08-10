@@ -10,7 +10,7 @@ const backgroundClass: Record<IconTileColor, string> = {
   yellow: "bg-brand-yellow",
 };
 
-const foregroundVariable: Record<IconTileColor, string> = {
+export const foregroundVariable: Record<IconTileColor, string> = {
   pink: "--color-brand-pink-foreground",
   purple: "--color-brand-purple-foreground",
   yellow: "--color-brand-yellow-foreground",
