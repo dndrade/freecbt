@@ -1,5 +1,6 @@
 import { TranslateFn } from "@/src/i18n/use-i18n";
-import { SettingsCard, SettingsRow } from "@/src/components/settings";
+import { SettingsCard } from "./settings-card";
+import { SettingsRow } from "./settings-row";
 import { SettingsSheet } from "./settings-sheet";
 import { Link } from "expo-router";
 import React from "react";

@@ -1,6 +1,7 @@
 import { Routes } from "@/src";
 import { TranslateFn } from "@/src/i18n/use-i18n";
-import { SettingsCard, SettingsRow } from "@/src/components/settings";
+import { SettingsCard } from "./settings-card";
+import { SettingsRow } from "./settings-row";
 import { SettingsSheet, useDismissThenNavigate } from "./settings-sheet";
 import React from "react";
 
