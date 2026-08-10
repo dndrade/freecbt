@@ -1,7 +1,9 @@
 export { AboutSheet } from "./about-sheet";
+export { AppearancePicker } from "./appearance-picker";
 export { DataSheet } from "./data-sheet";
 export { IconTile } from "./icon-tile";
 export type { IconTileColor } from "./icon-tile";
+export { JournalPicker } from "./journal-picker";
 export { SectionHeader } from "./section-header";
 export { SettingsCard } from "./settings-card";
 export { SettingsHeader } from "./settings-header";
