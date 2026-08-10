@@ -3,7 +3,8 @@
  */
 import { act, renderHook, waitFor } from "@testing-library/react";
 import React from "react";
-import { Action, Model, Thought } from "../model";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { Action, Model, Settings, Thought } from "../model";
 import { ModelProvider, useModel } from "./use-model";
 
 test("use-model basics", async () => {
@@ -75,4 +76,57 @@ test("use-model settings propagate through context for every consumer", async ()
   expect(ready().sessionAuthed).toBe(true); // set-pincode authenticates the session that set it
   act(() => dispatch()(Action.setPincode(null)));
   expect(ready().settings.pincode).toBe(null);
+});
+
+test("use-model reports completion persistence failure", async () => {
+  const error = new Error("settings write failed");
+  const multiSet = jest
+    .spyOn(AsyncStorage, "multiSet")
+    .mockRejectedValueOnce(error);
+  const wrapper = ({ children }: { children: React.ReactNode }) => (
+    <ModelProvider>{children}</ModelProvider>
+  );
+  const { result } = renderHook(() => useModel(), { wrapper });
+  await waitFor(() => expect(result.current[0].status).toBe("ready"));
+
+  act(() => result.current[1](Action.beginOnboardingCompletion()));
+  await waitFor(() =>
+    expect((result.current[0] as Model.Ready).onboardingCompletion).toEqual({
+      status: "failure",
+      error,
+    })
+  );
+  expect((result.current[0] as Model.Ready).settings.existingUser).toBe(false);
+  multiSet.mockRestore();
+});
+
+test("use-model reports completion success only after persistence resolves", async () => {
+  let resolveWrite!: () => void;
+  const writePending = new Promise<void>((resolve) => {
+    resolveWrite = resolve;
+  });
+  const multiSet = jest
+    .spyOn(AsyncStorage, "multiSet")
+    .mockReturnValueOnce(writePending);
+  const wrapper = ({ children }: { children: React.ReactNode }) => (
+    <ModelProvider>{children}</ModelProvider>
+  );
+  const { result } = renderHook(() => useModel(), { wrapper });
+  await waitFor(() => expect(result.current[0].status).toBe("ready"));
+
+  act(() => result.current[1](Action.beginOnboardingCompletion()));
+  await waitFor(() =>
+    expect(multiSet).toHaveBeenCalledWith(
+      expect.arrayContaining([[Settings.existingUserKey, "1"]])
+    )
+  );
+  expect((result.current[0] as Model.Ready).onboardingCompletion).toBe("saving");
+  expect((result.current[0] as Model.Ready).settings.existingUser).toBe(false);
+
+  resolveWrite();
+  await waitFor(() =>
+    expect((result.current[0] as Model.Ready).onboardingCompletion).toBe("idle")
+  );
+  expect((result.current[0] as Model.Ready).settings.existingUser).toBe(true);
+  multiSet.mockRestore();
 });

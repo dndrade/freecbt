@@ -19,9 +19,14 @@ export interface Ready {
   thoughts: ReadonlyMap<Thought.Key, Thought.Thought>;
   thoughtParseErrors: ReadonlyMap<Thought.Key, z.ZodError<Thought.Thought>>;
   settings: Settings.Settings;
+  onboardingCompletion: OnboardingCompletion;
   deviceColorScheme: ColorScheme | null;
   deviceLocale: LocaleTag;
 }
+export type OnboardingCompletion =
+  | "idle"
+  | "saving"
+  | { status: "failure"; error: unknown };
 
 export const loading = { status: "loading" } as const;
 export const init: readonly [Model, Cmd.List] = [loading, [Cmd.loadModel]];
@@ -117,6 +122,32 @@ function updateReady(m: Ready, a: Action.Action): readonly [Model, Cmd.List] {
     }
     case "set-existing-user": {
       return updateSettings(m, { existingUser: true });
+    }
+    case "begin-onboarding-completion": {
+      if (m.onboardingCompletion === "saving") return [m, []];
+      return [
+        { ...m, onboardingCompletion: "saving" },
+        [Cmd.completeOnboarding({ ...m.settings, existingUser: true })],
+      ];
+    }
+    case "onboarding-completion-succeeded": {
+      return [
+        {
+          ...m,
+          onboardingCompletion: "idle",
+          settings: { ...m.settings, existingUser: true },
+        },
+        [],
+      ];
+    }
+    case "onboarding-completion-failed": {
+      return [
+        {
+          ...m,
+          onboardingCompletion: { status: "failure", error: a.error },
+        },
+        [],
+      ];
     }
     case "set-reminders": {
       return updateSettings(m, { reminders: a.value });

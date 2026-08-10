@@ -8,6 +8,9 @@ export type Action = ReturnType<
   | typeof modelReady
   | typeof setSessionAuthed
   | typeof setExistingUser
+  | typeof beginOnboardingCompletion
+  | typeof onboardingCompletionSucceeded
+  | typeof onboardingCompletionFailed
   | typeof setReminders
   | typeof setPincode
   | typeof setHistoryLabel
@@ -38,6 +41,15 @@ export function setPincode(value: Settings.Pincode | null) {
 }
 export function setExistingUser() {
   return { action: "set-existing-user" } as const;
+}
+export function beginOnboardingCompletion() {
+  return { action: "begin-onboarding-completion" } as const;
+}
+export function onboardingCompletionSucceeded() {
+  return { action: "onboarding-completion-succeeded" } as const;
+}
+export function onboardingCompletionFailed(error: unknown) {
+  return { action: "onboarding-completion-failed", error } as const;
 }
 export function setReminders(value: boolean) {
   return { action: "set-reminders", value } as const;

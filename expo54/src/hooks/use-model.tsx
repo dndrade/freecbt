@@ -83,6 +83,7 @@ function useCmdRunner(data: Distortion.Data, storage: AsyncStorageStatic) {
             deviceColorScheme,
             deviceLocale,
             settings,
+            onboardingCompletion: "idle",
             ...tm,
           });
           dispatch(Action.modelReady(m));
@@ -90,6 +91,15 @@ function useCmdRunner(data: Distortion.Data, storage: AsyncStorageStatic) {
         }
         case "write-settings": {
           await s.write(c.value);
+          return;
+        }
+        case "complete-onboarding": {
+          try {
+            await s.write(c.value);
+            dispatch(Action.onboardingCompletionSucceeded());
+          } catch (error) {
+            dispatch(Action.onboardingCompletionFailed(error));
+          }
           return;
         }
         case "write-thought": {

@@ -6,6 +6,7 @@ export type Cmd =
   | typeof loadModel
   | ReturnType<
       | typeof writeSettings
+      | typeof completeOnboarding
       | typeof writeThought
       | typeof deleteThought
       | typeof navigate
@@ -15,6 +16,9 @@ export type List = readonly Cmd[];
 export const loadModel = { cmd: "load-model" } as const;
 export function writeSettings(value: Settings.Settings) {
   return { cmd: "write-settings", value } as const;
+}
+export function completeOnboarding(value: Settings.Settings) {
+  return { cmd: "complete-onboarding", value } as const;
 }
 export function writeThought(value: Thought.Thought) {
   return { cmd: "write-thought", value } as const;

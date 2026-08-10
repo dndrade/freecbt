@@ -1,4 +1,4 @@
-import { Action, DistortionData, Model, Settings, Thought } from ".";
+import { Action, Cmd, DistortionData, Model, Settings, Thought } from ".";
 
 const emptyReady: Model.Ready = {
   status: "ready",
@@ -9,6 +9,7 @@ const emptyReady: Model.Ready = {
   distortionData: DistortionData,
   sessionAuthed: false,
   settings: Settings.empty(),
+  onboardingCompletion: "idle",
 };
 
 test("basic actions", () => {
@@ -53,4 +54,49 @@ test("import archive merges thoughts without deleting local-only thoughts", () =
     );
 
     expect(cmds.some((cmd) => cmd.cmd === "delete-thought")).toBe(false);
+});
+
+test("onboarding completion persists only after a successful result", () => {
+  const error = new Error("settings write failed");
+  let m: Model.Model = emptyReady;
+
+  const [saving, savingCmds] = Model.update(
+    m,
+    Action.beginOnboardingCompletion()
+  );
+  m = saving;
+  expect((m as Model.Ready).onboardingCompletion).toBe("saving");
+  expect((m as Model.Ready).settings.existingUser).toBe(false);
+  expect(savingCmds).toEqual([
+    Cmd.completeOnboarding({ ...emptyReady.settings, existingUser: true }),
+  ]);
+
+  const [duplicate, duplicateCmds] = Model.update(
+    m,
+    Action.beginOnboardingCompletion()
+  );
+  expect(duplicate).toBe(m);
+  expect(duplicateCmds).toEqual([]);
+
+  [m] = Model.update(m, Action.onboardingCompletionSucceeded());
+  expect((m as Model.Ready).onboardingCompletion).toBe("idle");
+  expect((m as Model.Ready).settings.existingUser).toBe(true);
+
+  [m] = Model.update(
+    emptyReady,
+    Action.beginOnboardingCompletion()
+  );
+  [m] = Model.update(m, Action.onboardingCompletionFailed(error));
+  expect((m as Model.Ready).onboardingCompletion).toEqual({
+    status: "failure",
+    error,
+  });
+  expect((m as Model.Ready).settings.existingUser).toBe(false);
+
+  const [retry, retryCmds] = Model.update(
+    m,
+    Action.beginOnboardingCompletion()
+  );
+  expect((retry as Model.Ready).onboardingCompletion).toBe("saving");
+  expect(retryCmds).toHaveLength(1);
 });
