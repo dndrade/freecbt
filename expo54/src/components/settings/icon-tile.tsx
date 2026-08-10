@@ -1,20 +1,19 @@
 import { cn } from "heroui-native";
+import { useCSSVariable } from "uniwind";
 import { View } from "react-native";
 
 export type IconTileColor = "pink" | "purple" | "yellow";
 
-const backgroundClass: Record<IconTileColor, string> = {
+export const backgroundClass: Record<IconTileColor, string> = {
   pink: "bg-brand-pink",
   purple: "bg-brand-purple",
   yellow: "bg-brand-yellow",
 };
 
-// icon glyphs need a concrete hex, not a CSS var, since react-native icon
-// libraries take a color prop rather than reading theme classes
-const iconColorHex: Record<IconTileColor, string> = {
-  pink: "#ffffff",
-  purple: "#ffffff",
-  yellow: "#3d3212",
+export const foregroundVariable: Record<IconTileColor, string> = {
+  pink: "--color-brand-pink-foreground",
+  purple: "--color-brand-purple-foreground",
+  yellow: "--color-brand-yellow-foreground",
 };
 
 export function IconTile(props: {
@@ -23,6 +22,14 @@ export function IconTile(props: {
   className?: string;
 }) {
   const { color, children, className } = props;
+  const resolved = useCSSVariable(foregroundVariable[color]);
+  const iconColor =
+    typeof resolved === "string"
+      ? resolved
+      : typeof resolved === "number"
+        ? String(resolved)
+        : "invalid";
+
   return (
     <View
       className={cn(
@@ -31,7 +38,7 @@ export function IconTile(props: {
         className
       )}
     >
-      {children(iconColorHex[color])}
+      {children(iconColor)}
     </View>
   );
 }

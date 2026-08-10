@@ -1,4 +1,4 @@
-import { cn, Switch } from "heroui-native";
+import { cn, Switch, useThemeColor } from "heroui-native";
 import { Feather } from "@expo/vector-icons";
 import { Pressable, Text, View } from "react-native";
 import { IconTile, type IconTileColor } from "./icon-tile";
@@ -43,6 +43,7 @@ export type SettingsRowProps =
 
 export function SettingsRow(props: SettingsRowProps) {
   const { iconName, iconColor, label, description, className } = props;
+  const chevronColor = useThemeColor("muted");
 
   // border-between-rows comes from the parent SettingsCard's `divide-y`,
   // not from this component — it has no concept of its own position in the list
@@ -80,12 +81,12 @@ export function SettingsRow(props: SettingsRowProps) {
       {props.type === "value" && (
         <View className="flex-row items-center gap-[5px]">
           <Text className="text-muted text-[14px]">{props.value}</Text>
-          <Feather name="chevron-right" size={14} color="#bbbbbb" />
+          <Feather name="chevron-right" size={14} color={chevronColor} />
         </View>
       )}
 
       {(props.type === "nav" || props.type === "collapsed") && (
-        <Feather name="chevron-right" size={14} color="#bbbbbb" />
+        <Feather name="chevron-right" size={14} color={chevronColor} />
       )}
     </View>
   );
