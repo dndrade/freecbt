@@ -824,3 +824,86 @@ test("retries cleanup failures by removal only and does not auto-retry after hyd
   );
   expect(cmds).toEqual([Cmd.removeThoughtSaveOutbox(cleanupFailed.submissionId)]);
 });
+
+test("discards a failed record by removing it directly, isolated from other records", () => {
+  const failed = makeOutboxRecord(120, "failed");
+  const untouched = makeOutboxRecord(121, "pending");
+  let m: Model.Model = { ...emptyReady, thoughtSaveOutbox: [failed, untouched] };
+  const now = new Date("2026-08-11T11:00:00.000Z");
+
+  let cmds: Cmd.List;
+  [m, cmds] = Model.update(m, Action.discardThoughtSave(failed.submissionId));
+  // straight to removal - no queueing, no write-then-cleanup cycle
+  expect(cmds).toEqual([Cmd.removeThoughtSaveOutbox(failed.submissionId)]);
+
+  [m, cmds] = Model.update(m, Action.thoughtSaveOutboxRemoved(failed.submissionId, now));
+  // gone, and FIFO picks up the next pending record as usual - discard never
+  // touches anything but the record it targeted
+  expect((m as Model.Ready).thoughtSaveOutbox).toEqual([
+    expect.objectContaining({ submissionId: untouched.submissionId, status: "active" }),
+  ]);
+});
+
+test("discards an uncertain record left by a restart", () => {
+  const uncertain = makeOutboxRecord(122, "uncertain");
+  let m: Model.Model = { ...emptyReady, thoughtSaveOutbox: [uncertain] };
+  const now = new Date("2026-08-11T11:00:00.000Z");
+
+  let cmds: Cmd.List;
+  [m, cmds] = Model.update(m, Action.discardThoughtSave(uncertain.submissionId));
+  expect(cmds).toEqual([Cmd.removeThoughtSaveOutbox(uncertain.submissionId)]);
+
+  [m, cmds] = Model.update(m, Action.thoughtSaveOutboxRemoved(uncertain.submissionId, now));
+  expect((m as Model.Ready).thoughtSaveOutbox).toEqual([]);
+});
+
+test("discards a cleanup-failed record without touching the already-saved Thought", () => {
+  const cleanupFailed = {
+    ...makeOutboxRecord(123, "cleanup-failed"),
+    thoughtPersisted: true,
+  };
+  let m: Model.Model = { ...emptyReady, thoughtSaveOutbox: [cleanupFailed] };
+  const now = new Date("2026-08-11T11:00:00.000Z");
+
+  let cmds: Cmd.List;
+  [m, cmds] = Model.update(m, Action.discardThoughtSave(cleanupFailed.submissionId));
+  expect(cmds).toEqual([Cmd.removeThoughtSaveOutbox(cleanupFailed.submissionId)]);
+
+  [m, cmds] = Model.update(
+    m,
+    Action.thoughtSaveOutboxRemoved(cleanupFailed.submissionId, now)
+  );
+  expect((m as Model.Ready).thoughtSaveOutbox).toEqual([]);
+  // the discard is only ever the redundant outbox bookkeeping record - the
+  // saved Thought itself was never in `thoughtSaveOutbox` in the first place
+  expect((m as Model.Ready).thoughts.size).toBe(0);
+});
+
+test("refuses to discard a record still in flight", () => {
+  for (const status of ["insertion-pending", "pending", "active"] as const) {
+    const record = makeOutboxRecord(130, status);
+    const m: Model.Model = { ...emptyReady, thoughtSaveOutbox: [record] };
+    const [next, cmds] = Model.update(m, Action.discardThoughtSave(record.submissionId));
+    expect(cmds).toEqual([]);
+    expect(next).toBe(m);
+  }
+});
+
+test("a failed removal from Discard leaves the record exactly as it was, never mislabels it", () => {
+  const failed = makeOutboxRecord(131, "failed");
+  let m: Model.Model = { ...emptyReady, thoughtSaveOutbox: [failed] };
+  const now = new Date("2026-08-11T11:00:00.000Z");
+
+  let cmds: Cmd.List;
+  [m, cmds] = Model.update(m, Action.discardThoughtSave(failed.submissionId));
+  expect(cmds).toEqual([Cmd.removeThoughtSaveOutbox(failed.submissionId)]);
+
+  [m, cmds] = Model.update(
+    m,
+    Action.thoughtSaveOutboxRemovalFailed(failed.submissionId, new Error("disk full"), now)
+  );
+  // the removal-failed guard only mutates an "active" D-path record, so a
+  // failed non-active removal (from Discard) is a no-op, not a relabel
+  expect((m as Model.Ready).thoughtSaveOutbox).toEqual([failed]);
+  expect(cmds).toEqual([]);
+});

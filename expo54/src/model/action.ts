@@ -26,6 +26,7 @@ export type Action = ReturnType<
   | typeof beginThoughtSave
   | typeof runThoughtSaveOutbox
   | typeof retryThoughtSave
+  | typeof discardThoughtSave
   | typeof thoughtSaveOutboxInsertionSucceeded
   | typeof thoughtSaveOutboxInsertionFailed
   | typeof thoughtSaveOutboxUpdated
@@ -121,6 +122,14 @@ export function runThoughtSaveOutbox(now: Date) {
 }
 export function retryThoughtSave(submissionId: Thought.Id) {
   return { action: "retry-thought-save", submissionId } as const;
+}
+/**
+ * Explicit, user-confirmed removal of one outbox record - only ever a record
+ * the user can already do nothing else useful with (see the model's own
+ * eligibility guard). Never a substitute for the automatic D cleanup path.
+ */
+export function discardThoughtSave(submissionId: Thought.Id) {
+  return { action: "discard-thought-save", submissionId } as const;
 }
 export function thoughtSaveOutboxInsertionSucceeded(
   submissionId: Thought.Id,

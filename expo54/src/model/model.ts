@@ -303,6 +303,24 @@ function updateReady(m: Ready, a: Action.Action): readonly [Model, Cmd.List] {
         return { ...record, retryRequested: true };
       });
     }
+    case "discard-thought-save": {
+      const record = m.thoughtSaveOutbox.find(
+        (candidate) => candidate.submissionId === a.submissionId
+      );
+      // same eligibility as Retry: only a record the user can't otherwise move
+      // forward. Isolated to the one matching record - nothing else changes.
+      if (
+        record === undefined ||
+        (record.status !== "failed" &&
+          record.status !== "cleanup-failed" &&
+          record.status !== "uncertain")
+      ) {
+        return [m, []];
+      }
+      // the same durable-removal primitive D's own cleanup already uses -
+      // "confirms and removes only the selected record", nothing queued.
+      return [m, [Cmd.removeThoughtSaveOutbox(a.submissionId)]];
+    }
     case "thought-save-outbox-updated": {
       const current = m.thoughtSaveOutbox.find(
         (record) => record.submissionId === a.value.submissionId
