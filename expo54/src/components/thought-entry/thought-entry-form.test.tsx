@@ -4,7 +4,8 @@ import { HeroUINativeProvider } from "heroui-native/provider";
 import React from "react";
 import { ThoughtEntryForm, type ThoughtEntryFormProps } from "./thought-entry-form";
 
-const translate = ((key: string) => key) as ThoughtEntryFormProps["translate"];
+const translate = ((key: string, values?: Record<string, unknown>) =>
+  values ? `${key}:${JSON.stringify(values)}` : key) as ThoughtEntryFormProps["translate"];
 
 /** The form is controlled; the wrapper screens own the value in real use. */
 function Harness(
@@ -152,6 +153,27 @@ describe("ThoughtEntryForm", () => {
     ).toBe("checkbox");
   });
 
+  test("translates its own controls and announces the step it is on", () => {
+    render(<Harness saveError="stuck" onRetry={jest.fn()} />);
+
+    // the progress indicator announces the step, not the app's name
+    expect(screen.getByRole("progressbar").props.accessibilityLabel).toBe(
+      'cbt_form.step_progress:{"step":1,"count":4}'
+    );
+    expect(screen.getByText("cbt_form.retry")).toBeTruthy();
+    const previous = screen.getByTestId("thought-entry-previous");
+    expect(previous.props.accessibilityLabel).toBe("cbt_form.previous");
+    expect(screen.getByText("cbt_form.previous")).toBeTruthy();
+    const nextButton = screen.getByTestId("thought-entry-next");
+    expect(nextButton.props.accessibilityLabel).toBe("cbt_form.next");
+    expect(screen.getByText("cbt_form.next")).toBeTruthy();
+
+    next();
+    expect(screen.getByRole("progressbar").props.accessibilityLabel).toBe(
+      'cbt_form.step_progress:{"step":2,"count":4}'
+    );
+  });
+
   test("disables Save with pending text while a save is in flight", () => {
     const onSave = jest.fn();
     render(<Harness isSaving onSave={onSave} />);
@@ -159,7 +181,7 @@ describe("ThoughtEntryForm", () => {
 
     const save = screen.getByTestId("thought-entry-save");
     expect(save.props.accessibilityState).toMatchObject({ disabled: true });
-    expect(screen.getByText("Saving…")).toBeTruthy();
+    expect(screen.getByText("cbt_form.saving")).toBeTruthy();
     fireEvent.press(save);
     expect(onSave).not.toHaveBeenCalled();
   });

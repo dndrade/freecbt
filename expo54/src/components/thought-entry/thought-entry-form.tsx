@@ -170,7 +170,10 @@ export function ThoughtEntryForm(props: ThoughtEntryFormProps) {
       <SegmentedProgress
         currentIndex={index}
         count={steps.length}
-        accessibilityLabel={t("cbt_form.header")}
+        accessibilityLabel={t("cbt_form.step_progress", {
+          step: index + 1,
+          count: steps.length,
+        })}
       />
       <ScrollView
         className="flex-1"
@@ -194,7 +197,7 @@ export function ThoughtEntryForm(props: ThoughtEntryFormProps) {
               variant="secondary"
               onPress={props.onRetry}
             >
-              Retry
+              {t("cbt_form.retry")}
             </Button>
           ) : null}
         </View>
@@ -205,10 +208,10 @@ export function ThoughtEntryForm(props: ThoughtEntryFormProps) {
           variant="secondary"
           className="flex-1"
           isDisabled={index === 0}
-          accessibilityLabel="Previous"
+          accessibilityLabel={t("cbt_form.previous")}
           onPress={() => go(index - 1)}
         >
-          Previous
+          {t("cbt_form.previous")}
         </Button>
         {isLast ? (
           <Button
@@ -220,16 +223,16 @@ export function ThoughtEntryForm(props: ThoughtEntryFormProps) {
               props.onSave?.();
             }}
           >
-            {isSaving ? "Saving…" : t("cbt_form.submit")}
+            {isSaving ? t("cbt_form.saving") : t("cbt_form.submit")}
           </Button>
         ) : (
           <Button
             testID="thought-entry-next"
             className="flex-1"
-            accessibilityLabel="Next"
+            accessibilityLabel={t("cbt_form.next")}
             onPress={() => go(index + 1)}
           >
-            Next
+            {t("cbt_form.next")}
           </Button>
         )}
       </View>

@@ -430,7 +430,7 @@ describe("compatibility thought entry", () => {
     expect(
       view.getByTestId("thought-entry-save").props.accessibilityState
     ).toMatchObject({ disabled: false });
-    expect(view.queryByText("Saving…")).toBeNull();
+    expect(view.queryByText("cbt_form.saving")).toBeNull();
   });
 
   test("saving here never touches Home's durable draft", async () => {
