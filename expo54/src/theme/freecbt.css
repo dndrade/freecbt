@@ -1,0 +1,164 @@
+@theme {
+    --font-normal: system-ui;
+    --font-medium: system-ui;
+    --font-semibold: system-ui;
+
+    /* Brand palette (identical light/dark) */
+    --brand-blue: oklch(0.580 0.183 271);
+    --brand-pink: oklch(0.748 0.137 349);
+    --brand-yellow: oklch(0.846 0.123 86);
+    --brand-purple: oklch(0.514 0.118 293);
+
+    /* Brand foreground pairs: the glyph/text color that sits on top of each
+       brand tile above. Identical light/dark, since the tile color itself is. */
+    --brand-pink-foreground: oklch(0 0 0);
+    --brand-purple-foreground: oklch(1 0 0);
+    --brand-yellow-foreground: #3d3212;
+}
+
+/* Bridges the bare names above into Tailwind's --color-* namespace, the same
+   way node_modules/heroui-native/src/styles/theme.css bridges its own tokens
+   (--color-background: var(--background), etc.). Without this, bg-brand-*
+   and text-brand-* utilities are never generated at all. */
+@theme inline static {
+    --color-brand-blue: var(--brand-blue);
+    --color-brand-pink: var(--brand-pink);
+    --color-brand-yellow: var(--brand-yellow);
+    --color-brand-purple: var(--brand-purple);
+    --color-brand-pink-foreground: var(--brand-pink-foreground);
+    --color-brand-purple-foreground: var(--brand-purple-foreground);
+    --color-brand-yellow-foreground: var(--brand-yellow-foreground);
+    --color-success: var(--success);
+    --color-success-foreground: var(--success-foreground);
+    --color-warning: var(--warning);
+    --color-warning-foreground: var(--warning-foreground);
+    --color-danger: var(--danger);
+    --color-danger-foreground: var(--danger-foreground);
+    --color-disabled: var(--disabled);
+    --color-disabled-foreground: var(--disabled-foreground);
+}
+
+@layer theme {
+    @variant light {
+        /* Base */
+        --background: oklch(0.991 0 0);
+        --foreground: oklch(0 0 0);
+
+        /* Surfaces */
+        --surface: oklch(0.969 0.007 261);
+        --surface-foreground: var(--foreground);
+
+        --surface-secondary: oklch(0.956 0.016 275);
+        --surface-secondary-foreground: var(--foreground);
+
+        --surface-tertiary: oklch(0.940 0.018 275);
+        --surface-tertiary-foreground: var(--foreground);
+
+        /* Overlays */
+        --overlay: oklch(1 0 0);
+        --overlay-foreground: var(--foreground);
+        --backdrop: oklch(0 0 0 / 20%);
+
+        /* Muted / Default */
+        --muted: #5f636f;
+
+        --default: oklch(0.956 0.016 275);
+        --default-foreground: var(--foreground);
+
+        /* Brand */
+        --accent: var(--brand-blue);
+        --accent-foreground: oklch(1 0 0);
+
+        /* Semantic state roles */
+        --success: #027a48;
+        --success-foreground: #ffffff;
+        --warning: #b54708;
+        --warning-foreground: #ffffff;
+        --danger: #b42318;
+        --danger-foreground: #ffffff;
+        --disabled: #e5e7eb;
+        --disabled-foreground: #4b5563;
+
+        /* Fields */
+        --field-background: oklch(1 0 0);
+        --field-foreground: var(--foreground);
+        --field-placeholder: var(--muted);
+        --field-border: oklch(0 0 0 / 20%);
+
+        /* Structure */
+        --border: oklch(0 0 0 / 20%);
+        --separator: oklch(0 0 0 / 20%);
+
+        /* Interaction */
+        --focus: var(--accent);
+        --link: var(--accent);
+    }
+
+    @variant dark {
+        /* Base */
+        --background: oklch(0.107 0 0);
+        --foreground: oklch(1 0 0);
+
+        /* Surfaces */
+        --surface: oklch(1 0 0 / 20%);
+        --surface-foreground: var(--foreground);
+
+        --surface-secondary: oklch(0.580 0.183 271 / 40%);
+        --surface-secondary-foreground: oklch(0.956 0.016 275);
+
+        --surface-tertiary: oklch(0.250 0.025 275);
+        --surface-tertiary-foreground: var(--foreground);
+
+        /* Overlays */
+        --overlay: oklch(0.180 0 0);
+        --overlay-foreground: var(--foreground);
+        --backdrop: oklch(0 0 0 / 50%);
+
+        /* Muted / Default */
+        --muted: oklch(0.680 0.015 270);
+
+        --default: oklch(0.220 0.020 275);
+        --default-foreground: var(--foreground);
+
+        /* Brand */
+        --accent: oklch(0.664 0.144 273);
+        --accent-foreground: oklch(1 0 0);
+
+        /* Semantic state roles */
+        --success: #32d583;
+        --success-foreground: #062b1c;
+        --warning: #fdb022;
+        --warning-foreground: #2f1b00;
+        --danger: #f97066;
+        --danger-foreground: #3b0a08;
+        --disabled: #374151;
+        --disabled-foreground: #d1d5db;
+
+        /* Fields */
+        --field-background: oklch(0 0 0);
+        --field-foreground: var(--foreground);
+        --field-placeholder: var(--muted);
+        --field-border: oklch(1 0 0 / 25%);
+
+        /* Structure */
+        --border: oklch(1 0 0 / 25%);
+        --separator: oklch(1 0 0 / 25%);
+
+        /* Interaction */
+        --focus: var(--accent);
+        --link: var(--accent);
+    }
+}
+
+/* Tab navigation styling */
+.tabs-icon {
+    @apply flex items-center justify-center;
+}
+
+.tabs-pill {
+    @apply rounded-full p-2 transition-all duration-200;
+}
+
+.tabs-active {
+    @apply bg-accent;
+}

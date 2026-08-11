@@ -7,3 +7,4 @@ export const looker = require("@/assets/looker/Looker.png");
 export const eater = require("@/assets/eater/eater.png");
 export const logo = require("@/assets/logo/logo.png");
 export const notifications = require("@/assets/notifications/notifications.png");
+export const lockIllustration = require("@/assets/lock/lock-illustration.png");

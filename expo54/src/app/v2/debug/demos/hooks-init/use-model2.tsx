@@ -80,6 +80,7 @@ function useModelInit(
             deviceColorScheme: cs,
             deviceLocale,
             settings: await s.read(),
+            onboardingCompletion: "idle",
             ...(await t.readAll()),
           })
         )
@@ -173,6 +174,24 @@ function updateReady(m: Model.Ready, a: Action.Action): Model.Ready {
     }
     case "set-existing-user": {
       return { ...m, settings: { ...m.settings, existingUser: true } };
+    }
+    case "begin-onboarding-completion": {
+      return m.onboardingCompletion === "saving"
+        ? m
+        : { ...m, onboardingCompletion: "saving" };
+    }
+    case "onboarding-completion-succeeded": {
+      return {
+        ...m,
+        onboardingCompletion: "idle",
+        settings: { ...m.settings, existingUser: true },
+      };
+    }
+    case "onboarding-completion-failed": {
+      return {
+        ...m,
+        onboardingCompletion: { status: "failure", error: a.error },
+      };
     }
     case "set-device-color-scheme": {
       return { ...m, deviceColorScheme: a.value };

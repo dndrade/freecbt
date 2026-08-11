@@ -60,7 +60,9 @@ function Ready(props: ModelLoadedProps) {
         key="create-simple"
         title="Simple"
         onPress={() =>
-          dispatch(Action.createThought(exampleThought(), new Date()))
+          dispatch(
+            Action.createThought(exampleThought(), new Date(), "standalone")
+          )
         }
       />,
     ],
@@ -70,7 +72,9 @@ function Ready(props: ModelLoadedProps) {
         key="create-symbols"
         title="Symbols"
         onPress={() =>
-          dispatch(Action.createThought(symbolsThought(), new Date()))
+          dispatch(
+            Action.createThought(symbolsThought(), new Date(), "standalone")
+          )
         }
       />,
     ],

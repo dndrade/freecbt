@@ -1,5 +1,5 @@
 import * as Localization from "expo-localization";
-import { I18n } from "i18n-js";
+import { I18n, type TranslateOptions } from "i18n-js";
 import { createContext, useContext } from "react";
 import { z } from "zod";
 import locals0 from "./locals";
@@ -8,7 +8,7 @@ import en from "./locals/en.json";
 // Type-safe, autocompletable translation keys!
 export function useTranslate() {
   const i18n = useI18n();
-  return (k: TranslateKey) => i18n.t(k);
+  return (k: TranslateKey, values?: TranslateOptions) => i18n.t(k, values);
 }
 export type TranslateFn = ReturnType<typeof useTranslate>;
 

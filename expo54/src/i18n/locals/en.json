@@ -111,7 +111,7 @@
     "empty": "No thoughts yet!"
   },
   "settings": {
-    "header": "FreeCBT*",
+    "header": "Settings",
     "theme": {
       "header": "*theme",
       "light": "Light",
@@ -177,6 +177,52 @@
         "_test": ")tset( hsilgnE-esreveR"
       }
     },
+    "hub": {
+      "home": { "label": "Home" },
+      "journal": { "label": "Journal" },
+      "general": { "label": "General" },
+      "appearance": { "label": "Appearance" },
+      "data": { "label": "Data", "description": "Backup, restore, export" },
+      "wellbeing": { "label": "Wellbeing", "description": "Crisis lines, learn about CBT" },
+      "support": { "label": "Support", "description": "Help center, contact us, privacy" },
+      "about": { "label": "About" }
+    },
+    "general": {
+      "header": "General",
+      "notifications": { "label": "Notifications" },
+      "applock": { "label": "App Lock", "description": "Require a pincode to open" },
+      "language": { "label": "Language" }
+    },
+    "appearance": {
+      "header": "Appearance",
+      "theme": { "label": "Theme" }
+    },
+    "journal": {
+      "header": "Journal",
+      "history": { "label": "History button labels" }
+    },
+    "data": {
+      "header": "Data",
+      "backup": { "label": "Backup & Restore", "description": "Save or restore your FreeCBT data" },
+      "export": { "label": "Export journal", "description": "Save as Markdown, CSV, or JSON" }
+    },
+    "wellbeing": {
+      "header": "Wellbeing",
+      "learn": { "label": "Learn about CBT", "description": "What it is and how it works" },
+      "crisis": { "label": "Crisis Resources", "description": "Hotlines and emergency contacts", "todo": "Crisis resource content is not available in this build yet." }
+    },
+    "support": {
+      "header": "Support",
+      "help": { "label": "Help Center" },
+      "contact": { "label": "Contact Us", "description": "Email the FreeCBT maintainer" },
+      "issue": { "label": "Report an issue", "description": "GitHub issues" }
+    },
+    "about": {
+      "header": "About",
+      "version": "Version {{version}}",
+      "source": { "label": "Source code" },
+      "acknowledgements": { "label": "Acknowledgements", "todo": "Acknowledgements are not available in this build yet." }
+    },
     "privacy": "Privacy Policy",
     "terms": "Terms of Service"
   },
@@ -192,7 +238,33 @@
     "challenged": "Challenge",
     "changed_placeholder": "It might not be true that...",
     "alt_thought_placeholder": "What could we think instead?",
-    "show_details": "Show detailed descriptions"
+    "show_details": "Show detailed descriptions",
+    "step_progress": "Step %{step} of %{count}",
+    "previous": "Previous",
+    "next": "Next",
+    "saving": "Saving…",
+    "retry": "Retry",
+    "discard_draft": "Discard draft",
+    "discard_draft_confirm": "Discard this draft? Your saved thoughts are not affected.",
+    "discard_draft_yes": "Discard",
+    "discard_draft_no": "Keep editing",
+    "thought_saved": "Thought saved",
+    "thought_save_failed": "Couldn't save your thought",
+    "thought_save_capacity": "Too many unfinished saves. Your text is safe here - resolve some below, then save again.",
+    "recovery_header": "Needs attention (%{count})",
+    "recovery_dismiss": "Dismiss",
+    "recovery_retry": "Retry",
+    "recovery_item_label": "Recovery needed",
+    "recovery_cleanup_label": "Saved - cleanup needed",
+    "recovery_cleanup_description": "Your thought is saved. Some local bookkeeping still needs to finish.",
+    "recovery_draft_cleanup_note": "Old draft text couldn't be cleared automatically. This doesn't change what's saved above.",
+    "recovery_untitled": "Untitled thought",
+    "recovery_discard": "Discard",
+    "recovery_discard_confirm_lossy": "Discard this? The text you entered was never saved and cannot be recovered.",
+    "recovery_discard_confirm_uncertain": "Discard this? It's unclear whether this was saved before the interruption - if it wasn't, this text can't be recovered.",
+    "recovery_discard_confirm_safe": "Discard this cleanup reminder? Your thought is already saved - this only stops the app from retrying the redundant bookkeeping step.",
+    "recovery_discard_yes": "Discard",
+    "recovery_discard_no": "Cancel"
   },
   "explanation_screen": {
     "header": "FreeCBT.",
@@ -350,6 +422,11 @@
   "lock_screen": {
     "auth": "Please enter your passcode.",
     "update": "Please set a passcode.",
-    "confirm": "Please re-enter your passcode to confirm."
+    "confirm": "Please re-enter your passcode to confirm.",
+    "gate_title": "FreeCBT is locked",
+    "gate_subtitle": "Enter your 4-digit PIN to continue.",
+    "unlock_button": "Unlock",
+    "forgot_pin": "Forgot your PIN?",
+    "reset_warning": "If you reset your PIN, some local access may be affected."
   }
 }

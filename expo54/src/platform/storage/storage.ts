@@ -2,7 +2,11 @@ import { Distortion, Model, Settings, Thought } from "@/src/model";
 import { AsyncStorageStatic } from "@react-native-async-storage/async-storage";
 import * as Crypto from "expo-crypto";
 import * as SecureStore from "expo-secure-store";
+import _ from "lodash";
 import { z } from "zod";
+
+export * from "./home-thought-draft";
+export * from "./thought-save-outbox";
 
 export interface SecureStoreLike {
     getItemAsync(key: string): Promise<string | null>;
@@ -214,7 +218,42 @@ export function thoughts(data: Distortion.Data, storage: AsyncStorageStatic) {
     const keys = await readKeys();
     await storage.multiRemove(keys);
   }
-  return { readKeys, readAll, read, write, remove, clear };
+  // Idempotent, stable-ID persistence for a submitted thought. Replaying the same
+  // submission always targets the same storage identity: an exact-matching existing
+  // record is treated as "already persisted" (no-op success); a conflicting record at
+  // that key (same id, different content) is an explicit failure, never overwritten.
+  async function persistSubmittedThought(
+    submissionId: Thought.Id,
+    thought: Thought.Thought
+  ): Promise<void> {
+    if (submissionId !== thought.uuid) {
+      throw new Error(
+        `persistSubmittedThought: submissionId ${submissionId} does not match thought.uuid ${thought.uuid}`
+      );
+    }
+    const key = Thought.keyFromId.decode(submissionId);
+    let existing: Thought.Thought | null = null;
+    try {
+      existing = await read(key);
+    } catch (error) {
+      if (
+        !(error instanceof Error && error.message.startsWith("no such thought-id:"))
+      ) {
+        throw error;
+      }
+    }
+    if (existing === null) {
+      await write(thought);
+      return;
+    }
+    if (_.isEqual(existing, thought)) {
+      return; // already persisted at this key — idempotent no-op
+    }
+    throw new Error(
+      `persistSubmittedThought: conflicting record already exists at ${key} for submission ${submissionId}`
+    );
+  }
+  return { readKeys, readAll, read, write, remove, clear, persistSubmittedThought };
 }
 
 export type Thought = ReturnType<typeof thoughts>;

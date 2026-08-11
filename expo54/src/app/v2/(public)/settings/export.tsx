@@ -2,9 +2,10 @@ import { TranslateFn } from "@/src/i18n/use-i18n";
 import { LoadModel, ModelLoadedProps } from "@/src/hooks/use-model";
 import { Archive, Model, Thought } from "@/src/model";
 import { DownloadOrShareLink } from "@/src/platform/sharing/download-or-share";
+import { Screen } from "@/src/components";
+import { SettingsHeader } from "@/src/components/settings";
 import React from "react";
 import { Text, TouchableOpacity, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function Backup() {
   return <LoadModel ready={Ready} />;
@@ -12,14 +13,15 @@ export default function Backup() {
 export function Ready(props: ModelLoadedProps) {
   const { style: s, translate: t } = props;
   return (
-    <SafeAreaView style={[s.view]}>
-      <View style={[s.container]}>
+    <Screen>
+      <SettingsHeader title={t("export_screen.header")} />
+      <View style={[s.container]} className="mt-2">
         <Text style={[s.text, s.my2]}>{t("export_screen.description")}</Text>
         <MarkdownLink {...props} />
         <CSVLink {...props} />
         <JSONLink {...props} />
       </View>
-    </SafeAreaView>
+    </Screen>
   );
 }
 

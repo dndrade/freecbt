@@ -64,7 +64,12 @@ export function createElmArch<M, A, C>(): ElmArchCtx<M, A, C> {
     useEffect(() => {
       if (!lastCmds.length) return;
       for (const cmd of lastCmds) {
-        run(cmd);
+        // a runner case that forgets its own try/catch would otherwise become a
+        // silent unhandled rejection - and a command whose failure dispatches
+        // nothing can wedge the model. Fail loud instead.
+        void Promise.resolve(run(cmd)).catch((error) =>
+          console.warn("elm-arch: command runner failed", cmd, error)
+        );
       }
       dispatch(clearCmdsAction);
     }, [run, lastCmds]);

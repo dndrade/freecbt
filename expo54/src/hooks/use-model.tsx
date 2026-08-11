@@ -55,6 +55,8 @@ export type ModelLoadedComponent = (props: ModelLoadedProps) => React.ReactNode;
 function useCmdRunner(data: Distortion.Data, storage: AsyncStorageStatic) {
   const s = Storage.settings(storage, SecureStore);
   const t = Storage.thoughts(data, storage);
+  const drafts = Storage.homeThoughtDraft(data, storage);
+  const outbox = Storage.thoughtSaveOutbox(data, storage);
   const router = useRouter();
   // usually mutable stuff should be done with useState() in react, but here it blows up, and I couldn't solve why.
   let dispatch: (a: Action.Action) => void = () => {};
@@ -72,9 +74,13 @@ function useCmdRunner(data: Distortion.Data, storage: AsyncStorageStatic) {
       switch (c.cmd) {
         case "load-model": {
           if (typeof window === "undefined") return; // web platform ssr + asyncstorage bugs out
-          // const [settings, tm] = await Promise.all([s.read(), t.readAll()]);
-          const settings = await s.read();
-          const tm = await t.readAll();
+          const [settings, tm, homeThoughtDraft, thoughtSaveOutbox] =
+            await Promise.all([
+              s.read(),
+              t.readAll(),
+              drafts.read(),
+              outbox.readAll(),
+            ]);
           const deviceLocale = defaultLocale();
           const deviceColorScheme = Appearance.getColorScheme() ?? null;
           const m = Model.ready({
@@ -83,6 +89,12 @@ function useCmdRunner(data: Distortion.Data, storage: AsyncStorageStatic) {
             deviceColorScheme,
             deviceLocale,
             settings,
+            onboardingCompletion: "idle",
+            homeThoughtDraft,
+            homeThoughtDraftRevision: 0,
+            homeThoughtDraftPersistence: "idle",
+            thoughtSaveOutbox,
+            thoughtSaveResult: "idle",
             ...tm,
           });
           dispatch(Action.modelReady(m));
@@ -90,6 +102,91 @@ function useCmdRunner(data: Distortion.Data, storage: AsyncStorageStatic) {
         }
         case "write-settings": {
           await s.write(c.value);
+          return;
+        }
+        case "complete-onboarding": {
+          try {
+            await s.write(c.value);
+            dispatch(Action.onboardingCompletionSucceeded());
+          } catch (error) {
+            dispatch(Action.onboardingCompletionFailed(error));
+          }
+          return;
+        }
+        case "write-home-thought-draft": {
+          try {
+            await drafts.write(c.value);
+          } catch (error) {
+            dispatch(Action.homeThoughtDraftWriteFailed(error));
+          }
+          return;
+        }
+        case "clear-home-thought-draft": {
+          try {
+            await drafts.clear();
+          } catch (error) {
+            dispatch(
+              c.cleanup === undefined
+                ? Action.homeThoughtDraftWriteFailed(error)
+                : Action.homeThoughtDraftCleanupFailed(
+                    c.cleanup.record,
+                    c.cleanup.outboxSubmissionId,
+                    error,
+                    new Date()
+                  )
+            );
+          }
+          return;
+        }
+        case "insert-thought-save-outbox": {
+          try {
+            await outbox.insert(c.value);
+            dispatch(Action.thoughtSaveOutboxInsertionSucceeded(c.value.submissionId, new Date()));
+          } catch (error) {
+            dispatch(
+              Action.thoughtSaveOutboxInsertionFailed(
+                c.value.submissionId,
+                error
+              )
+            );
+          }
+          return;
+        }
+        case "update-thought-save-outbox": {
+          try {
+            await outbox.update(c.value);
+            dispatch(Action.thoughtSaveOutboxUpdated(c.value));
+          } catch (error) {
+            // an unreported failure here is fatal to the processor: the record
+            // stays `active`, which gates every later record, and no recovery
+            // surface renders an `active` record. Report it as a save failure,
+            // which the model turns into a recoverable `failed` record.
+            dispatch(
+              Action.thoughtSaveWriteFailed(
+                c.value.submissionId,
+                error,
+                new Date()
+              )
+            );
+          }
+          return;
+        }
+        case "remove-thought-save-outbox": {
+          try {
+            await outbox.remove(c.value);
+            dispatch(Action.thoughtSaveOutboxRemoved(c.value, new Date()));
+          } catch (error) {
+            dispatch(Action.thoughtSaveOutboxRemovalFailed(c.value, error, new Date()));
+          }
+          return;
+        }
+        case "write-submitted-thought": {
+          try {
+            await t.persistSubmittedThought(c.submissionId, c.thought);
+            dispatch(Action.thoughtSaveWriteSucceeded(c.submissionId, c.thought));
+          } catch (error) {
+            dispatch(Action.thoughtSaveWriteFailed(c.submissionId, error, new Date()));
+          }
           return;
         }
         case "write-thought": {

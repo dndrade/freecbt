@@ -1,268 +1,129 @@
-import { LoadModel, ModelLoadedProps } from "@/src/hooks/use-model";
-import { useSafeWindowDimensions } from "@/src/hooks/use-safe-area";
-import { Action, Distortion, Thought } from "@/src/model";
-import { ImagePath } from "@/src/components";
-import { Image } from "expo-image";
-import React, { useState } from "react";
+import { Routes } from "@/src";
+import { Screen } from "@/src/components/screen";
 import {
-  Keyboard,
-  Pressable,
-  ScrollView,
-  Switch,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
-} from "react-native";
-import { SharedValue, useSharedValue } from "react-native-reanimated";
-import Carousel, {
-  CarouselRenderItem,
-  ICarouselInstance,
-  Pagination,
-} from "react-native-reanimated-carousel";
-import { SafeAreaView } from "react-native-safe-area-context";
-
-const slideNums = new Map<Thought.SlideName, number>(
-  Thought.SlideName.options.map((name, i) => [name, i])
-);
+  HomeThoughtRecovery,
+  ThoughtEntryForm,
+} from "@/src/components/thought-entry";
+import { LoadModel, ModelLoadedProps } from "@/src/hooks/use-model";
+import { Action, Thought } from "@/src/model";
+import { useRouter } from "expo-router";
+import React, { useEffect, useRef, useState } from "react";
 
 export default function Create() {
   return <LoadModel ready={Ready} />;
 }
 
-function Ready({ model, dispatch, style: s, translate: t }: ModelLoadedProps) {
-  const [value, setValue] = useState(Thought.emptySpec());
-  return (
-    <SafeAreaView testID="create-thought-screen" style={[s.view, s.p0, s.py4]}>
-      <CBTForm
-        model={model}
-        style={s}
-        translate={t}
-        value={value}
-        onChange={setValue}
-        onSubmit={() => dispatch(Action.createThought(value, new Date()))}
-      />
-    </SafeAreaView>
-  );
-}
-
 /**
- * Used for both the create and edit pages.
+ * The compatibility create screen: a full-screen entry context for deep links and
+ * older navigation. Its unfinished input is session-local - it never reads or
+ * writes Home's durable draft - and it only navigates to the saved Thought once
+ * that Thought is confirmed persisted.
  */
-export function CBTForm(
-  props: Pick<ModelLoadedProps, "model" | "style" | "translate"> & {
-    slide?: Thought.SlideName; // used only for editing - select this slide on page load
-    value: Thought.Spec;
-    onChange?: (t: Thought.Spec) => void;
-    onSubmit?: () => void;
-  }
-) {
-  const { style: s } = props;
-  const defaultIndex = props.slide ? slideNums.get(props.slide) ?? 0 : 0;
-  // "Accessing element.ref was removed in React 19. ref is now a regular prop. It will be removed from the JSX Element type in a future release."
-  // 2025/11 - I'm doing this right, it's carousel's fault:
-  // https://github.com/dohooo/react-native-reanimated-carousel/issues/857
-  const ref = React.useRef<ICarouselInstance>(null);
-  const progress = useSharedValue<number>(0);
-  const onPressPagination = (index: number) => {
-    ref.current?.scrollTo({
-      count: index - progress.value,
-      animated: true,
-    });
-  };
-  const w = useSafeWindowDimensions();
-  const width = Math.min(w.width, s.container.maxWidth);
-  return (
-    <View style={[s.container]}>
-      <Carousel
-        ref={ref}
-        data={[...Thought.SlideName.options]}
-        onProgressChange={progress}
-        renderItem={CBTFormItem({ ...props, progress })}
-        width={width}
-        height={w.height - 150}
-        onSnapToItem={(index) => {
-          Keyboard.dismiss();
-        }}
-        loop={false}
-        defaultIndex={defaultIndex}
-        mode="parallax"
-        modeConfig={{
-          parallaxScrollingScale: 0.9,
-          parallaxScrollingOffset: Math.round(width * 0.15),
-        }}
-        // fix vertical scrolling for distortions
-        onConfigurePanGesture={(gesture) => {
-          "worklet";
-          gesture.activeOffsetX([-10, 10]);
-        }}
-      />
-      <Pagination.Basic
-        progress={progress}
-        data={[...Thought.SlideName.options]}
-        dotStyle={s.paginationDot}
-        activeDotStyle={s.activePaginationDot}
-        containerStyle={{ gap: 5, marginTop: 10 }}
-        onPress={onPressPagination}
-      />
-    </View>
-  );
-}
+function Ready({ model, dispatch, translate: t }: ModelLoadedProps) {
+  const [value, setValue] = useState(Thought.emptySpec());
+  const router = useRouter();
+  // the submission this screen started, by id: every screen shares one model,
+  // so "whatever is insertion-pending" can belong to another screen entirely
+  const requested = useRef<Thought.Id | null>(null);
+  const [submitted, setSubmitted] = useState<Thought.Id | null>(null);
+  // one submission at a time: the input stays on screen until we navigate, so an
+  // enabled Save button here would let a second tap duplicate the Thought. Both
+  // halves are observable model state, so a rejected or failed save can never
+  // latch Save shut - there is nothing to un-latch.
+  const [awaiting, setAwaiting] = useState<Thought.Id | null>(null);
+  const isSaving =
+    awaiting !== null ||
+    model.thoughtSaveOutbox.some(
+      (record) => record.status === "insertion-pending"
+    );
+  // a rejection this screen caused: the text stays put and says why
+  const rejected =
+    model.thoughtSaveResult !== "idle" &&
+    model.thoughtSaveResult.submissionId === submitted
+      ? model.thoughtSaveResult
+      : null;
 
-function CBTFormItem(
-  props: Pick<ModelLoadedProps, "model" | "style" | "translate"> & {
-    progress: SharedValue<number>;
-    value: Thought.Spec;
-    onChange?: (t: Thought.Spec) => void;
-    onSubmit?: () => void;
-  }
-): CarouselRenderItem<Thought.SlideName> {
-  const { model, value, progress, style: s, translate: t } = props;
-  const onChange = props.onChange ?? (() => {});
-  const onSubmit = props.onSubmit ?? (() => {});
-  return function CBTFormItem({ item }) {
-    const [showDetails, setShowDetails] = useState(false);
-    switch (item) {
-      case "automatic-thought": {
-        return (
-          <>
-            <Text style={[s.subheader]}>{t("auto_thought")}</Text>
-            <TextInput
-              testID="automatic-thought-input"
-              style={[s.textInput]}
-              // placeholderTextColor={textInputPlaceholderColor}
-              placeholder={t("cbt_form.auto_thought_placeholder")}
-              value={value.automaticThought}
-              multiline={true}
-              numberOfLines={6}
-              onChangeText={(v) => onChange({ ...value, automaticThought: v })}
-            />
-          </>
-        );
+  useEffect(() => {
+    const id = requested.current;
+    if (id !== null) {
+      requested.current = null;
+      // arm only on this screen's own submission, once the model accepted it
+      if (
+        model.thoughtSaveOutbox.some(
+          (record) =>
+            record.submissionId === id && record.status === "insertion-pending"
+        )
+      ) {
+        setAwaiting(id);
+        return;
       }
-      case "distortions": {
-        const selectorBtn = (v: Distortion.Distortion) =>
-          value.cognitiveDistortions.has(v) ? s.bgSelected : s.bg;
-        const selectorText = (v: Distortion.Distortion) =>
-          value.cognitiveDistortions.has(v) ? s.selectedText : s.text;
-        const selectorCardBg = (v: Distortion.Distortion) =>
-          value.cognitiveDistortions.has(v) ? s.bgCardSelected : s.bgCard;
-        const img = (i: number) =>
-          ImagePath.bubbles[i % ImagePath.bubbles.length];
-        return (
-          <>
-            <Text style={[s.subheader]}>{t("cog_distortion")}</Text>
-            <Pressable
-              style={[s.flexRow]}
-              onPress={() => setShowDetails(!showDetails)}
-            >
-              <Text style={[s.text]}>
-                <Switch value={showDetails} onValueChange={setShowDetails} />
-              </Text>
-              <Text style={[s.text, s.alignMiddle, s.mx2, s.hFull]}>
-                {t("cbt_form.show_details")}
-              </Text>
-            </Pressable>
-            <ScrollView>
-              {model.distortionData.list.map((d, i) => {
-                function onPress() {
-                  // ignore button-presses if the distortion slide is not focused.
-                  // this prevents pressing the button while swiping away from the distortion list.
-                  if (progress.get() !== slideNums.get("distortions")) return;
-
-                  const ds = new Set(value.cognitiveDistortions);
-                  // toggle
-                  if (ds.has(d)) {
-                    ds.delete(d);
-                  } else {
-                    ds.add(d);
-                  }
-                  return onChange({ ...value, cognitiveDistortions: ds });
-                }
-                return (
-                  <TouchableOpacity
-                    key={d.slug}
-                    style={[selectorBtn(d), s.rounded, s.border, s.p1, s.my1]}
-                    onPress={onPress}
-                  >
-                    <Text style={[selectorText(d), s.m1]}>
-                      {Distortion.emoji(d)} {t(d.labelKey)}
-                    </Text>
-                    {showDetails ? (
-                      <>
-                        <Text style={[selectorText(d), s.m1, s.mx4]}>
-                          {d.explanationKeys.map((k) => t(k)).join("\n\n")}
-                        </Text>
-                        <View style={[s.flexRow, s.my2]}>
-                          <Image source={img(i)} style={[s.bubble, s.m2]} />
-                          <Text
-                            style={[
-                              selectorText(d),
-                              selectorCardBg(d),
-                              s.border,
-                              s.rounded,
-                              s.p2,
-                            ]}
-                          >
-                            {t(d.explanationThoughtKey)}
-                          </Text>
-                        </View>
-                      </>
-                    ) : (
-                      <Text style={[selectorText(d), s.m1, s.mx4]}>
-                        {t(d.descriptionKey)}
-                      </Text>
-                    )}
-                  </TouchableOpacity>
-                );
-              })}
-            </ScrollView>
-          </>
-        );
-      }
-      case "challenge": {
-        return (
-          <>
-            <Text style={[s.subheader]}>{t("challenge")}</Text>
-            <TextInput
-              style={[s.textInput]}
-              // placeholderTextColor={textInputPlaceholderColor}
-              placeholder={t("cbt_form.changed_placeholder")}
-              value={value.challenge}
-              multiline={true}
-              numberOfLines={6}
-              onChangeText={(v) => onChange({ ...value, challenge: v })}
-            />
-          </>
-        );
-      }
-      case "alternative-thought": {
-        return (
-          <>
-            <Text style={[s.subheader]}>{t("alt_thought")}</Text>
-            <Text style={[s.text, s.mb2]}>{t("alt_thought_description")}</Text>
-            <TextInput
-              style={[s.textInput]}
-              // placeholderTextColor={textInputPlaceholderColor}
-              placeholder={t("cbt_form.alt_thought_placeholder")}
-              value={value.alternativeThought}
-              multiline={true}
-              numberOfLines={6}
-              onChangeText={(v) =>
-                onChange({ ...value, alternativeThought: v })
-              }
-            />
-            <TouchableOpacity
-              style={[s.button, s.bgSelected]}
-              onPress={onSubmit}
-            >
-              <Text style={[s.selectedText]}>{t("cbt_form.submit")}</Text>
-            </TouchableOpacity>
-          </>
-        );
-      }
-      default:
-        throw new Error(`unknown slide: ${item satisfies never}`);
     }
-  };
+    if (awaiting === null) return;
+    // the saved Thought reaches `thoughts` only once its write succeeded, so this
+    // is the confirmed-persistence signal - never the mere acceptance of a save.
+    if (model.thoughts.has(Thought.keyFromId.decode(awaiting))) {
+      setAwaiting(null);
+      setValue(Thought.emptySpec());
+      router.push(Routes.thoughtViewV2(awaiting));
+      return;
+    }
+    // still on its way, or done for: a dropped or failed record stays here with
+    // the input intact and Save usable again, recovery surfaced above.
+    const record = model.thoughtSaveOutbox.find(
+      (candidate) => candidate.submissionId === awaiting
+    );
+    const inFlight =
+      record?.status === "insertion-pending" ||
+      record?.status === "pending" ||
+      record?.status === "active";
+    if (!inFlight) setAwaiting(null);
+  }, [
+    awaiting,
+    model.thoughtSaveOutbox,
+    model.thoughtSaveResult,
+    model.thoughts,
+    router,
+  ]);
+
+  return (
+    <Screen scroll={false} contentClassName="flex-1 gap-3">
+      {/* the same recovery surface Home uses, so Retry here goes through the
+          model's own retry instead of a fresh save that duplicates the Thought */}
+      <HomeThoughtRecovery
+        route="compatibility"
+        model={model}
+        dispatch={dispatch}
+        translate={t}
+      />
+      <ThoughtEntryForm
+        route="compatibility"
+        translate={t}
+        distortions={model.distortionData.list}
+        value={value}
+        isSaving={isSaving}
+        saveError={
+          rejected === null
+            ? null
+            : t(
+                rejected.stage === "capacity"
+                  ? "cbt_form.thought_save_capacity"
+                  : "cbt_form.thought_save_failed"
+              )
+        }
+        onChange={setValue}
+        onSave={() => {
+          // "standalone": this input never came from Home's draft, so a durable
+          // save here must not trigger the cleanup that clears that draft
+          const action = Action.createThought(
+            value,
+            new Date(),
+            "standalone"
+          );
+          requested.current = action.submissionId;
+          setSubmitted(action.submissionId);
+          dispatch(action);
+        }}
+      />
+    </Screen>
+  );
 }

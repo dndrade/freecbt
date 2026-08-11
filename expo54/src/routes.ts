@@ -26,7 +26,7 @@ export function lockUpdateV2(): Href {
   return "/v2/settings/lock";
 }
 export function backupV2(): Href {
-  return "/v2/settings/backup";
+  return "/v2/settings/data/backup";
 }
 export function exportV2(): Href {
   return "/v2/settings/export";
@@ -34,11 +34,8 @@ export function exportV2(): Href {
 export function helpV2(): Href {
   return "/v2/help";
 }
-export function introV2(params: { onboarded?: boolean } = {}): Href {
-  return {
-    pathname: "/v2/help/intro",
-    params: { onboarded: params.onboarded ? "1" : undefined },
-  };
+export function introV2(): Href {
+  return "/v2/help/intro";
 }
 export function debugV2(): Href {
   return "/v2/debug";

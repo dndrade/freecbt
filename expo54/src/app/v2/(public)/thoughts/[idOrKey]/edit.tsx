@@ -1,16 +1,16 @@
+import { Screen } from "@/src/components/screen";
+import { ThoughtEntryForm } from "@/src/components/thought-entry";
 import { LoadModel, ModelLoadedProps } from "@/src/hooks/use-model";
 import { Action, Thought } from "@/src/model";
 import { useLocalSearchParams } from "expo-router";
 import React, { useState } from "react";
-import { SafeAreaView } from "react-native-safe-area-context";
 import { useThoughtFromParams } from ".";
-import { CBTForm } from "../create";
 
 export default function Create() {
   return <LoadModel ready={Ready} />;
 }
 
-function Ready({ model, dispatch, style: s, translate: t }: ModelLoadedProps) {
+function Ready({ model, dispatch, translate: t }: ModelLoadedProps) {
   const res = useThoughtFromParams(model);
   const params = useLocalSearchParams<{ slide?: string }>();
   const slide = Thought.SlideName.safeParse(params.slide);
@@ -19,15 +19,15 @@ function Ready({ model, dispatch, style: s, translate: t }: ModelLoadedProps) {
   );
   if (res.status === "error") return res.error;
   return (
-    <SafeAreaView style={[s.view]}>
-      <CBTForm
-        model={model}
-        style={s}
+    <Screen scroll={false} contentClassName="flex-1">
+      <ThoughtEntryForm
+        route="compatibility"
         translate={t}
+        distortions={model.distortionData.list}
         value={value!}
         slide={slide.data ?? undefined}
         onChange={setValue}
-        onSubmit={() =>
+        onSave={() =>
           dispatch(
             Action.updateThought({
               ...res.value,
@@ -37,6 +37,6 @@ function Ready({ model, dispatch, style: s, translate: t }: ModelLoadedProps) {
           )
         }
       />
-    </SafeAreaView>
+    </Screen>
   );
 }
