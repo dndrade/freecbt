@@ -6,6 +6,15 @@ import React from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Action, Model, Settings, Thought } from "../model";
 import { ModelProvider, useModel } from "./use-model";
+import { THOUGHT_SAVE_OUTBOX_KEY } from "../platform/storage/thought-save-outbox";
+
+function sampleSpec(overrides: Partial<Thought.Spec> = {}): Thought.Spec {
+  return {
+    ...Thought.emptySpec(),
+    automaticThought: "I always mess this up",
+    ...overrides,
+  };
+}
 
 test("use-model basics", async () => {
   const wrapper = ({ children }: { children: React.ReactNode }) => (
@@ -22,9 +31,11 @@ test("use-model basics", async () => {
   expect(model()).toBe(Model.loading);
   await waitFor(() => expect(model().status).toBe("ready"));
   expect(ready().thoughts.size).toBe(0);
+  expect(ready().thoughtSaveOutbox).toEqual([]);
   expect(ready().settings.theme).toBe(null);
   act(() => dispatch()(Action.createThought(Thought.emptySpec(), new Date(0))));
-  expect(ready().thoughts.size).toBe(1);
+  expect(ready().thoughts.size).toBe(0);
+  expect(ready().thoughtSaveOutbox).toEqual([]);
   act(() => dispatch()(Action.setTheme("dark")));
   expect(ready().settings.theme).toBe("dark");
 });
@@ -61,10 +72,7 @@ test("use-model settings propagate through context for every consumer", async ()
   expect(ready().settings.reminders).toBe(true);
 
   // history label: settings value and its consumer (Thought.label) both update
-  act(() =>
-    dispatch()(Action.createThought(Thought.emptySpec(), new Date(0)))
-  );
-  const [thought] = ready().thoughts.values();
+  const thought = Thought.create(Thought.emptySpec(), new Date(0));
   act(() => dispatch()(Action.setHistoryLabel("automatic-thought")));
   expect(ready().settings.historyLabels).toBe("automatic-thought");
   expect(Thought.label(thought, ready())).toBe(thought.automaticThought);
@@ -129,4 +137,91 @@ test("use-model reports completion success only after persistence resolves", asy
   );
   expect((result.current[0] as Model.Ready).settings.existingUser).toBe(true);
   multiSet.mockRestore();
+});
+
+test("use-model persists one submitted snapshot after outbox insertion succeeds and ignores duplicate save while insertion is pending", async () => {
+  let releaseWrite!: () => void;
+  const writePending = new Promise<void>((resolve) => {
+    releaseWrite = resolve;
+  });
+  const setItem = jest.spyOn(AsyncStorage, "setItem").mockImplementation(
+    async (key: string, value: string) => {
+      if (key === THOUGHT_SAVE_OUTBOX_KEY) {
+        await writePending;
+      }
+      return Promise.resolve(value) as unknown as Promise<void>;
+    }
+  );
+  const wrapper = ({ children }: { children: React.ReactNode }) => (
+    <ModelProvider>{children}</ModelProvider>
+  );
+  const { result } = renderHook(() => useModel(), { wrapper });
+  await waitFor(() => expect(result.current[0].status).toBe("ready"));
+
+  const spec = sampleSpec({ automaticThought: "original snapshot" });
+  act(() => result.current[1](Action.createThought(spec, new Date("2026-08-11T04:00:00.000Z"))));
+  spec.automaticThought = "mutated after dispatch";
+  act(() => result.current[1](Action.createThought(spec, new Date("2026-08-11T04:00:01.000Z"))));
+
+  expect((result.current[0] as Model.Ready).thoughtSaveOutbox).toHaveLength(1);
+  expect((result.current[0] as Model.Ready).thoughts.size).toBe(0);
+
+  releaseWrite();
+
+  await waitFor(() =>
+    expect((result.current[0] as Model.Ready).thoughtSaveOutbox[0].status).toBe(
+      "pending"
+    )
+  );
+
+  const outboxWrites = setItem.mock.calls.filter(
+    ([key]) => key === THOUGHT_SAVE_OUTBOX_KEY
+  );
+  expect(outboxWrites).toHaveLength(1);
+  expect(JSON.parse(outboxWrites[0][1] as string)).toEqual({
+    v: "thought-save-outbox/v1",
+    records: [
+      expect.objectContaining({
+        thought: expect.objectContaining({
+          automaticThought: "original snapshot",
+        }),
+      }),
+    ],
+  });
+  setItem.mockRestore();
+});
+
+test("use-model releases insertion-pending reservation when outbox insertion fails", async () => {
+  const error = new Error("outbox write failed");
+  const setItem = jest.spyOn(AsyncStorage, "setItem").mockImplementation(
+    async (key: string, value: string) => {
+      if (key === THOUGHT_SAVE_OUTBOX_KEY) throw error;
+      return Promise.resolve(value) as unknown as Promise<void>;
+    }
+  );
+  const wrapper = ({ children }: { children: React.ReactNode }) => (
+    <ModelProvider>{children}</ModelProvider>
+  );
+  const { result } = renderHook(() => useModel(), { wrapper });
+  await waitFor(() => expect(result.current[0].status).toBe("ready"));
+
+  act(() =>
+    result.current[1](
+      Action.createThought(
+        sampleSpec({ automaticThought: "will fail to queue" }),
+        new Date("2026-08-11T05:00:00.000Z")
+      )
+    )
+  );
+
+  await waitFor(() =>
+    expect((result.current[0] as Model.Ready).thoughtSaveOutbox).toEqual([])
+  );
+  expect((result.current[0] as Model.Ready).thoughtSaveResult).toEqual({
+    status: "failure",
+    submissionId: expect.any(String),
+    stage: "outbox-insert",
+    error,
+  });
+  setItem.mockRestore();
 });

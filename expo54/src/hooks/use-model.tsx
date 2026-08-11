@@ -55,6 +55,8 @@ export type ModelLoadedComponent = (props: ModelLoadedProps) => React.ReactNode;
 function useCmdRunner(data: Distortion.Data, storage: AsyncStorageStatic) {
   const s = Storage.settings(storage, SecureStore);
   const t = Storage.thoughts(data, storage);
+  const drafts = Storage.homeThoughtDraft(data, storage);
+  const outbox = Storage.thoughtSaveOutbox(data, storage);
   const router = useRouter();
   // usually mutable stuff should be done with useState() in react, but here it blows up, and I couldn't solve why.
   let dispatch: (a: Action.Action) => void = () => {};
@@ -84,6 +86,11 @@ function useCmdRunner(data: Distortion.Data, storage: AsyncStorageStatic) {
             deviceLocale,
             settings,
             onboardingCompletion: "idle",
+            homeThoughtDraft: null,
+            homeThoughtDraftRevision: 0,
+            homeThoughtDraftPersistence: "idle",
+            thoughtSaveOutbox: [],
+            thoughtSaveResult: "idle",
             ...tm,
           });
           dispatch(Action.modelReady(m));
@@ -100,6 +107,44 @@ function useCmdRunner(data: Distortion.Data, storage: AsyncStorageStatic) {
           } catch (error) {
             dispatch(Action.onboardingCompletionFailed(error));
           }
+          return;
+        }
+        case "write-home-thought-draft": {
+          try {
+            await drafts.write(c.value);
+          } catch (error) {
+            dispatch(Action.homeThoughtDraftWriteFailed(error));
+          }
+          return;
+        }
+        case "clear-home-thought-draft": {
+          try {
+            await drafts.clear();
+          } catch (error) {
+            dispatch(Action.homeThoughtDraftWriteFailed(error));
+          }
+          return;
+        }
+        case "insert-thought-save-outbox": {
+          try {
+            await outbox.insert(c.value);
+            dispatch(Action.thoughtSaveOutboxInsertionSucceeded(c.value.submissionId));
+          } catch (error) {
+            dispatch(
+              Action.thoughtSaveOutboxInsertionFailed(
+                c.value.submissionId,
+                error
+              )
+            );
+          }
+          return;
+        }
+        case "update-thought-save-outbox": {
+          await outbox.update(c.value);
+          return;
+        }
+        case "remove-thought-save-outbox": {
+          await outbox.remove(c.value);
           return;
         }
         case "write-thought": {

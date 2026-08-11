@@ -1,6 +1,10 @@
 import _ from "lodash";
 import { z } from "zod";
 import type { LocaleTag } from "../i18n/use-i18n";
+import type {
+  HomeThoughtDraftRecord,
+  ThoughtSaveOutboxRecord,
+} from "../platform/storage/storage";
 import * as Routes from "../routes";
 import * as Action from "./action";
 import * as Cmd from "./cmd";
@@ -20,6 +24,11 @@ export interface Ready {
   thoughtParseErrors: ReadonlyMap<Thought.Key, z.ZodError<Thought.Thought>>;
   settings: Settings.Settings;
   onboardingCompletion: OnboardingCompletion;
+  homeThoughtDraft: HomeThoughtDraftRecord | null;
+  homeThoughtDraftRevision: number;
+  homeThoughtDraftPersistence: PersistenceState;
+  thoughtSaveOutbox: readonly ThoughtSaveOutboxRecord[];
+  thoughtSaveResult: ThoughtSaveResult;
   deviceColorScheme: ColorScheme | null;
   deviceLocale: LocaleTag;
 }
@@ -27,6 +36,15 @@ export type OnboardingCompletion =
   | "idle"
   | "saving"
   | { status: "failure"; error: unknown };
+export type PersistenceState = "idle" | { status: "failure"; error: unknown };
+export type ThoughtSaveResult =
+  | "idle"
+  | {
+      status: "failure";
+      submissionId: Thought.Id;
+      stage: "outbox-insert";
+      error: unknown;
+    };
 
 export const loading = { status: "loading" } as const;
 export const init: readonly [Model, Cmd.List] = [loading, [Cmd.loadModel]];
@@ -155,8 +173,71 @@ function updateReady(m: Ready, a: Action.Action): readonly [Model, Cmd.List] {
     case "set-device-color-scheme": {
       return [{ ...m, deviceColorScheme: a.value }, []];
     }
+    case "update-home-thought-draft": {
+      return updateHomeDraft(m, a.spec, a.now);
+    }
+    case "flush-home-thought-draft": {
+      return flushHomeDraft(m);
+    }
+    case "clear-home-thought-draft": {
+      return clearHomeDraft(m);
+    }
+    case "home-thought-draft-write-failed": {
+      return [
+        { ...m, homeThoughtDraftPersistence: { status: "failure", error: a.error } },
+        [],
+      ];
+    }
     case "create-thought": {
-      return writeThought(m, Thought.create(a.spec, a.now));
+      return createThoughtSubmission(m, a.spec, a.now);
+    }
+    case "thought-save-outbox-insertion-succeeded": {
+      return [
+        {
+          ...m,
+          thoughtSaveOutbox: m.thoughtSaveOutbox.map((record) =>
+            record.submissionId === a.submissionId &&
+            record.status === "insertion-pending"
+              ? { ...record, status: "pending" }
+              : record
+          ),
+        },
+        [],
+      ];
+    }
+    case "thought-save-outbox-insertion-failed": {
+      return [
+        {
+          ...m,
+          thoughtSaveOutbox: m.thoughtSaveOutbox.filter(
+            (record) => record.submissionId !== a.submissionId
+          ),
+          thoughtSaveResult: {
+            status: "failure",
+            submissionId: a.submissionId,
+            stage: "outbox-insert",
+            error: a.error,
+          },
+        },
+        [],
+      ];
+    }
+    case "begin-thought-save": {
+      return updateThoughtSaveRecord(m, a.submissionId, (record) => ({
+        ...record,
+        status: "active",
+        attemptCount: record.attemptCount + 1,
+        lastAttemptAt: a.now,
+        updatedAt: a.now,
+      }));
+    }
+    case "thought-save-write-failed": {
+      return updateThoughtSaveRecord(m, a.submissionId, (record) => ({
+        ...record,
+        status: "failed",
+        lastError: a.error instanceof Error ? a.error.message : String(a.error),
+        updatedAt: a.now,
+      }));
     }
     case "update-thought": {
       return writeThought(m, a.value);
@@ -212,6 +293,133 @@ function writeThought(
   ];
   return [m2, cmds];
 }
+
+function isMeaningfulSpec(spec: Thought.Spec): boolean {
+  return (
+    spec.automaticThought !== "" ||
+    spec.challenge !== "" ||
+    spec.alternativeThought !== "" ||
+    spec.cognitiveDistortions.size > 0
+  );
+}
+
+function cloneSpec(spec: Thought.Spec): Thought.Spec {
+  return {
+    automaticThought: spec.automaticThought,
+    cognitiveDistortions: new Set(spec.cognitiveDistortions),
+    challenge: spec.challenge,
+    alternativeThought: spec.alternativeThought,
+  };
+}
+
+function updateHomeDraft(
+  m: Ready,
+  spec: Thought.Spec,
+  now: Date
+): readonly [Model, Cmd.List] {
+  const revision = m.homeThoughtDraftRevision + 1;
+  if (!isMeaningfulSpec(spec)) {
+    return [
+      {
+        ...m,
+        homeThoughtDraft: null,
+        homeThoughtDraftRevision: revision,
+        homeThoughtDraftPersistence: "idle",
+      },
+      [Cmd.clearHomeThoughtDraft()],
+    ];
+  }
+  const record: HomeThoughtDraftRecord = {
+    spec: cloneSpec(spec),
+    sourceRevision: revision,
+    updatedAt: now,
+    draftCleanup: null,
+  };
+  return [
+    {
+      ...m,
+      homeThoughtDraft: record,
+      homeThoughtDraftRevision: revision,
+      homeThoughtDraftPersistence: "idle",
+    },
+    [Cmd.writeHomeThoughtDraft(record)],
+  ];
+}
+
+function flushHomeDraft(m: Ready): readonly [Model, Cmd.List] {
+  if (m.homeThoughtDraft === null) return [m, []];
+  return [
+    { ...m, homeThoughtDraftPersistence: "idle" },
+    [Cmd.writeHomeThoughtDraft(m.homeThoughtDraft)],
+  ];
+}
+
+function clearHomeDraft(m: Ready): readonly [Model, Cmd.List] {
+  return [
+    {
+      ...m,
+      homeThoughtDraft: null,
+      homeThoughtDraftRevision: m.homeThoughtDraftRevision + 1,
+      homeThoughtDraftPersistence: "idle",
+    },
+    [Cmd.clearHomeThoughtDraft()],
+  ];
+}
+
+function createThoughtSubmission(
+  m: Ready,
+  spec: Thought.Spec,
+  now: Date
+): readonly [Model, Cmd.List] {
+  if (!isMeaningfulSpec(spec)) return [m, []];
+  if (m.thoughtSaveOutbox.length >= 20) return [m, []];
+  if (
+    m.thoughtSaveOutbox.some((record) => record.status === "insertion-pending")
+  ) {
+    return [m, []];
+  }
+  const thought = Thought.create(cloneSpec(spec), now);
+  const record: ThoughtSaveOutboxRecord = {
+    submissionId: thought.uuid,
+    thought,
+    sourceDraftRevision:
+      m.homeThoughtDraft?.sourceRevision ?? m.homeThoughtDraftRevision,
+    attemptCount: 0,
+    lastAttemptAt: now,
+    lastError: null,
+    retryRequested: false,
+    thoughtPersisted: false,
+    updatedAt: now,
+    status: "insertion-pending",
+  };
+  return [
+    {
+      ...m,
+      thoughtSaveOutbox: [...m.thoughtSaveOutbox, record],
+      thoughtSaveResult: "idle",
+    },
+    [Cmd.insertThoughtSaveOutbox(record)],
+  ];
+}
+
+function updateThoughtSaveRecord(
+  m: Ready,
+  submissionId: Thought.Id,
+  recipe: (record: ThoughtSaveOutboxRecord) => ThoughtSaveOutboxRecord
+): readonly [Model, Cmd.List] {
+  let nextRecord: ThoughtSaveOutboxRecord | null = null;
+  const nextOutbox = m.thoughtSaveOutbox.map((record) => {
+    if (record.submissionId !== submissionId) return record;
+    nextRecord = recipe(record);
+    return nextRecord;
+  });
+  if (nextRecord === null) return [m, []];
+  return [
+    { ...m, thoughtSaveOutbox: nextOutbox },
+    [Cmd.updateThoughtSaveOutbox(nextRecord)],
+  ];
+}
+
 function updateSettings(
   m: Ready,
   s: Partial<Settings.Settings>

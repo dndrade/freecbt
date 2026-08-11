@@ -17,7 +17,15 @@ export type Action = ReturnType<
   | typeof setLocale
   | typeof setTheme
   | typeof setDeviceColorScheme
+  | typeof updateHomeThoughtDraft
+  | typeof flushHomeThoughtDraft
+  | typeof clearHomeThoughtDraft
+  | typeof homeThoughtDraftWriteFailed
   | typeof createThought
+  | typeof beginThoughtSave
+  | typeof thoughtSaveOutboxInsertionSucceeded
+  | typeof thoughtSaveOutboxInsertionFailed
+  | typeof thoughtSaveWriteFailed
   | typeof deleteThought
   | typeof updateThought
   | typeof importArchive
@@ -60,8 +68,50 @@ export function modelReady(model: Model.Ready) {
 export function setDeviceColorScheme(value: Model.Ready["deviceColorScheme"]) {
   return { action: "set-device-color-scheme", value } as const;
 }
+export function updateHomeThoughtDraft(spec: Thought.Spec, now: Date) {
+  return { action: "update-home-thought-draft", spec, now } as const;
+}
+export function flushHomeThoughtDraft() {
+  return { action: "flush-home-thought-draft" } as const;
+}
+export function clearHomeThoughtDraft() {
+  return { action: "clear-home-thought-draft" } as const;
+}
+export function homeThoughtDraftWriteFailed(error: unknown) {
+  return { action: "home-thought-draft-write-failed", error } as const;
+}
 export function createThought(spec: Thought.Spec, now: Date) {
   return { action: "create-thought", spec, now } as const;
+}
+export function beginThoughtSave(submissionId: Thought.Id, now: Date) {
+  return { action: "begin-thought-save", submissionId, now } as const;
+}
+export function thoughtSaveOutboxInsertionSucceeded(
+  submissionId: Thought.Id
+) {
+  return { action: "thought-save-outbox-insertion-succeeded", submissionId } as const;
+}
+export function thoughtSaveOutboxInsertionFailed(
+  submissionId: Thought.Id,
+  error: unknown
+) {
+  return {
+    action: "thought-save-outbox-insertion-failed",
+    submissionId,
+    error,
+  } as const;
+}
+export function thoughtSaveWriteFailed(
+  submissionId: Thought.Id,
+  error: unknown,
+  now: Date
+) {
+  return {
+    action: "thought-save-write-failed",
+    submissionId,
+    error,
+    now,
+  } as const;
 }
 export function deleteThought(value: Thought.Id) {
   return { action: "delete-thought", value } as const;
