@@ -1,6 +1,7 @@
 import { AsyncStorageStatic } from "@react-native-async-storage/async-storage";
 import { Distortion, Thought } from "@/src/model";
 import { z } from "zod";
+import { createLatestWinsStorageWriter } from "./serialized-storage-writer";
 
 export const HOME_THOUGHT_DRAFT_KEY = "@Quirk:home-thought-draft:v1";
 
@@ -60,6 +61,52 @@ function encodeSpec(spec: Thought.Spec) {
   };
 }
 
+function cloneRecord(
+  data: Distortion.Data,
+  record: HomeThoughtDraftRecord | null
+): HomeThoughtDraftRecord | null {
+  if (record === null) return null;
+  const distortions = Distortion.createParsers(data);
+  const encoded = {
+    v: "home-thought-draft/v1" as const,
+    spec: encodeSpec(record.spec),
+    sourceRevision: record.sourceRevision,
+    updatedAt: record.updatedAt.toISOString(),
+    draftCleanup:
+      record.draftCleanup === null
+        ? null
+        : {
+            ...record.draftCleanup,
+            updatedAt: record.draftCleanup.updatedAt.toISOString(),
+          },
+  };
+  const json = DraftJson.parse(encoded);
+  return {
+    spec: {
+      automaticThought: json.spec.automaticThought,
+      cognitiveDistortions: distortions.fromSlugSet.decode(
+        new Set(json.spec.cognitiveDistortions)
+      ),
+      challenge: json.spec.challenge,
+      alternativeThought: json.spec.alternativeThought,
+    },
+    sourceRevision: json.sourceRevision,
+    updatedAt: new Date(json.updatedAt),
+    draftCleanup:
+      json.draftCleanup === null
+        ? null
+        : {
+            status: json.draftCleanup.status,
+            sourceRevision: json.draftCleanup.sourceRevision,
+            outboxSubmissionId: Thought.Id.decode(
+              json.draftCleanup.outboxSubmissionId
+            ),
+            lastError: json.draftCleanup.lastError,
+            updatedAt: new Date(json.draftCleanup.updatedAt),
+          },
+  };
+}
+
 export function homeThoughtDraft(
   data: Distortion.Data,
   storage: AsyncStorageStatic
@@ -114,22 +161,38 @@ export function homeThoughtDraft(
     };
   }
 
-  async function read(): Promise<HomeThoughtDraftRecord | null> {
+  async function readPersisted(): Promise<HomeThoughtDraftRecord | null> {
     const raw = await storage.getItem(HOME_THOUGHT_DRAFT_KEY);
     if (raw === null) return null;
     return decode(raw);
   }
 
+  const writer = createLatestWinsStorageWriter<HomeThoughtDraftRecord | null>({
+    load: readPersisted,
+    clone: (record) => cloneRecord(data, record),
+    persist: async (record) => {
+      if (record === null) {
+        await storage.removeItem(HOME_THOUGHT_DRAFT_KEY);
+        return;
+      }
+      await storage.setItem(HOME_THOUGHT_DRAFT_KEY, encode(record));
+    },
+  });
+
+  async function read(): Promise<HomeThoughtDraftRecord | null> {
+    return writer.read();
+  }
+
   async function write(record: HomeThoughtDraftRecord): Promise<void> {
     if (!isMeaningful(record.spec)) {
-      await clear();
+      await writer.write(null);
       return;
     }
-    await storage.setItem(HOME_THOUGHT_DRAFT_KEY, encode(record));
+    await writer.write(record);
   }
 
   async function clear(): Promise<void> {
-    await storage.removeItem(HOME_THOUGHT_DRAFT_KEY);
+    await writer.write(null);
   }
 
   return { read, write, clear };

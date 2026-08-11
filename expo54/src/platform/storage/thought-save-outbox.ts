@@ -1,6 +1,7 @@
 import { AsyncStorageStatic } from "@react-native-async-storage/async-storage";
 import { Distortion, Thought } from "@/src/model";
 import { z } from "zod";
+import { createOrderedStorageWriter } from "./serialized-storage-writer";
 
 export const THOUGHT_SAVE_OUTBOX_KEY = "@Quirk:thought-save-outbox:v1";
 export const MAX_THOUGHT_SAVE_OUTBOX_RECORDS = 20;
@@ -67,10 +68,13 @@ export function thoughtSaveOutbox(
 ) {
   const thoughts = Thought.createParsers(data);
 
-  function encodeRecord(record: ThoughtSaveOutboxRecord) {
+  function encodeRecordWith(
+    parsers: ReturnType<typeof Thought.createParsers>,
+    record: ThoughtSaveOutboxRecord
+  ) {
     return {
       submissionId: record.submissionId,
-      thought: thoughts.toJson.encode(record.thought),
+      thought: parsers.toJson.encode(record.thought),
       sourceDraftRevision: record.sourceDraftRevision,
       attemptCount: record.attemptCount,
       lastAttemptAt: record.lastAttemptAt.toISOString(),
@@ -82,12 +86,17 @@ export function thoughtSaveOutbox(
     } satisfies z.infer<typeof OutboxRecordJson>;
   }
 
-  function decodeRecord(
+  function encodeRecord(record: ThoughtSaveOutboxRecord) {
+    return encodeRecordWith(thoughts, record);
+  }
+
+  function decodeRecordWith(
+    parsers: ReturnType<typeof Thought.createParsers>,
     record: z.infer<typeof OutboxRecordJson>
   ): ThoughtSaveOutboxRecord {
     return {
       submissionId: Thought.Id.decode(record.submissionId),
-      thought: thoughts.toJson.decode(record.thought),
+      thought: parsers.toJson.decode(record.thought),
       sourceDraftRevision: record.sourceDraftRevision,
       attemptCount: record.attemptCount,
       lastAttemptAt: new Date(record.lastAttemptAt),
@@ -97,6 +106,20 @@ export function thoughtSaveOutbox(
       updatedAt: new Date(record.updatedAt),
       status: record.status,
     };
+  }
+
+  function decodeRecord(record: z.infer<typeof OutboxRecordJson>): ThoughtSaveOutboxRecord {
+    return decodeRecordWith(thoughts, record);
+  }
+
+  function cloneRecords(
+    records: readonly ThoughtSaveOutboxRecord[]
+  ): readonly ThoughtSaveOutboxRecord[] {
+    return records.map((record) => decodeRecordWith(thoughts, encodeRecordWith(thoughts, record)));
+  }
+
+  function cloneRecord(record: ThoughtSaveOutboxRecord): ThoughtSaveOutboxRecord {
+    return cloneRecords([record])[0];
   }
 
   async function persist(records: readonly ThoughtSaveOutboxRecord[]): Promise<void> {
@@ -109,7 +132,7 @@ export function thoughtSaveOutbox(
     );
   }
 
-  async function readAll(): Promise<readonly ThoughtSaveOutboxRecord[]> {
+  async function readPersisted(): Promise<readonly ThoughtSaveOutboxRecord[]> {
     const raw = await storage.getItem(THOUGHT_SAVE_OUTBOX_KEY);
     if (raw === null) return [];
     const json = OutboxJson.parse(JSON.parse(raw));
@@ -129,39 +152,59 @@ export function thoughtSaveOutbox(
     return records;
   }
 
+  const writer = createOrderedStorageWriter<readonly ThoughtSaveOutboxRecord[]>({
+    load: readPersisted,
+    clone: cloneRecords,
+    persist,
+  });
+
+  async function readAll(): Promise<readonly ThoughtSaveOutboxRecord[]> {
+    return writer.read();
+  }
+
   async function insert(record: ThoughtSaveOutboxRecord): Promise<void> {
-    const records = [...(await readAll())];
-    assertSubmissionIdentity(record);
-    assertStatusInvariant(record);
-    if (records.length >= MAX_THOUGHT_SAVE_OUTBOX_RECORDS) {
-      throw new Error("outbox capacity exceeded");
-    }
-    if (records.some((r) => r.submissionId === record.submissionId)) {
-      throw new Error(`duplicate submission id: ${record.submissionId}`);
-    }
-    records.push(record);
-    await persist(records);
+    const snapshot = cloneRecord(record);
+    assertSubmissionIdentity(snapshot);
+    assertStatusInvariant(snapshot);
+    await writer.mutate((state) => {
+      const records = [...state];
+      if (records.length >= MAX_THOUGHT_SAVE_OUTBOX_RECORDS) {
+        throw new Error("outbox capacity exceeded");
+      }
+      if (records.some((r) => r.submissionId === snapshot.submissionId)) {
+        throw new Error(`duplicate submission id: ${snapshot.submissionId}`);
+      }
+      records.push(snapshot);
+      return { state: records };
+    });
   }
 
   async function update(record: ThoughtSaveOutboxRecord): Promise<void> {
-    const records = [...(await readAll())];
-    assertSubmissionIdentity(record);
-    assertStatusInvariant(record);
-    const index = records.findIndex((r) => r.submissionId === record.submissionId);
-    if (index < 0) {
-      throw new Error(`missing outbox record: ${record.submissionId}`);
-    }
-    const existing = records[index];
-    if (JSON.stringify(encodeRecord(existing).thought) !== JSON.stringify(encodeRecord(record).thought)) {
-      throw new Error("immutable thought snapshot cannot change");
-    }
-    records[index] = record;
-    await persist(records);
+    const snapshot = cloneRecord(record);
+    assertSubmissionIdentity(snapshot);
+    assertStatusInvariant(snapshot);
+    await writer.mutate((state) => {
+      const records = [...state];
+      const index = records.findIndex((r) => r.submissionId === snapshot.submissionId);
+      if (index < 0) {
+        throw new Error(`missing outbox record: ${snapshot.submissionId}`);
+      }
+      const existing = records[index];
+      if (
+        JSON.stringify(encodeRecord(existing).thought) !==
+        JSON.stringify(encodeRecord(snapshot).thought)
+      ) {
+        throw new Error("immutable thought snapshot cannot change");
+      }
+      records[index] = snapshot;
+      return { state: records };
+    });
   }
 
   async function remove(submissionId: Thought.Id): Promise<void> {
-    const records = (await readAll()).filter((r) => r.submissionId !== submissionId);
-    await persist(records);
+    await writer.mutate((state) => ({
+      state: state.filter((r) => r.submissionId !== submissionId),
+    }));
   }
 
   return { readAll, insert, update, remove };

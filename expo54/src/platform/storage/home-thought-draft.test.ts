@@ -24,6 +24,43 @@ function fakeAsyncStorage(initial: Record<string, string> = {}) {
   } as unknown as AsyncStorageStatic;
 }
 
+function fakeAsyncStorageWithBlockedFirstSet(
+  initial: Record<string, string> = {}
+) {
+  const release = (() => {
+    let resolve!: () => void;
+    const promise = new Promise<void>((res) => {
+      resolve = res;
+    });
+    return { promise, resolve };
+  })();
+  const store = new Map(Object.entries(initial));
+  let setCalls = 0;
+  return {
+    storage: {
+      getItem: async (k: string) => store.get(k) ?? null,
+      setItem: async (k: string, v: string) => {
+        setCalls += 1;
+        if (setCalls === 1) await release.promise;
+        store.set(k, v);
+      },
+      removeItem: async (k: string) => {
+        store.delete(k);
+      },
+      multiGet: async (ks: readonly string[]) =>
+        ks.map((k) => [k, store.get(k) ?? null] as const),
+      multiSet: async (pairs: readonly [string, string][]) => {
+        for (const [k, v] of pairs) store.set(k, v);
+      },
+      multiRemove: async (ks: readonly string[]) => {
+        for (const k of ks) store.delete(k);
+      },
+      getAllKeys: async () => Array.from(store.keys()),
+    } as unknown as AsyncStorageStatic,
+    release,
+  };
+}
+
 function sampleSpec(): Thought.Spec {
   return {
     automaticThought: "I always fail",
@@ -94,5 +131,62 @@ describe("homeThoughtDraft", () => {
 
     await expect(drafts.read()).resolves.toBeNull();
     await expect(async.getAllKeys()).resolves.toEqual([]);
+  });
+
+  test("keeps the newest queued draft write after an older write has already started", async () => {
+    const blocked = fakeAsyncStorageWithBlockedFirstSet();
+    const drafts = (Storage as any).homeThoughtDraft(
+      DistortionData,
+      blocked.storage
+    );
+    const older = {
+      spec: sampleSpec(),
+      sourceRevision: 3,
+      updatedAt: new Date("2026-08-11T00:03:00.000Z"),
+      draftCleanup: null,
+    };
+    const newer = {
+      ...older,
+      sourceRevision: 4,
+      updatedAt: new Date("2026-08-11T00:04:00.000Z"),
+      spec: {
+        ...older.spec,
+        alternativeThought: "newest wins",
+      },
+    };
+
+    const first = drafts.write(older);
+    const second = drafts.write(newer);
+    blocked.release.resolve();
+
+    await Promise.all([first, second]);
+
+    await expect(drafts.read()).resolves.toEqual(newer);
+  });
+
+  test("does not persist mutation of a draft record after write begins but before persistence settles", async () => {
+    const blocked = fakeAsyncStorageWithBlockedFirstSet();
+    const drafts = (Storage as any).homeThoughtDraft(
+      DistortionData,
+      blocked.storage
+    );
+    const draft = {
+      spec: sampleSpec(),
+      sourceRevision: 5,
+      updatedAt: new Date("2026-08-11T00:05:00.000Z"),
+      draftCleanup: null,
+    };
+
+    const write = drafts.write(draft);
+    draft.spec.alternativeThought = "mutated after write";
+    blocked.release.resolve();
+
+    await write;
+    await expect(drafts.read()).resolves.toEqual({
+      spec: sampleSpec(),
+      sourceRevision: 5,
+      updatedAt: new Date("2026-08-11T00:05:00.000Z"),
+      draftCleanup: null,
+    });
   });
 });
