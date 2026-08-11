@@ -446,6 +446,47 @@ test("gives one explicit failed retry priority without activating it beside curr
   ]);
 });
 
+test("allows explicit retry to recover an uncertain outbox record left by a restart", () => {
+  const uncertain = makeOutboxRecord(85, "uncertain");
+  const pending = makeOutboxRecord(86, "pending");
+  let m: Model.Model = { ...emptyReady, thoughtSaveOutbox: [uncertain, pending] };
+
+  let cmds: Cmd.List;
+  [m, cmds] = Model.update(m, Action.retryThoughtSave(uncertain.submissionId));
+  expect((m as Model.Ready).thoughtSaveOutbox[0]).toEqual({
+    ...uncertain,
+    retryRequested: true,
+  });
+  expect(cmds).toEqual([
+    Cmd.updateThoughtSaveOutbox((m as Model.Ready).thoughtSaveOutbox[0]),
+  ]);
+
+  [m, cmds] = Model.update(
+    m,
+    Action.thoughtSaveOutboxUpdated((m as Model.Ready).thoughtSaveOutbox[0])
+  );
+  expect((m as Model.Ready).thoughtSaveOutbox[0]).toEqual(
+    expect.objectContaining({
+      submissionId: uncertain.submissionId,
+      status: "active",
+      retryRequested: false,
+      attemptCount: 1,
+    })
+  );
+  expect((m as Model.Ready).thoughtSaveOutbox[1]).toEqual(pending);
+  expect(cmds).toEqual([
+    Cmd.updateThoughtSaveOutbox((m as Model.Ready).thoughtSaveOutbox[0]),
+  ]);
+
+  [m, cmds] = Model.update(
+    m,
+    Action.thoughtSaveOutboxUpdated((m as Model.Ready).thoughtSaveOutbox[0])
+  );
+  expect(cmds).toEqual([
+    Cmd.writeSubmittedThought(uncertain.submissionId, uncertain.thought),
+  ]);
+});
+
 test("ignores a stale write result after its active record has failed", () => {
   const first = makeOutboxRecord(90, "active");
   const second = makeOutboxRecord(91, "pending");

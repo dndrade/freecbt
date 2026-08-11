@@ -240,7 +240,11 @@ function updateReady(m: Ready, a: Action.Action): readonly [Model, Cmd.List] {
         return [m, []];
       }
       return updateThoughtSaveRecord(m, a.submissionId, (record) => {
-        if (record.status !== "failed" && record.status !== "cleanup-failed") {
+        if (
+          record.status !== "failed" &&
+          record.status !== "cleanup-failed" &&
+          record.status !== "uncertain"
+        ) {
           return record;
         }
         return { ...record, retryRequested: true };
@@ -258,7 +262,11 @@ function updateReady(m: Ready, a: Action.Action): readonly [Model, Cmd.List] {
           ? [m, [Cmd.removeThoughtSaveOutbox(current.submissionId)]]
           : [m, [Cmd.writeSubmittedThought(current.submissionId, current.thought)]];
       }
-      if (current.status === "failed" || current.status === "cleanup-failed") {
+      if (
+        current.status === "failed" ||
+        current.status === "cleanup-failed" ||
+        current.status === "uncertain"
+      ) {
         return selectNextThoughtSave(m, current.updatedAt);
       }
       return [m, []];
@@ -511,7 +519,9 @@ function selectNextThoughtSave(
     ? m.thoughtSaveOutbox.find(
         (candidate) =>
           candidate.retryRequested &&
-          (candidate.status === "failed" || candidate.status === "cleanup-failed")
+          (candidate.status === "failed" ||
+            candidate.status === "cleanup-failed" ||
+            candidate.status === "uncertain")
       ) ?? m.thoughtSaveOutbox.find((candidate) => candidate.status === "pending")
     : m.thoughtSaveOutbox.find(
         (candidate) => candidate.submissionId === submissionId && candidate.status === "pending"
