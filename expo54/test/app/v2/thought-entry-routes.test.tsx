@@ -191,6 +191,28 @@ describe("Home thought entry", () => {
     expect(view.queryByTestId("thought-entry-save")).toBeNull();
   });
 
+  test("keeps the tabs visible when a restored draft is only sitting there", async () => {
+    await seedHomeDraft("restored, not engaged");
+    const view = await mount(<Home />);
+    const tabBarStyle = () =>
+      setOptions.mock.calls[setOptions.mock.calls.length - 1][0].tabBarStyle;
+
+    await waitFor(() =>
+      expect(view.getByTestId("automatic-thought-input").props.value).toBe(
+        "restored, not engaged"
+      )
+    );
+    // a draft the app restored is data, not intentional engagement
+    expect(tabBarStyle()).toBeUndefined();
+
+    // ...and actually touching the flow still hides them
+    fireEvent.changeText(
+      view.getByTestId("automatic-thought-input"),
+      "now I am engaged"
+    );
+    expect(tabBarStyle()).toEqual({ display: "none" });
+  });
+
   test("hides the tabs when the user advances past the first step alone", async () => {
     const view = await mount(<Home />);
     fireEvent.press(view.getByTestId("thought-entry-next"));

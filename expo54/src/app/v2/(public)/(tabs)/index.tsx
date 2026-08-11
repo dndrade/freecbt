@@ -1,7 +1,7 @@
 import { HomeThoughtRecovery, ThoughtEntryForm } from "@/src/components/thought-entry";
 import { useHomeThoughtDraft } from "@/src/hooks/use-home-thought-draft";
 import { LoadModel, ModelLoadedProps } from "@/src/hooks/use-model";
-import { Thought } from "@/src/model";
+import { Model, Thought } from "@/src/model";
 import { Feather } from "@expo/vector-icons";
 import { useNavigation } from "expo-router";
 import { Button, Typography, useThemeColor, useToast } from "heroui-native";
@@ -56,7 +56,12 @@ function Home({ model, dispatch, translate: t }: ModelLoadedProps) {
       });
     },
   });
-  const [paused, setPaused] = React.useState(false);
+  // a draft restored on mount is data, not intentional engagement: start paused
+  // so the tabs stay visible until the user actually touches the flow. Read the
+  // restore directly - `draft.spec` is already seeded from it by now.
+  const [paused, setPaused] = React.useState(
+    () => Model.restorableHomeThoughtDraft(model) !== null
+  );
   const background = useThemeColor("background");
   const isSaving = model.thoughtSaveOutbox.some(
     (record) => record.status === "insertion-pending"
