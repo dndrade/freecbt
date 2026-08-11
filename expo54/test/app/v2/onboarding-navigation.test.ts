@@ -1,16 +1,24 @@
 import React from "react";
-import { fireEvent, render } from "@testing-library/react-native";
+import { act, fireEvent, render } from "@testing-library/react-native";
 import { Image, ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { Ready } from "@/src/app/v2/(public)/help/intro";
 
 const mockDispatch = jest.fn();
+const mockPush = jest.fn();
 const mockScrollTo = jest.fn();
+const mockHomeV2 = jest.fn(() => "/v2");
+const mockThoughtCreateV2 = jest.fn(() => "/v2/thoughts/create");
+const mockReminders = {
+  isSupported: () => remindersSupported,
+  enable: jest.fn(),
+  disable: jest.fn(),
+};
 let remindersSupported = true;
 let currentIndex = 0;
 let mockWindowHeight = 800;
 
 jest.mock("expo-router", () => ({
-  useRouter: () => ({ push: jest.fn() }),
+  useRouter: () => ({ push: mockPush }),
   Link: (props: {
     asChild?: boolean;
     children: React.ReactNode;
@@ -34,7 +42,10 @@ jest.mock("expo-router", () => ({
 }));
 
 jest.mock("@/src", () => ({
-  Routes: { homeV2: () => "/v2" },
+  Routes: {
+    homeV2: () => mockHomeV2(),
+    thoughtCreateV2: () => mockThoughtCreateV2(),
+  },
 }));
 
 jest.mock("@/src/components", () => ({
@@ -64,11 +75,7 @@ jest.mock("@/src/components", () => ({
 }));
 
 jest.mock("@/src/features/reminders/use-reminders", () => ({
-  useReminders: () => ({
-    isSupported: () => remindersSupported,
-    enable: jest.fn(),
-    disable: jest.fn(),
-  }),
+  useReminders: () => mockReminders,
 }));
 
 jest.mock("@/src/hooks/use-safe-area", () => ({
@@ -155,9 +162,11 @@ const style = new Proxy(
   { get: (target, key: string) => target[key] ?? {} }
 );
 
-function intro() {
+function intro(
+  completion: "idle" | "saving" | { status: "failure"; error: Error } = "idle"
+) {
   return React.createElement(Ready, {
-    model: { onboardingCompletion: "idle" } as never,
+    model: { onboardingCompletion: completion } as never,
     dispatch: mockDispatch,
     style: style as never,
     translate: ((key: string) => key) as never,
@@ -234,5 +243,133 @@ describe("onboarding navigation", () => {
     const [slideScrollView] = view.UNSAFE_getAllByType(ScrollView);
     expect(slideScrollView.props.style).toEqual(expect.objectContaining({ flex: 1 }));
     expect(view.getByRole("button", { name: "Get started" })).toBeTruthy();
+  });
+
+  it("keeps supported reminder choices persistence-only before completion", () => {
+    const view = render(intro());
+
+    fireEvent.press(view.getByRole("button", { name: "Next" }));
+    fireEvent.press(view.getByRole("button", { name: "Next" }));
+    fireEvent.press(view.getByRole("button", { name: "Next" }));
+
+    fireEvent.press(
+      view.getByRole("button", { name: "onboarding_screen.reminders.button.yes" })
+    );
+    expect(mockReminders.enable).toHaveBeenCalledWith(
+      mockDispatch,
+      expect.any(Function)
+    );
+    expect(mockDispatch).not.toHaveBeenCalledWith({
+      action: "begin-onboarding-completion",
+    });
+    expect(mockPush).not.toHaveBeenCalled();
+    expect(mockThoughtCreateV2).not.toHaveBeenCalled();
+    expect(view.getByRole("button", { name: "Get started" })).toBeTruthy();
+    expect(
+      view.getByRole("button", { name: "onboarding_screen.reminders.button.no" })
+    ).toBeTruthy();
+
+    fireEvent.press(
+      view.getByRole("button", { name: "onboarding_screen.reminders.button.no" })
+    );
+    expect(mockReminders.disable).toHaveBeenCalledWith(mockDispatch);
+    expect(mockDispatch).not.toHaveBeenCalledWith({
+      action: "begin-onboarding-completion",
+    });
+    expect(mockPush).not.toHaveBeenCalled();
+    expect(mockThoughtCreateV2).not.toHaveBeenCalled();
+    expect(view.getByRole("button", { name: "Get started" })).toBeTruthy();
+    expect(
+      view.getByRole("button", { name: "onboarding_screen.reminders.button.yes" })
+    ).toBeTruthy();
+  });
+
+  it("uses Get started as the single completion affordance on supported and unsupported flows", () => {
+    const supportedView = render(intro());
+    fireEvent.press(supportedView.getByRole("button", { name: "Next" }));
+    fireEvent.press(supportedView.getByRole("button", { name: "Next" }));
+    fireEvent.press(supportedView.getByRole("button", { name: "Next" }));
+    expect(
+      supportedView.queryAllByRole("button", { name: "Get started" })
+    ).toHaveLength(1);
+
+    remindersSupported = false;
+    currentIndex = 0;
+    const unsupportedView = render(intro());
+    fireEvent.press(unsupportedView.getByRole("button", { name: "Next" }));
+    fireEvent.press(unsupportedView.getByRole("button", { name: "Next" }));
+
+    expect(
+      unsupportedView.queryAllByRole("button", { name: "Get started" })
+    ).toHaveLength(1);
+    expect(unsupportedView.queryByRole("button", { name: "Next" })).toBeNull();
+    expect(mockThoughtCreateV2).not.toHaveBeenCalled();
+  });
+
+  it("waits for the completion result before routing home and keeps failures retryable", () => {
+    remindersSupported = false;
+    const view = render(intro("idle"));
+
+    fireEvent.press(view.getByRole("button", { name: "Next" }));
+    fireEvent.press(view.getByRole("button", { name: "Next" }));
+    fireEvent.press(view.getByRole("button", { name: "Get started" }));
+
+    expect(mockDispatch).toHaveBeenCalledWith({
+      action: "begin-onboarding-completion",
+    });
+    expect(mockPush).not.toHaveBeenCalled();
+    expect(mockThoughtCreateV2).not.toHaveBeenCalled();
+
+    view.rerender(intro("saving"));
+    const savingButton = view.getByRole("button", { name: "Saving…" }) as {
+      props: { accessibilityState?: { disabled?: boolean } };
+    };
+    expect(savingButton.props.accessibilityState?.disabled).toBe(true);
+    expect(mockPush).not.toHaveBeenCalled();
+
+    view.rerender(intro({ status: "failure", error: new Error("failed") }));
+    expect(view.getByText("Unable to save. Try again.")).toBeTruthy();
+    expect(view.getByRole("button", { name: "Get started" })).toBeTruthy();
+    fireEvent.press(view.getByRole("button", { name: "Get started" }));
+    expect(mockDispatch).toHaveBeenCalledTimes(2);
+    expect(mockPush).not.toHaveBeenCalled();
+    expect(mockHomeV2).not.toHaveBeenCalled();
+
+    view.rerender(intro("idle"));
+    act(() => undefined);
+
+    expect(mockHomeV2).toHaveBeenCalledTimes(1);
+    expect(mockPush).toHaveBeenCalledWith("/v2");
+    expect(mockThoughtCreateV2).not.toHaveBeenCalled();
+  });
+
+  it("waits for the supported completion result before routing home", () => {
+    const view = render(intro("idle"));
+
+    fireEvent.press(view.getByRole("button", { name: "Next" }));
+    fireEvent.press(view.getByRole("button", { name: "Next" }));
+    fireEvent.press(view.getByRole("button", { name: "Next" }));
+    fireEvent.press(view.getByRole("button", { name: "Get started" }));
+
+    expect(mockDispatch).toHaveBeenCalledTimes(1);
+    expect(mockDispatch).toHaveBeenCalledWith({
+      action: "begin-onboarding-completion",
+    });
+    expect(mockPush).not.toHaveBeenCalled();
+    expect(mockThoughtCreateV2).not.toHaveBeenCalled();
+
+    view.rerender(intro("saving"));
+    expect(
+      (view.getByRole("button", { name: "Saving…" }) as {
+        props: { accessibilityState?: { disabled?: boolean } };
+      }).props.accessibilityState?.disabled
+    ).toBe(true);
+
+    view.rerender(intro("idle"));
+    act(() => undefined);
+
+    expect(mockHomeV2).toHaveBeenCalledTimes(1);
+    expect(mockPush).toHaveBeenCalledWith("/v2");
+    expect(mockThoughtCreateV2).not.toHaveBeenCalled();
   });
 });
