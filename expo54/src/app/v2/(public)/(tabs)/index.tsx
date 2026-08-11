@@ -1,54 +1,153 @@
+import { ThoughtEntryForm, ThoughtSaveRecovery } from "@/src/components/thought-entry";
 import { useHomeThoughtDraft } from "@/src/hooks/use-home-thought-draft";
 import { LoadModel, ModelLoadedProps } from "@/src/hooks/use-model";
 import { Thought } from "@/src/model";
+import { useNavigation } from "expo-router";
+import { Button, Typography, useThemeColor } from "heroui-native";
 import React from "react";
-import { Text, TouchableOpacity, View } from "react-native";
+import { BackHandler, Keyboard, Pressable, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { CBTForm, ThoughtSaveRecovery } from "../thoughts/create";
 
 export default function Index() {
   return <LoadModel ready={Home} />;
 }
 
 /**
- * Home is the immediate thought-entry experience. The presentation here is still
- * the shared compatibility form; only the draft lifecycle lives at this level.
+ * Home is the immediate thought-entry experience. It owns the durable draft, the
+ * focus/tab-visibility policy and the recovery surface; the shared flow owns the
+ * presentation. Home never navigates to a saved Thought - a save resets in place.
  */
-function Home({ model, dispatch, style: s, translate: t }: ModelLoadedProps) {
+function Home({ model, dispatch, translate: t }: ModelLoadedProps) {
   const draft = useHomeThoughtDraft({ model, dispatch });
+  const [step, setStep] = React.useState(0);
+  const [paused, setPaused] = React.useState(false);
+  const background = useThemeColor("background");
+  const isSaving = model.thoughtSaveOutbox.some(
+    (record) => record.status === "insertion-pending"
+  );
+  // focus is derived, so every control inside the flow keeps it by construction:
+  // only an explicit pause (outside tap, staged Back) gives the tabs back.
+  const focused =
+    !paused && (Thought.isMeaningfulSpec(draft.spec) || step > 0);
+
+  const pause = React.useCallback(() => {
+    Keyboard.dismiss();
+    setPaused(true);
+  }, []);
+
+  useTabBarHidden(focused);
+  useStagedBack(focused, pause);
+
   return (
-    <SafeAreaView testID="create-thought-screen" style={[s.view, s.p0, s.py4]}>
-      <ThoughtSaveRecovery model={model} style={s} />
-      {Thought.isMeaningfulSpec(draft.spec) && !draft.discarding ? (
-        <TouchableOpacity testID="discard-draft" onPress={draft.discard}>
-          <Text style={[s.text]}>{t("cbt_form.discard_draft")}</Text>
-        </TouchableOpacity>
-      ) : null}
-      {draft.discarding ? (
-        <View testID="discard-draft-confirmation" accessibilityRole="alert">
-          <Text style={[s.text]}>{t("cbt_form.discard_draft_confirm")}</Text>
-          <TouchableOpacity
-            testID="discard-draft-confirm"
-            onPress={draft.confirmDiscard}
-          >
-            <Text style={[s.text]}>{t("cbt_form.discard_draft_yes")}</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            testID="discard-draft-cancel"
-            onPress={draft.cancelDiscard}
-          >
-            <Text style={[s.text]}>{t("cbt_form.discard_draft_no")}</Text>
-          </TouchableOpacity>
+    <SafeAreaView
+      testID="create-thought-screen"
+      className="flex-1"
+      style={{ flex: 1, backgroundColor: background }}
+    >
+      <Pressable
+        testID="thought-entry-outside"
+        accessible={false}
+        className="flex-1 items-center"
+        onPress={pause}
+      >
+        <View className="w-full max-w-3xl flex-1 gap-3 px-4 py-4">
+          <ThoughtSaveRecovery model={model} />
+          {Thought.isMeaningfulSpec(draft.spec) && !draft.discarding ? (
+            <Button
+              testID="discard-draft"
+              variant="tertiary"
+              size="sm"
+              className="self-end"
+              onPress={draft.discard}
+            >
+              {t("cbt_form.discard_draft")}
+            </Button>
+          ) : null}
+          {draft.discarding ? (
+            <View
+              testID="discard-draft-confirmation"
+              accessibilityRole="alert"
+              className="gap-2 rounded-lg border border-border bg-surface-secondary p-3"
+            >
+              <Typography type="body-sm">
+                {t("cbt_form.discard_draft_confirm")}
+              </Typography>
+              <View className="flex-row gap-3">
+                <Button
+                  testID="discard-draft-confirm"
+                  className="flex-1"
+                  onPress={draft.confirmDiscard}
+                >
+                  {t("cbt_form.discard_draft_yes")}
+                </Button>
+                <Button
+                  testID="discard-draft-cancel"
+                  variant="secondary"
+                  className="flex-1"
+                  onPress={draft.cancelDiscard}
+                >
+                  {t("cbt_form.discard_draft_no")}
+                </Button>
+              </View>
+            </View>
+          ) : null}
+          <ThoughtEntryForm
+            route="home"
+            translate={t}
+            distortions={model.distortionData.list}
+            value={draft.spec}
+            isSaving={isSaving}
+            onChange={draft.change}
+            onSave={draft.submit}
+            onStepChange={(_slide, index) => setStep(index)}
+            onFocusRequest={() => setPaused(false)}
+          />
         </View>
-      ) : null}
-      <CBTForm
-        model={model}
-        style={s}
-        translate={t}
-        value={draft.spec}
-        onChange={draft.change}
-        onSubmit={draft.submit}
-      />
+      </Pressable>
     </SafeAreaView>
   );
+}
+
+/** Hide the tab bar while thought entry is focused, restore it on pause. */
+function useTabBarHidden(hidden: boolean) {
+  const navigation = useNavigation();
+  React.useEffect(() => {
+    navigation.setOptions({
+      tabBarStyle: hidden ? { display: "none" } : undefined,
+    });
+  }, [hidden, navigation]);
+}
+
+/**
+ * Staged platform Back: dismiss the keyboard first, pause second, and only then
+ * let the platform/router handle it - so Back never drops entry work by surprise.
+ */
+function useStagedBack(focused: boolean, pause: () => void) {
+  const keyboardOpen = React.useRef(false);
+  React.useEffect(() => {
+    const shown = Keyboard.addListener("keyboardDidShow", () => {
+      keyboardOpen.current = true;
+    });
+    const hidden = Keyboard.addListener("keyboardDidHide", () => {
+      keyboardOpen.current = false;
+    });
+    return () => {
+      shown.remove();
+      hidden.remove();
+    };
+  }, []);
+  React.useEffect(() => {
+    const sub = BackHandler.addEventListener("hardwareBackPress", () => {
+      if (keyboardOpen.current) {
+        Keyboard.dismiss();
+        return true;
+      }
+      if (focused) {
+        pause();
+        return true;
+      }
+      return false;
+    });
+    return () => sub.remove();
+  }, [focused, pause]);
 }

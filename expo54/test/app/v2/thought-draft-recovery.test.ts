@@ -10,39 +10,12 @@ import React from "react";
 import type { ThoughtSaveOutboxRecord } from "@/src/platform/storage/storage";
 import { HOME_THOUGHT_DRAFT_KEY } from "@/src/platform/storage/home-thought-draft";
 import Home from "@/src/app/v2/(public)/(tabs)/index";
-import { AppState, type AppStateStatus, View } from "react-native";
-
-jest.mock("@/src/components", () => ({
-  ImagePath: { bubbles: [1] },
-}));
+import { HeroUINativeProvider } from "heroui-native/provider";
+import { AppState, type AppStateStatus } from "react-native";
 
 jest.mock("@/src/i18n/use-i18n", () => ({
   ...jest.requireActual("@/src/i18n/use-i18n"),
   useTranslate: () => (key: string) => key,
-}));
-
-jest.mock("@/src/hooks/use-safe-area", () => ({
-  useSafeWindowDimensions: () => ({ width: 400, height: 800 }),
-}));
-
-jest.mock("react-native-reanimated", () => ({
-  useSharedValue: () => ({ value: 0, get: () => 0 }),
-}));
-
-jest.mock("react-native-reanimated-carousel", () => ({
-  __esModule: true,
-  default: (props: {
-    data: readonly Thought.SlideName[];
-    renderItem: (props: { item: Thought.SlideName }) => React.ReactNode;
-  }) =>
-    React.createElement(
-      View,
-      null,
-      props.data.map((item, key) =>
-        React.createElement(View, { key }, props.renderItem({ item }))
-      )
-    ),
-  Pagination: { Basic: () => null },
 }));
 
 function spec(automaticThought: string): Thought.Spec {
@@ -74,9 +47,13 @@ function record(
 // Home mounts/unmounts under a provider that outlives it, the way a route exit works.
 function HomeHost(props: { home: boolean }) {
   return React.createElement(
-    ModelProvider,
+    HeroUINativeProvider,
     null,
-    props.home ? React.createElement(Home) : null
+    React.createElement(
+      ModelProvider,
+      null,
+      props.home ? React.createElement(Home) : null
+    )
   );
 }
 
@@ -271,17 +248,22 @@ describe("Home draft lifecycle", () => {
     expect(draftWrites(setItem)).toHaveLength(1);
 
     jest.useRealTimers();
+    // Save lives on the last step of the flow
+    for (let i = 0; i < 3; i++) {
+      fireEvent.press(view.getByTestId("thought-entry-next"));
+    }
     await act(async () => {
-      fireEvent.press(view.getByText("cbt_form.submit"));
+      fireEvent.press(view.getByTestId("thought-entry-save"));
     });
 
     // "A" alone resets Home; "B" clears the draft it was snapshotted from
-    await waitFor(() =>
-      expect(view.getByTestId("automatic-thought-input").props.value).toBe("")
-    );
     await waitFor(async () =>
       expect(await AsyncStorage.getItem(HOME_THOUGHT_DRAFT_KEY)).toBeNull()
     );
+    for (let i = 0; i < 3; i++) {
+      fireEvent.press(view.getByTestId("thought-entry-previous"));
+    }
+    expect(view.getByTestId("automatic-thought-input").props.value).toBe("");
     const saved = await Storage.thoughts(DistortionData, AsyncStorage).readAll();
     expect(saved.thoughts.size).toBe(1);
     expect(
@@ -337,9 +319,7 @@ test("Home displays restarted recovery records without labeling normal recovery 
   for (const item of records) await outbox.insert(item);
   const setItem = jest.spyOn(AsyncStorage, "setItem");
   setItem.mockClear();
-  const view = render(
-    React.createElement(ModelProvider, null, React.createElement(Home))
-  );
+  const view = renderHome();
 
   await waitFor(() => expect(view.getByTestId("thought-save-recovery")).toBeTruthy());
 

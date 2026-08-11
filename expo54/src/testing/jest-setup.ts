@@ -36,7 +36,11 @@ process.env.EXPO_OS = Platform.OS;
 jest.mock("expo-router", () => ({
   useRouter: () => ({
     navigate: () => {},
+    push: () => {},
   }),
+  // screens tweak their own navigation options (e.g. hiding the tab bar); off a
+  // navigator there's nothing to set, so accept and drop it.
+  useNavigation: () => ({ setOptions: () => {} }),
 }));
 
 // expo-secure-store's native module isn't linked in the jest environment,
