@@ -178,9 +178,10 @@
       }
     },
     "hub": {
+      "home": { "label": "Home" },
+      "journal": { "label": "Journal" },
       "general": { "label": "General" },
       "appearance": { "label": "Appearance" },
-      "journal": { "label": "Journal" },
       "data": { "label": "Data", "description": "Backup, restore, export" },
       "wellbeing": { "label": "Wellbeing", "description": "Crisis lines, learn about CBT" },
       "support": { "label": "Support", "description": "Help center, contact us, privacy" },
