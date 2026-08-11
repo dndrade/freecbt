@@ -13,12 +13,11 @@ import { View } from "react-native";
  * a whole Home visit and is rediscoverable on a later one - dismissal here is
  * presentation-only (never a durable flag, never removes the underlying record).
  *
- * "Existing outbox actions only": the model exposes `Action.retryThoughtSave` for
- * a stuck submission, but no action to discard/delete an outbox record - that
- * would risk silently dropping a Thought the model hasn't confirmed elsewhere yet.
- * So each item's only control is Retry; the "Discard" this surface offers is the
- * already-existing Home draft discard, which lives above this component in the
- * Home tree and is entirely separate from these outbox records.
+ * Each record exposes Retry (priority) and a destructive-confirmed Discard,
+ * both routed through `Action`s the model already owns. Retry is globally
+ * disabled while any one record has `retryRequested` - the model only ever
+ * lets one queued Retry run at a time, so every button must respect that, not
+ * just the record that requested it.
  */
 export function HomeThoughtRecovery(props: {
   model: Model.Ready;
@@ -63,6 +62,12 @@ export function HomeThoughtRecovery(props: {
   const draftCleanupTarget = [...recovery, ...cleanup].find(
     (record) => record.submissionId === draftCleanup?.outboxSubmissionId
   );
+  // the model queues at most one explicit Retry at a time (see model.ts's
+  // retry-thought-save guard) - a per-record disable would silently no-op a
+  // second press instead of giving feedback, so every button shares this.
+  const retryQueued = model.thoughtSaveOutbox.some(
+    (record) => record.retryRequested
+  );
 
   return (
     <View
@@ -92,6 +97,9 @@ export function HomeThoughtRecovery(props: {
           dispatch={dispatch}
           translate={t}
           label={t("cbt_form.recovery_item_label")}
+          retryQueued={retryQueued}
+          // this record's own text was never confirmed saved - say so plainly
+          discardConfirmCopy={t("cbt_form.recovery_discard_confirm_lossy")}
           note={
             record === draftCleanupTarget
               ? t("cbt_form.recovery_draft_cleanup_note")
@@ -107,6 +115,9 @@ export function HomeThoughtRecovery(props: {
           translate={t}
           label={t("cbt_form.recovery_cleanup_label")}
           description={t("cbt_form.recovery_cleanup_description")}
+          retryQueued={retryQueued}
+          // the Thought is already safely saved - Discard here is safe/neutral
+          discardConfirmCopy={t("cbt_form.recovery_discard_confirm_safe")}
           note={
             record === draftCleanupTarget
               ? t("cbt_form.recovery_draft_cleanup_note")
@@ -130,9 +141,25 @@ function RecoveryItem(props: {
   label: string;
   description?: string;
   note: string | null;
+  retryQueued: boolean;
+  discardConfirmCopy: string;
 }) {
-  const { record, dispatch, translate: t, label, description, note } = props;
+  const {
+    record,
+    dispatch,
+    translate: t,
+    label,
+    description,
+    note,
+    retryQueued,
+    discardConfirmCopy,
+  } = props;
   const id = record.submissionId;
+  const [discarding, setDiscarding] = React.useState(false);
+  // internal IDs are never shown as a label - an empty Automatic Thought
+  // falls back to a localized placeholder instead
+  const excerpt =
+    record.thought.automaticThought || t("cbt_form.recovery_untitled");
   return (
     <View
       testID={`home-thought-recovery-item-${id}`}
@@ -145,9 +172,9 @@ function RecoveryItem(props: {
         numberOfLines={1}
         // full text stays reachable to screen readers even though the visual
         // excerpt is a single truncated line
-        accessibilityLabel={record.thought.automaticThought}
+        accessibilityLabel={excerpt}
       >
-        {record.thought.automaticThought}
+        {excerpt}
       </Typography>
       <Typography
         testID={`home-thought-recovery-timestamp-${id}`}
@@ -166,14 +193,52 @@ function RecoveryItem(props: {
           {note}
         </Typography>
       ) : null}
-      <Button
-        testID={`home-thought-recovery-retry-${id}`}
-        size="sm"
-        isDisabled={record.retryRequested}
-        onPress={() => dispatch(Action.retryThoughtSave(id))}
-      >
-        {t("cbt_form.recovery_retry")}
-      </Button>
+      <View className="flex-row gap-2">
+        <Button
+          testID={`home-thought-recovery-retry-${id}`}
+          size="sm"
+          isDisabled={retryQueued}
+          onPress={() => dispatch(Action.retryThoughtSave(id))}
+        >
+          {t("cbt_form.recovery_retry")}
+        </Button>
+        {!discarding ? (
+          <Button
+            testID={`home-thought-recovery-discard-${id}`}
+            variant="tertiary"
+            size="sm"
+            onPress={() => setDiscarding(true)}
+          >
+            {t("cbt_form.recovery_discard")}
+          </Button>
+        ) : null}
+      </View>
+      {discarding ? (
+        <View
+          testID={`home-thought-recovery-discard-confirm-${id}`}
+          accessibilityRole="alert"
+          className="gap-2 rounded-md border border-border bg-surface-secondary p-2"
+        >
+          <Typography type="body-sm">{discardConfirmCopy}</Typography>
+          <View className="flex-row gap-3">
+            <Button
+              testID={`home-thought-recovery-discard-confirm-yes-${id}`}
+              className="flex-1"
+              onPress={() => dispatch(Action.discardThoughtSave(id))}
+            >
+              {t("cbt_form.recovery_discard_yes")}
+            </Button>
+            <Button
+              testID={`home-thought-recovery-discard-cancel-${id}`}
+              variant="secondary"
+              className="flex-1"
+              onPress={() => setDiscarding(false)}
+            >
+              {t("cbt_form.recovery_discard_no")}
+            </Button>
+          </View>
+        </View>
+      ) : null}
     </View>
   );
 }

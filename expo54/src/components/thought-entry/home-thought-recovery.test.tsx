@@ -253,6 +253,138 @@ describe("HomeThoughtRecovery", () => {
     expect(screen.queryByText("cbt_form.recovery_item_label")).toBeNull();
   });
 
+  test("falls back to a localized placeholder for an empty Automatic Thought, never an internal ID", () => {
+    const record = makeOutboxRecord(1, "failed", "");
+    const model: Model.Ready = {
+      ...emptyReady,
+      thoughtSaveOutbox: [record],
+    };
+    render(<Harness model={model} dispatch={jest.fn()} />);
+
+    const excerpt = screen.getByTestId(
+      `home-thought-recovery-excerpt-${record.submissionId}`
+    );
+    expect(excerpt.props.children).toBe("cbt_form.recovery_untitled");
+    expect(excerpt.props.accessibilityLabel).toBe(
+      "cbt_form.recovery_untitled"
+    );
+    expect(excerpt.props.children).not.toBe(record.submissionId);
+  });
+
+  test("Retry is disabled for every record while any one record already has a queued retry", () => {
+    const queued = { ...makeOutboxRecord(1, "failed"), retryRequested: true };
+    const other = makeOutboxRecord(2, "uncertain");
+    const model: Model.Ready = {
+      ...emptyReady,
+      thoughtSaveOutbox: [queued, other],
+    };
+    const dispatch = jest.fn();
+    render(<Harness model={model} dispatch={dispatch} />);
+
+    const queuedRetry = screen.getByTestId(
+      `home-thought-recovery-retry-${queued.submissionId}`
+    );
+    const otherRetry = screen.getByTestId(
+      `home-thought-recovery-retry-${other.submissionId}`
+    );
+    expect(queuedRetry.props.accessibilityState).toMatchObject({
+      disabled: true,
+    });
+    // the model rejects any new retry request while one is already queued -
+    // every button must reflect that, not just the one that requested it
+    expect(otherRetry.props.accessibilityState).toMatchObject({
+      disabled: true,
+    });
+
+    fireEvent.press(otherRetry);
+    expect(dispatch).not.toHaveBeenCalled();
+  });
+
+  test("Discard on a failed/uncertain record confirms with lossy copy, then dispatches discardThoughtSave", () => {
+    const record = makeOutboxRecord(1, "failed");
+    const model: Model.Ready = {
+      ...emptyReady,
+      thoughtSaveOutbox: [record],
+    };
+    const dispatch = jest.fn();
+    render(<Harness model={model} dispatch={dispatch} />);
+
+    fireEvent.press(
+      screen.getByTestId(`home-thought-recovery-discard-${record.submissionId}`)
+    );
+    expect(
+      screen.getByTestId(
+        `home-thought-recovery-discard-confirm-${record.submissionId}`
+      )
+    ).toBeTruthy();
+    expect(
+      screen.getByText("cbt_form.recovery_discard_confirm_lossy")
+    ).toBeTruthy();
+    // never the safe/neutral D copy for a record that was never confirmed saved
+    expect(
+      screen.queryByText("cbt_form.recovery_discard_confirm_safe")
+    ).toBeNull();
+
+    fireEvent.press(
+      screen.getByTestId(
+        `home-thought-recovery-discard-confirm-yes-${record.submissionId}`
+      )
+    );
+    expect(dispatch).toHaveBeenCalledWith(
+      Action.discardThoughtSave(record.submissionId)
+    );
+  });
+
+  test("Discard on a cleanup-failed record confirms with safe copy, and Cancel dispatches nothing", () => {
+    const record = makeOutboxRecord(1, "cleanup-failed");
+    const model: Model.Ready = {
+      ...emptyReady,
+      thoughtSaveOutbox: [record],
+    };
+    const dispatch = jest.fn();
+    render(<Harness model={model} dispatch={dispatch} />);
+
+    fireEvent.press(
+      screen.getByTestId(`home-thought-recovery-discard-${record.submissionId}`)
+    );
+    expect(
+      screen.getByText("cbt_form.recovery_discard_confirm_safe")
+    ).toBeTruthy();
+    expect(
+      screen.queryByText("cbt_form.recovery_discard_confirm_lossy")
+    ).toBeNull();
+
+    fireEvent.press(
+      screen.getByTestId(
+        `home-thought-recovery-discard-cancel-${record.submissionId}`
+      )
+    );
+    expect(dispatch).not.toHaveBeenCalled();
+    expect(
+      screen.queryByTestId(
+        `home-thought-recovery-discard-confirm-${record.submissionId}`
+      )
+    ).toBeNull();
+  });
+
+  test("a record in an ineligible (in-flight) status has no recovery item, so no Discard control at all", () => {
+    const record = makeOutboxRecord(1, "pending");
+    const model: Model.Ready = {
+      ...emptyReady,
+      thoughtSaveOutbox: [record],
+    };
+    render(<Harness model={model} dispatch={jest.fn()} />);
+
+    expect(
+      screen.queryByTestId(`home-thought-recovery-item-${record.submissionId}`)
+    ).toBeNull();
+    expect(
+      screen.queryByTestId(
+        `home-thought-recovery-discard-${record.submissionId}`
+      )
+    ).toBeNull();
+  });
+
   test("dismissing hides the banner for this visit, and a later Home visit rediscovers it", () => {
     const record = makeOutboxRecord(1, "failed");
     const model: Model.Ready = {
