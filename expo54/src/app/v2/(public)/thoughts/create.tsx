@@ -30,8 +30,14 @@ export default function Create() {
   return <LoadModel ready={Ready} />;
 }
 
-function Ready({ model, dispatch, style: s, translate: t }: ModelLoadedProps) {
-  const [value, setValue] = useState(Thought.emptySpec());
+/**
+ * Recovery banner for interrupted thought saves and failed draft cleanup.
+ * Shared by the Home tab and this compatibility screen.
+ */
+export function ThoughtSaveRecovery(
+  props: Pick<ModelLoadedProps, "model" | "style">
+) {
+  const { model, style: s } = props;
   const recovery = model.thoughtSaveOutbox.filter(
     (record) => record.status !== "cleanup-failed"
   );
@@ -40,26 +46,34 @@ function Ready({ model, dispatch, style: s, translate: t }: ModelLoadedProps) {
   );
   const draftCleanupFailed =
     model.homeThoughtDraft?.draftCleanup?.status === "clear-failed";
+  if (recovery.length === 0 && cleanup.length === 0 && !draftCleanupFailed) {
+    return null;
+  }
+  return (
+    <View testID="thought-save-recovery" accessibilityRole="alert">
+      <Text style={[s.subheader]}>Thought recovery needed</Text>
+      {draftCleanupFailed ? (
+        <Text style={[s.text]}>Draft cleanup needs attention</Text>
+      ) : null}
+      {recovery.map((record) => (
+        <Text key={record.submissionId} style={[s.text]}>
+          Recovery needed: {record.thought.automaticThought}
+        </Text>
+      ))}
+      {cleanup.map((record) => (
+        <Text key={record.submissionId} style={[s.text]}>
+          Saved Thought cleanup needed: {record.thought.automaticThought}
+        </Text>
+      ))}
+    </View>
+  );
+}
+
+function Ready({ model, dispatch, style: s, translate: t }: ModelLoadedProps) {
+  const [value, setValue] = useState(Thought.emptySpec());
   return (
     <SafeAreaView testID="create-thought-screen" style={[s.view, s.p0, s.py4]}>
-      {recovery.length > 0 || cleanup.length > 0 || draftCleanupFailed ? (
-        <View testID="thought-save-recovery" accessibilityRole="alert">
-          <Text style={[s.subheader]}>Thought recovery needed</Text>
-          {draftCleanupFailed ? (
-            <Text style={[s.text]}>Draft cleanup needs attention</Text>
-          ) : null}
-          {recovery.map((record) => (
-            <Text key={record.submissionId} style={[s.text]}>
-              Recovery needed: {record.thought.automaticThought}
-            </Text>
-          ))}
-          {cleanup.map((record) => (
-            <Text key={record.submissionId} style={[s.text]}>
-              Saved Thought cleanup needed: {record.thought.automaticThought}
-            </Text>
-          ))}
-        </View>
-      ) : null}
+      <ThoughtSaveRecovery model={model} style={s} />
       <CBTForm
         model={model}
         style={s}
