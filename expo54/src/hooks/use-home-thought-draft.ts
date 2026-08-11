@@ -75,7 +75,7 @@ export function useHomeThoughtDraft(props: {
   // "A" resolved: Home resets on durable insertion alone, never waiting on "B"
   // (the revision-guarded draft cleanup the model runs from the same action).
   useEffect(() => {
-    if (requested.current) {
+    if (requested.current && armed.current === null) {
       // arm only on a submit the model actually accepted. A rejected one - empty
       // spec, outbox at capacity, insertion already in flight - changes nothing,
       // so it must never leave a watcher behind to wipe later typing.
@@ -85,6 +85,9 @@ export function useHomeThoughtDraft(props: {
           ?.submissionId ?? null;
       return;
     }
+    // a redundant submit while one is already in flight changes nothing: the
+    // submission we armed on is still the one that governs the reset.
+    requested.current = false;
     const id = armed.current;
     if (id === null) return;
     const record = model.thoughtSaveOutbox.find((r) => r.submissionId === id);

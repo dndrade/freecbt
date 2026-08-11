@@ -105,6 +105,30 @@ test("resets only after the submission it armed becomes durable", () => {
   expect(result.current.spec.automaticThought).toBe("");
 });
 
+test("still resets when a redundant Save lands while the first is in flight", () => {
+  const { result, rerender } = renderDraft();
+
+  act(() => result.current.change(spec("save me")));
+  act(() => result.current.submit());
+
+  const accepted = {
+    ...outboxRecord(32, "insertion-pending"),
+    sourceDraftRevision: 1,
+  };
+  rerender({ ...emptyReady, thoughtSaveOutbox: [accepted] });
+
+  // Save has no disabled guard yet, so a second tap is reachable. The model
+  // rejects it while an insertion is pending, leaving the model untouched.
+  act(() => result.current.submit());
+
+  rerender({
+    ...emptyReady,
+    thoughtSaveOutbox: [{ ...accepted, status: "pending" }],
+  });
+
+  expect(result.current.spec.automaticThought).toBe("");
+});
+
 test("keeps the text on screen when the durable insertion is rejected", () => {
   const { result, rerender } = renderDraft();
 
