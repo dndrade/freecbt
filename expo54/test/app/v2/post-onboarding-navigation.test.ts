@@ -1,12 +1,18 @@
 import fs from "node:fs";
 import path from "node:path";
 import React from "react";
-import { render } from "@testing-library/react-native";
-import { Text } from "react-native";
+import { act, fireEvent, render } from "@testing-library/react-native";
+import { Text, TouchableOpacity, View } from "react-native";
 import { OnboardingGateway } from "@/src/view/gateways/onboarding-gateway";
+import { Ready } from "@/src/app/v2/(public)/help/intro";
 
 const mockPush = jest.fn();
 const mockDispatch = jest.fn();
+const mockReminders = {
+  isSupported: () => true,
+  enable: jest.fn(),
+  disable: jest.fn(),
+};
 let mockPathname = "/v2";
 let mockExistingUser = false;
 
@@ -22,6 +28,65 @@ jest.mock("@/src/hooks/use-model", () => ({
       dispatch: mockDispatch,
     }),
 }));
+
+jest.mock("@/src", () => ({
+  Routes: { homeV2: () => "/v2", introV2: () => "/v2/help/intro" },
+}));
+
+jest.mock("@/src/components", () => ({
+  ImagePath: {
+    looker: 1,
+    eater: 2,
+    logo: 3,
+    notifications: 4,
+  },
+}));
+
+jest.mock("@/src/features/reminders/use-reminders", () => ({
+  useReminders: () => mockReminders,
+}));
+
+jest.mock("@/src/hooks/use-safe-area", () => ({
+  useSafeWindowDimensions: () => ({ width: 400, height: 800 }),
+}));
+
+jest.mock("react-native-reanimated", () => ({
+  useSharedValue: () => ({ value: 0 }),
+  createAnimatedComponent: (component: unknown) => component,
+}));
+
+jest.mock("react-native-reanimated-carousel", () => {
+  function Carousel(props: {
+    data: readonly string[];
+    renderItem: (props: { item: string; index: number }) => React.ReactNode;
+  }) {
+    const item = props.data[props.data.length - 1];
+    return React.createElement(
+      View,
+      null,
+      props.renderItem({ item, index: props.data.length - 1 })
+    );
+  }
+  const Pagination = { Basic: () => null };
+  return { __esModule: true, default: Carousel, Pagination };
+});
+
+const mockStyle: Record<string, object> = new Proxy(
+  { container: {}, errorText: {}, button: {}, buttonText: {} } as Record<
+    string,
+    object
+  >,
+  { get: (target, key: string) => target[key] ?? {} }
+);
+
+function intro(completion: "idle" | "saving" | { status: "failure"; error: Error }) {
+  return React.createElement(Ready, {
+    model: { onboardingCompletion: completion } as never,
+    dispatch: mockDispatch,
+    style: mockStyle as never,
+    translate: ((key: string) => key) as never,
+  });
+}
 
 function Child() {
   return React.createElement(Text, null, "onboarding gateway child");
@@ -76,6 +141,63 @@ describe("post-onboarding navigation", () => {
       /export function introV2\(\): Href\s*\{\s*return "\/v2\/help\/intro";/
     );
     expect(routes).not.toMatch(/onboarded/);
+  });
+
+  it("uses one explicit completion action for every onboarding exit", () => {
+    const intro = fs.readFileSync(
+      path.join(__dirname, "../../../src/app/v2/(public)/help/intro.tsx"),
+      "utf8"
+    );
+
+    expect(intro).not.toMatch(/thoughtCreateV2/);
+    expect(intro.match(/Action\.beginOnboardingCompletion\(\)/g)).toHaveLength(1);
+    expect(intro).toMatch(/Routes\.homeV2\(\)/);
+    expect(intro).toMatch(/onPressGetStarted/);
+    expect(intro.match(/renderGetStarted\(\)/g)).toHaveLength(3);
+    expect(intro).toMatch(/Saving…/);
+    expect(intro).toMatch(/Unable to save\. Try again\./);
+    expect(intro).toMatch(/disabled=\{isSaving\}/);
+  });
+
+  it("keeps reminder choices persistence-only and unsupported Change content-only", () => {
+    const intro = fs.readFileSync(
+      path.join(__dirname, "../../../src/app/v2/(public)/help/intro.tsx"),
+      "utf8"
+    );
+
+    expect(intro).toMatch(/async function onPressYes\(\)[\s\S]*?reminders\.enable\(dispatch, t\);[\s\S]*?\}/);
+    expect(intro).toMatch(/async function onPressNo\(\)[\s\S]*?reminders\.disable\(dispatch\);[\s\S]*?\}/);
+    expect(intro).toMatch(/reminders\.isSupported\(\) \? null : renderGetStarted\(\)/);
+    expect(intro).toMatch(/case "reminders"[\s\S]*?renderGetStarted\(\)/);
+  });
+
+  it("completes only after saving succeeds and keeps failure retryable", () => {
+    const view = render(intro("idle"));
+
+    fireEvent.press(view.getByText("Get started"));
+    expect(mockDispatch).toHaveBeenCalledTimes(1);
+    expect(mockDispatch).toHaveBeenCalledWith({
+      action: "begin-onboarding-completion",
+    });
+    expect(mockPush).not.toHaveBeenCalled();
+
+    view.rerender(intro("saving"));
+    expect(view.getByText("Saving…")).toBeTruthy();
+    expect(view.UNSAFE_getAllByType(TouchableOpacity).at(-1)?.props.disabled).toBe(
+      true
+    );
+    expect(mockPush).not.toHaveBeenCalled();
+
+    view.rerender(intro({ status: "failure", error: new Error("failed") }));
+    expect(view.getByText("Unable to save. Try again.")).toBeTruthy();
+    expect(view.getByText("Get started")).toBeTruthy();
+    fireEvent.press(view.getByText("Get started"));
+    expect(mockDispatch).toHaveBeenCalledTimes(2);
+    expect(mockPush).not.toHaveBeenCalled();
+
+    view.rerender(intro("idle"));
+    act(() => undefined);
+    expect(mockPush).toHaveBeenCalledWith("/v2");
   });
 
   it("pushes onboarding once across rerenders without completing the user", () => {

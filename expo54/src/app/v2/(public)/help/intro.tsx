@@ -1,6 +1,7 @@
 import { Routes } from "@/src";
 import { LoadModel, ModelLoadedProps } from "@/src/hooks/use-model";
 import { Reminders, useReminders } from "@/src/features/reminders/use-reminders";
+import { Action } from "@/src/model";
 import { useSafeWindowDimensions } from "@/src/hooks/use-safe-area";
 import { ImagePath } from "@/src/components";
 import { Link, useRouter } from "expo-router";
@@ -21,11 +22,28 @@ const slideNames = ["record", "challenge", "change", "reminders"] as const;
 export type SlideName = (typeof slideNames)[number];
 // export const SlideName = z.enum(slideNames);
 // export type SlideName = z.infer<typeof SlideName>;
-function Ready(props: ModelLoadedProps) {
+export function Ready(props: ModelLoadedProps) {
   const { style: s } = props;
   const ref = React.useRef<ICarouselInstance>(null);
+  const completionRequested = React.useRef(false);
+  const router = useRouter();
   const progress = useSharedValue<number>(0);
   const reminders = useReminders();
+  const isSaving = props.model.onboardingCompletion === "saving";
+  const hasFailed =
+    typeof props.model.onboardingCompletion === "object" &&
+    props.model.onboardingCompletion.status === "failure";
+  React.useEffect(() => {
+    if (completionRequested.current && props.model.onboardingCompletion === "idle") {
+      completionRequested.current = false;
+      router.push(Routes.homeV2());
+    }
+  }, [props.model.onboardingCompletion, router]);
+  function onPressGetStarted() {
+    if (isSaving) return;
+    completionRequested.current = true;
+    props.dispatch(Action.beginOnboardingCompletion());
+  }
   const onPressPagination = (index: number) => {
     ref.current?.scrollTo({
       count: index - progress.value,
@@ -42,7 +60,13 @@ function Ready(props: ModelLoadedProps) {
           ref={ref}
           data={[...slides]}
           onProgressChange={progress}
-          renderItem={IntroItem({ ...props, reminders })}
+          renderItem={IntroItem({
+            ...props,
+            reminders,
+            isSaving,
+            hasFailed,
+            onPressGetStarted,
+          })}
           width={width}
           height={w.height - 150}
           onSnapToItem={(index) => {
@@ -75,20 +99,38 @@ function Ready(props: ModelLoadedProps) {
 }
 
 function IntroItem(
-  props: Pick<ModelLoadedProps, "dispatch" | "style" | "translate"> & {
+  props: Pick<ModelLoadedProps, "dispatch" | "model" | "style" | "translate"> & {
     reminders: Reminders;
+    isSaving: boolean;
+    hasFailed: boolean;
+    onPressGetStarted: () => void;
   }
 ): CarouselRenderItem<SlideName> {
-  const { reminders, dispatch, style: s, translate: t } = props;
-  const router = useRouter();
-  const href = Routes.thoughtCreateV2();
+  const { reminders, dispatch, style: s, translate: t, isSaving, hasFailed, onPressGetStarted } = props;
+
   async function onPressYes() {
     await reminders.enable(dispatch, t);
-    router.push(href);
   }
   async function onPressNo() {
     await reminders.disable(dispatch);
-    router.push(href);
+  }
+  function renderGetStarted() {
+    return (
+      <>
+        {hasFailed ? (
+          <Text style={[s.errorText]}>Unable to save. Try again.</Text>
+        ) : null}
+        <TouchableOpacity
+          style={[s.button]}
+          disabled={isSaving}
+          onPress={onPressGetStarted}
+        >
+          <Text style={[s.buttonText]}>
+            {isSaving ? "Saving…" : "Get started"}
+          </Text>
+        </TouchableOpacity>
+      </>
+    );
   }
   return function IntroItem({ item }) {
     switch (item) {
@@ -145,15 +187,7 @@ function IntroItem(
             <Text style={[s.subheader]}>
               {t("onboarding_screen.block2.body")}
             </Text>
-            {reminders.isSupported() ? null : (
-              <Link style={[s.button]} href={href}>
-                <TouchableOpacity style={[s.flex1]}>
-                  <Text style={[s.buttonText]}>
-                    {t("onboarding_screen.reminders.button.continue")}
-                  </Text>
-                </TouchableOpacity>
-              </Link>
-            )}
+            {reminders.isSupported() ? null : renderGetStarted()}
           </>
         );
       }
@@ -178,14 +212,7 @@ function IntroItem(
                 {t("onboarding_screen.reminders.button.no")}
               </Text>
             </TouchableOpacity>
-            {/* <Text style={[s.header]}> */}
-            {/* {t("onboarding_screen.reminders.disabled")} */}
-            {/* </Text> */}
-            {/* <TouchableOpacity style={[s.button]}> */}
-            {/* <Text style={[s.buttonText]}> */}
-            {/* {t("onboarding_screen.reminders.button.continue")} */}
-            {/* </Text> */}
-            {/* </TouchableOpacity> */}
+            {renderGetStarted()}
           </>
         );
       }
