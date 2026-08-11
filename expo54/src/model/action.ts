@@ -21,6 +21,7 @@ export type Action = ReturnType<
   | typeof flushHomeThoughtDraft
   | typeof clearHomeThoughtDraft
   | typeof homeThoughtDraftWriteFailed
+  | typeof homeThoughtDraftCleanupFailed
   | typeof createThought
   | typeof beginThoughtSave
   | typeof runThoughtSaveOutbox
@@ -85,6 +86,20 @@ export function clearHomeThoughtDraft() {
 }
 export function homeThoughtDraftWriteFailed(error: unknown) {
   return { action: "home-thought-draft-write-failed", error } as const;
+}
+export function homeThoughtDraftCleanupFailed(
+  record: Model.Ready["homeThoughtDraft"] & object,
+  outboxSubmissionId: Thought.Id,
+  error: unknown,
+  now: Date
+) {
+  return {
+    action: "home-thought-draft-cleanup-failed",
+    record,
+    outboxSubmissionId,
+    error,
+    now,
+  } as const;
 }
 export function createThought(spec: Thought.Spec, now: Date) {
   return { action: "create-thought", spec, now } as const;

@@ -43,15 +43,6 @@ export interface HomeThoughtDraftRecord {
   draftCleanup: HomeThoughtDraftCleanup | null;
 }
 
-function isMeaningful(spec: Thought.Spec): boolean {
-  return (
-    spec.automaticThought !== "" ||
-    spec.challenge !== "" ||
-    spec.alternativeThought !== "" ||
-    spec.cognitiveDistortions.size > 0
-  );
-}
-
 function encodeSpec(spec: Thought.Spec) {
   return {
     automaticThought: spec.automaticThought,
@@ -184,7 +175,7 @@ export function homeThoughtDraft(
   }
 
   async function write(record: HomeThoughtDraftRecord): Promise<void> {
-    if (!isMeaningful(record.spec)) {
+    if (!Thought.isMeaningfulSpec(record.spec)) {
       await writer.write(null);
       return;
     }

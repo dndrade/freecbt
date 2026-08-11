@@ -125,7 +125,16 @@ function useCmdRunner(data: Distortion.Data, storage: AsyncStorageStatic) {
           try {
             await drafts.clear();
           } catch (error) {
-            dispatch(Action.homeThoughtDraftWriteFailed(error));
+            dispatch(
+              c.cleanup === undefined
+                ? Action.homeThoughtDraftWriteFailed(error)
+                : Action.homeThoughtDraftCleanupFailed(
+                    c.cleanup.record,
+                    c.cleanup.outboxSubmissionId,
+                    error,
+                    new Date()
+                  )
+            );
           }
           return;
         }

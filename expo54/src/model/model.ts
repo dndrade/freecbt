@@ -199,18 +199,43 @@ function updateReady(m: Ready, a: Action.Action): readonly [Model, Cmd.List] {
     case "create-thought": {
       return createThoughtSubmission(m, a.spec, a.now);
     }
+    case "home-thought-draft-cleanup-failed": {
+      // Keep whatever the user has now; only record why the durable clear failed.
+      const base = m.homeThoughtDraft ?? a.record;
+      const record: HomeThoughtDraftRecord = {
+        ...base,
+        draftCleanup: {
+          status: "clear-failed",
+          sourceRevision: a.record.sourceRevision,
+          outboxSubmissionId: a.outboxSubmissionId,
+          lastError: a.error instanceof Error ? a.error.message : String(a.error),
+          updatedAt: a.now,
+        },
+      };
+      return [
+        { ...m, homeThoughtDraft: record },
+        [Cmd.writeHomeThoughtDraft(record)],
+      ];
+    }
     case "thought-save-outbox-insertion-succeeded": {
-      return selectNextThoughtSave(
+      // "A": the submission is durable. Reset-blocking work stops here; "B" below
+      // is best-effort draft cleanup that must never undo or duplicate A.
+      const accepted = m.thoughtSaveOutbox.find(
+        (record) =>
+          record.submissionId === a.submissionId &&
+          record.status === "insertion-pending"
+      );
+      const [cleaned, cleanupCmds] = reconcileHomeDraft(
         {
           ...m,
           thoughtSaveOutbox: m.thoughtSaveOutbox.map((record) =>
-            record.submissionId === a.submissionId && record.status === "insertion-pending"
-              ? { ...record, status: "pending" }
-              : record
+            record === accepted ? { ...record, status: "pending" } : record
           ),
         },
-        a.now
+        accepted
       );
+      const [next, saveCmds] = selectNextThoughtSave(cleaned, a.now);
+      return [next, [...cleanupCmds, ...saveCmds]];
     }
     case "thought-save-outbox-insertion-failed": {
       return [
@@ -381,15 +406,6 @@ function writeThought(
   return [m2, cmds];
 }
 
-function isMeaningfulSpec(spec: Thought.Spec): boolean {
-  return (
-    spec.automaticThought !== "" ||
-    spec.challenge !== "" ||
-    spec.alternativeThought !== "" ||
-    spec.cognitiveDistortions.size > 0
-  );
-}
-
 function cloneSpec(spec: Thought.Spec): Thought.Spec {
   return {
     automaticThought: spec.automaticThought,
@@ -405,7 +421,7 @@ function updateHomeDraft(
   now: Date
 ): readonly [Model, Cmd.List] {
   const revision = m.homeThoughtDraftRevision + 1;
-  if (!isMeaningfulSpec(spec)) {
+  if (!Thought.isMeaningfulSpec(spec)) {
     return [
       {
         ...m,
@@ -453,12 +469,39 @@ function clearHomeDraft(m: Ready): readonly [Model, Cmd.List] {
   ];
 }
 
+/**
+ * "B" of the A→B handoff: clear the Home draft the accepted submission was
+ * snapshotted from. Guarded by revision, so newer user input is never erased.
+ */
+function reconcileHomeDraft(
+  m: Ready,
+  accepted: ThoughtSaveOutboxRecord | undefined
+): readonly [Ready, Cmd.List] {
+  const draft = m.homeThoughtDraft;
+  if (accepted === undefined || draft === null) return [m, []];
+  if (m.homeThoughtDraftRevision !== accepted.sourceDraftRevision) return [m, []];
+  return [
+    {
+      ...m,
+      homeThoughtDraft: null,
+      homeThoughtDraftRevision: m.homeThoughtDraftRevision + 1,
+      homeThoughtDraftPersistence: "idle",
+    },
+    [
+      Cmd.clearHomeThoughtDraft({
+        record: draft,
+        outboxSubmissionId: accepted.submissionId,
+      }),
+    ],
+  ];
+}
+
 function createThoughtSubmission(
   m: Ready,
   spec: Thought.Spec,
   now: Date
 ): readonly [Model, Cmd.List] {
-  if (!isMeaningfulSpec(spec)) return [m, []];
+  if (!Thought.isMeaningfulSpec(spec)) return [m, []];
   if (m.thoughtSaveOutbox.length >= 20) return [m, []];
   if (
     m.thoughtSaveOutbox.some((record) => record.status === "insertion-pending")

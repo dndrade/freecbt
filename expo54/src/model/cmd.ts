@@ -33,8 +33,17 @@ export function completeOnboarding(value: Settings.Settings) {
 export function writeHomeThoughtDraft(value: HomeThoughtDraftRecord) {
   return { cmd: "write-home-thought-draft", value } as const;
 }
-export function clearHomeThoughtDraft() {
-  return { cmd: "clear-home-thought-draft" } as const;
+/**
+ * Context for the "B" half of the A→B handoff: which draft record we're clearing
+ * on behalf of which accepted outbox submission. Present only for cleanup after a
+ * durable insertion, so a failed clear stays reconcilable; absent for plain clears.
+ */
+export interface HomeThoughtDraftCleanupContext {
+  record: HomeThoughtDraftRecord;
+  outboxSubmissionId: Thought.Id;
+}
+export function clearHomeThoughtDraft(cleanup?: HomeThoughtDraftCleanupContext) {
+  return { cmd: "clear-home-thought-draft", cleanup } as const;
 }
 export function insertThoughtSaveOutbox(value: ThoughtSaveOutboxRecord) {
   return { cmd: "insert-thought-save-outbox", value } as const;

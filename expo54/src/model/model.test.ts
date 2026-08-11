@@ -204,6 +204,203 @@ test("tracks one meaningful home draft and clears empty drafts", () => {
   expect(clearCmds).toEqual([Cmd.clearHomeThoughtDraft()]);
 });
 
+describe("home draft A→B handoff", () => {
+  const draftAt = new Date("2026-08-11T11:00:00.000Z");
+  const submitAt = new Date("2026-08-11T11:00:01.000Z");
+  const insertedAt = new Date("2026-08-11T11:00:02.000Z");
+
+  function submitted(spec: Thought.Spec) {
+    let m: Model.Model = emptyReady;
+    [m] = Model.update(m, Action.updateHomeThoughtDraft(spec, draftAt));
+    const draft = (m as Model.Ready).homeThoughtDraft as HomeThoughtDraftRecord;
+    [m] = Model.update(m, Action.createThought(spec, submitAt));
+    const record = (m as Model.Ready).thoughtSaveOutbox[0];
+    return { m, draft, record };
+  }
+
+  test("clears a matching Home draft only after durable insertion succeeds", () => {
+    const { m, draft, record } = submitted(sampleSpec({ automaticThought: "handoff" }));
+    expect(record.sourceDraftRevision).toBe(draft.sourceRevision);
+    expect((m as Model.Ready).homeThoughtDraft).toEqual(draft);
+
+    const [cleared, cmds] = Model.update(
+      m,
+      Action.thoughtSaveOutboxInsertionSucceeded(record.submissionId, insertedAt)
+    );
+
+    expect((cleared as Model.Ready).homeThoughtDraft).toBeNull();
+    expect(cmds).toContainEqual(
+      Cmd.clearHomeThoughtDraft({
+        record: draft,
+        outboxSubmissionId: record.submissionId,
+      })
+    );
+    // the accepted submission is never cancelled, duplicated, or claimed saved
+    expect((cleared as Model.Ready).thoughtSaveOutbox).toHaveLength(1);
+    expect((cleared as Model.Ready).thoughtSaveOutbox[0].submissionId).toBe(
+      record.submissionId
+    );
+    expect((cleared as Model.Ready).thoughts.size).toBe(0);
+  });
+
+  test("never clears a newer Home draft revision", () => {
+    const { m, record } = submitted(sampleSpec({ automaticThought: "handoff" }));
+    const [typedMore] = Model.update(
+      m,
+      Action.updateHomeThoughtDraft(
+        sampleSpec({ automaticThought: "handoff, plus more" }),
+        new Date("2026-08-11T11:00:01.500Z")
+      )
+    );
+    const newer = (typedMore as Model.Ready).homeThoughtDraft;
+
+    const [skipped, cmds] = Model.update(
+      typedMore,
+      Action.thoughtSaveOutboxInsertionSucceeded(record.submissionId, insertedAt)
+    );
+
+    expect((skipped as Model.Ready).homeThoughtDraft).toEqual(newer);
+    expect(cmds.some((cmd) => cmd.cmd === "clear-home-thought-draft")).toBe(false);
+    expect((skipped as Model.Ready).thoughtSaveOutbox).toHaveLength(1);
+  });
+
+  test("records clear-failed cleanup metadata without touching the accepted submission", () => {
+    const { m, draft, record } = submitted(sampleSpec({ automaticThought: "handoff" }));
+    const [cleared] = Model.update(
+      m,
+      Action.thoughtSaveOutboxInsertionSucceeded(record.submissionId, insertedAt)
+    );
+
+    const [failed, cmds] = Model.update(
+      cleared,
+      Action.homeThoughtDraftCleanupFailed(
+        draft,
+        record.submissionId,
+        new Error("disk full"),
+        new Date("2026-08-11T11:00:03.000Z")
+      )
+    );
+
+    const expected: HomeThoughtDraftRecord = {
+      ...draft,
+      draftCleanup: {
+        status: "clear-failed",
+        sourceRevision: draft.sourceRevision,
+        outboxSubmissionId: record.submissionId,
+        lastError: "disk full",
+        updatedAt: new Date("2026-08-11T11:00:03.000Z"),
+      },
+    };
+    expect((failed as Model.Ready).homeThoughtDraft).toEqual(expected);
+    expect(cmds).toEqual([Cmd.writeHomeThoughtDraft(expected)]);
+    expect((failed as Model.Ready).thoughtSaveOutbox).toHaveLength(1);
+    expect((failed as Model.Ready).thoughtSaveOutbox[0].submissionId).toBe(
+      record.submissionId
+    );
+    expect((failed as Model.Ready).thoughts.size).toBe(0);
+  });
+
+  test("keeps newer draft content when recording a failed cleanup", () => {
+    const { m, draft, record } = submitted(sampleSpec({ automaticThought: "handoff" }));
+    const [cleared] = Model.update(
+      m,
+      Action.thoughtSaveOutboxInsertionSucceeded(record.submissionId, insertedAt)
+    );
+    const [typedMore] = Model.update(
+      cleared,
+      Action.updateHomeThoughtDraft(
+        sampleSpec({ automaticThought: "a brand new thought" }),
+        new Date("2026-08-11T11:00:03.000Z")
+      )
+    );
+    const newer = (typedMore as Model.Ready).homeThoughtDraft as HomeThoughtDraftRecord;
+
+    const [failed, cmds] = Model.update(
+      typedMore,
+      Action.homeThoughtDraftCleanupFailed(
+        draft,
+        record.submissionId,
+        new Error("disk full"),
+        new Date("2026-08-11T11:00:04.000Z")
+      )
+    );
+
+    expect((failed as Model.Ready).homeThoughtDraft?.spec).toEqual(newer.spec);
+    expect((failed as Model.Ready).homeThoughtDraft?.draftCleanup).toEqual({
+      status: "clear-failed",
+      sourceRevision: draft.sourceRevision,
+      outboxSubmissionId: record.submissionId,
+      lastError: "disk full",
+      updatedAt: new Date("2026-08-11T11:00:04.000Z"),
+    });
+    expect(cmds).toHaveLength(1);
+  });
+
+  test("restores a Home draft when a crash interrupts before durable insertion", () => {
+    const draft: HomeThoughtDraftRecord = {
+      spec: sampleSpec({ automaticThought: "lost before A" }),
+      sourceRevision: 9,
+      updatedAt: draftAt,
+      draftCleanup: null,
+    };
+
+    const hydrated = Model.ready({ ...emptyReady, homeThoughtDraft: draft });
+    expect(hydrated.homeThoughtDraft).toEqual(draft);
+    expect(hydrated.homeThoughtDraftRevision).toBe(9);
+    expect(Model.update(Model.loading, Action.modelReady(hydrated))[1]).toEqual([]);
+
+    const [resubmitted] = Model.update(
+      hydrated,
+      Action.createThought(draft.spec, submitAt)
+    );
+    expect((resubmitted as Model.Ready).thoughtSaveOutbox).toHaveLength(1);
+    expect((resubmitted as Model.Ready).thoughtSaveOutbox[0].sourceDraftRevision).toBe(9);
+  });
+
+  test("keeps an A-succeeded, B-interrupted handoff reconcilable across a restart", () => {
+    const accepted = { ...makeOutboxRecord(120, "pending"), sourceDraftRevision: 4 };
+    const draft: HomeThoughtDraftRecord = {
+      spec: sampleSpec({ automaticThought: "thought 120" }),
+      sourceRevision: 4,
+      updatedAt: draftAt,
+      draftCleanup: null,
+    };
+
+    const hydrated = Model.ready({
+      ...emptyReady,
+      homeThoughtDraft: draft,
+      thoughtSaveOutbox: [accepted],
+    });
+    expect(hydrated.homeThoughtDraft).toEqual(draft);
+    expect(hydrated.thoughtSaveOutbox).toEqual([accepted]);
+    expect(Model.update(Model.loading, Action.modelReady(hydrated))[1]).toEqual([]);
+
+    // a replayed insertion result must not re-run B or duplicate the submission
+    const [replayed, cmds] = Model.update(
+      hydrated,
+      Action.thoughtSaveOutboxInsertionSucceeded(accepted.submissionId, insertedAt)
+    );
+    expect((replayed as Model.Ready).homeThoughtDraft).toEqual(draft);
+    expect(cmds.some((cmd) => cmd.cmd === "clear-home-thought-draft")).toBe(false);
+    expect((replayed as Model.Ready).thoughtSaveOutbox).toHaveLength(1);
+  });
+
+  test("discarding a draft leaves the outbox and saved thoughts alone", () => {
+    const { m, record } = submitted(sampleSpec({ automaticThought: "handoff" }));
+
+    const [discarded, cmds] = Model.update(m, Action.clearHomeThoughtDraft());
+
+    expect((discarded as Model.Ready).homeThoughtDraft).toBeNull();
+    expect(cmds).toEqual([Cmd.clearHomeThoughtDraft()]);
+    expect((discarded as Model.Ready).thoughtSaveOutbox).toEqual(
+      (m as Model.Ready).thoughtSaveOutbox
+    );
+    expect((discarded as Model.Ready).thoughtSaveOutbox[0].submissionId).toBe(
+      record.submissionId
+    );
+  });
+});
+
 test("reserves insertion-pending capacity and blocks duplicate save while insertion is pending", () => {
   let m: Model.Model = {
     ...emptyReady,

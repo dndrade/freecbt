@@ -133,6 +133,32 @@ describe("homeThoughtDraft", () => {
     await expect(async.getAllKeys()).resolves.toEqual([]);
   });
 
+  test("keeps a clear-failed cleanup marker written over an existing draft", async () => {
+    const async = fakeAsyncStorage();
+    const drafts = (Storage as any).homeThoughtDraft(DistortionData, async);
+    const draft = {
+      spec: sampleSpec(),
+      sourceRevision: 8,
+      updatedAt: new Date("2026-08-11T00:08:00.000Z"),
+      draftCleanup: null,
+    };
+
+    await drafts.write(draft);
+    const marked = {
+      ...draft,
+      draftCleanup: {
+        status: "clear-failed" as const,
+        sourceRevision: 8,
+        outboxSubmissionId: "33333333-3333-3333-3333-333333333333",
+        lastError: "disk full",
+        updatedAt: new Date("2026-08-11T00:09:00.000Z"),
+      },
+    };
+    await drafts.write(marked);
+
+    await expect(drafts.read()).resolves.toEqual(marked);
+  });
+
   test("keeps the newest queued draft write after an older write has already started", async () => {
     const blocked = fakeAsyncStorageWithBlockedFirstSet();
     const drafts = (Storage as any).homeThoughtDraft(

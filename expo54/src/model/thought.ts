@@ -110,6 +110,18 @@ export function emptySpec(): Spec {
 }
 
 /**
+ * A spec worth persisting: the user has entered something we'd hate to lose.
+ */
+export function isMeaningfulSpec(spec: Spec): boolean {
+  return (
+    spec.automaticThought !== "" ||
+    spec.challenge !== "" ||
+    spec.alternativeThought !== "" ||
+    spec.cognitiveDistortions.size > 0
+  );
+}
+
+/**
  * Thought-parsing enforces valid distortions, but parameterize the distortion-data until later.
  */
 export function createParsers(data: Distortion.Data) {
