@@ -2,11 +2,27 @@
 // with "Can't save text. Try saving a link instead." — see
 // .dev/data-compatibility/verification/results/backup/BACKUP-002-v2-android-emulator.md.
 // The backup archive is a compressed, non-text envelope (see
-// src/model/archive/thoughts-archive.ts), so text/plain was never an accurate
-// label. application/octet-stream avoids the "Save" target's text-specific
-// handling. text/plain stays in the import list so files exported before
-// this change can still be re-imported.
-export const BACKUP_EXPORT_MIME_TYPE = "application/octet-stream";
+// src/model/archive/thoughts-archive.ts), so text/plain was never an
+// accurate label.
+//
+// Switching to application/octet-stream fixed "Save" but traded it for a
+// worse regression: Android's ACTION_SEND chooser only lists apps whose
+// manifest <intent-filter> matches the declared MIME type (exact match,
+// subtype wildcard, or full */* wildcard), and most messaging/notes apps
+// filter on text/* or similar — not application/octet-stream. That dropped
+// the chooser from 5 targets to 3 (Drive, Gmail, Quick Share only; Signal,
+// WhatsApp, Messages, Bluetooth, etc. all silently excluded). See
+// .dev/data-compatibility/verification/results/backup/BACKUP-003-v2-android-emulator-fail-013-reverify.md.
+//
+// "*/*" is the standard Android wildcard that matches every app's
+// share-target intent-filter, restoring the full chooser list. It's broader
+// than application/octet-stream, not narrower, so it should not reintroduce
+// the "Save" rejection that text/plain caused — that rejection was about
+// text/plain's content handling, not about the MIME label being too broad —
+// but this has not been re-verified on-device. text/plain stays in the
+// import list so files exported before this change can still be
+// re-imported.
+export const BACKUP_EXPORT_MIME_TYPE = "*/*";
 export const BACKUP_IMPORT_MIME_TYPES: readonly string[] = [
   BACKUP_EXPORT_MIME_TYPE,
   "text/plain",

@@ -13,6 +13,19 @@ test("export mime type is not text/plain", () => {
   expect(BACKUP_EXPORT_MIME_TYPE).not.toBe("text/plain");
 });
 
+test("export mime type is the wildcard, not a narrow type", () => {
+  // application/octet-stream fixed "Save" but dropped the share chooser
+  // from 5 targets to 3 (Drive, Gmail, Quick Share only) — Android's
+  // ACTION_SEND chooser only lists apps whose manifest <intent-filter>
+  // matches the declared MIME type, and most messaging/notes apps filter
+  // on text/* or similar, not application/octet-stream. See
+  // .dev/data-compatibility/verification/results/backup/BACKUP-003-v2-android-emulator-fail-013-reverify.md.
+  // "*/*" is the standard Android wildcard that matches every app's
+  // share-target filter. This has regressed twice already via
+  // well-intentioned narrowing, so pin the exact value.
+  expect(BACKUP_EXPORT_MIME_TYPE).toBe("*/*");
+});
+
 test("import mime types accept both the current export type and the legacy text/plain type", () => {
   expect(BACKUP_IMPORT_MIME_TYPES).toContain(BACKUP_EXPORT_MIME_TYPE);
   expect(BACKUP_IMPORT_MIME_TYPES).toContain("text/plain");
