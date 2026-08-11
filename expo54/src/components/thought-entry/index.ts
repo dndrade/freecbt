@@ -4,3 +4,4 @@ export {
   type ThoughtEntryRoute,
 } from "./thought-entry-form";
 export { ThoughtSaveRecovery } from "./thought-save-recovery";
+export { HomeThoughtRecovery } from "./home-thought-recovery";

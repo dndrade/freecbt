@@ -18,6 +18,14 @@ jest.mock("@/src/i18n/use-i18n", () => ({
   useTranslate: () => (key: string) => key,
 }));
 
+// this file isn't about the save Toast; a real Toast render needs a
+// `SafeAreaProvider` this harness doesn't have (HeroUI Native's Toast reads
+// `useSafeAreaInsets()` directly), so keep it a no-op here.
+jest.mock("heroui-native", () => ({
+  ...jest.requireActual("heroui-native"),
+  useToast: () => ({ toast: { show: jest.fn(), hide: jest.fn() } }),
+}));
+
 function spec(automaticThought: string): Thought.Spec {
   return { ...Thought.emptySpec(), automaticThought };
 }
@@ -232,7 +240,7 @@ describe("Home draft lifecycle", () => {
 
     expect(view.getByTestId("automatic-thought-input").props.value).toBe("");
     // the failure is still on disk and still surfaced, just not re-offered for saving
-    expect(view.getByTestId("thought-save-recovery")).toBeTruthy();
+    expect(view.getByTestId("home-thought-recovery")).toBeTruthy();
     await expect(
       AsyncStorage.getItem(HOME_THOUGHT_DRAFT_KEY)
     ).resolves.not.toBeNull();
@@ -321,16 +329,37 @@ test("Home displays restarted recovery records without labeling normal recovery 
   setItem.mockClear();
   const view = renderHome();
 
-  await waitFor(() => expect(view.getByTestId("thought-save-recovery")).toBeTruthy());
+  await waitFor(() => expect(view.getByTestId("home-thought-recovery")).toBeTruthy());
 
-  expect(view.getByText("Recovery needed: recovery 2")).toBeTruthy();
-  expect(view.getByText("Recovery needed: recovery 3")).toBeTruthy();
-  expect(view.getByText("Recovery needed: recovery 4")).toBeTruthy();
-  expect(view.getByText("Recovery needed: recovery 5")).toBeTruthy();
-  expect(view.getByText("Saved Thought cleanup needed: recovery 6")).toBeTruthy();
-  expect(view.queryByText("Saved Thought cleanup needed: recovery 2")).toBeNull();
-  expect(view.queryByText("Saved Thought cleanup needed: recovery 3")).toBeNull();
-  expect(view.queryByText("Saved Thought cleanup needed: recovery 5")).toBeNull();
+  // only the stuck statuses surface as recovery items - insertion-pending and
+  // pending are normal bounded in-flight processing; a persisted "active" record
+  // is never really live after a restart, so hydration itself normalizes it to
+  // "uncertain" (see `Model.ready`), which is why it shows up here too
+  expect(
+    view.getByTestId(`home-thought-recovery-item-${records[2].submissionId}`)
+  ).toBeTruthy();
+  expect(
+    view.getByTestId(`home-thought-recovery-item-${records[3].submissionId}`)
+  ).toBeTruthy();
+  expect(
+    view.getByTestId(`home-thought-recovery-item-${records[4].submissionId}`)
+  ).toBeTruthy();
+  expect(
+    view.queryByTestId(`home-thought-recovery-item-${records[0].submissionId}`)
+  ).toBeNull();
+  expect(
+    view.queryByTestId(`home-thought-recovery-item-${records[1].submissionId}`)
+  ).toBeNull();
+
+  // cleanup-failed (D) gets its own item with neutral "already saved" copy,
+  // never the plain "recovery needed" label the failed/uncertain items use
+  const cleanupItem = view.getByTestId(
+    `home-thought-recovery-item-${records[5].submissionId}`
+  );
+  expect(cleanupItem).toBeTruthy();
+  expect(view.getByText("cbt_form.recovery_cleanup_label")).toBeTruthy();
+  expect(view.getByText("cbt_form.recovery_cleanup_description")).toBeTruthy();
+
   expect(setItem).not.toHaveBeenCalled();
   setItem.mockClear();
 });

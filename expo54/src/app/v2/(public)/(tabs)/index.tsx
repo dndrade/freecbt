@@ -1,9 +1,10 @@
-import { ThoughtEntryForm, ThoughtSaveRecovery } from "@/src/components/thought-entry";
+import { HomeThoughtRecovery, ThoughtEntryForm } from "@/src/components/thought-entry";
 import { useHomeThoughtDraft } from "@/src/hooks/use-home-thought-draft";
 import { LoadModel, ModelLoadedProps } from "@/src/hooks/use-model";
 import { Thought } from "@/src/model";
+import { Feather } from "@expo/vector-icons";
 import { useNavigation } from "expo-router";
-import { Button, Typography, useThemeColor } from "heroui-native";
+import { Button, Typography, useThemeColor, useToast } from "heroui-native";
 import React from "react";
 import { BackHandler, Keyboard, Pressable, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -23,12 +24,30 @@ function Home({ model, dispatch, translate: t }: ModelLoadedProps) {
   // otherwise `step > 0` alone would keep the tabs hidden after a durable save.
   // the flow owns its own step, so remounting it is what puts it back to step 1.
   const [entryKey, setEntryKey] = React.useState(0);
+  const { toast } = useToast();
   const draft = useHomeThoughtDraft({
     model,
     dispatch,
-    onReset: () => {
+    onReset: (reason) => {
       setStep(0);
       setEntryKey((key) => key + 1);
+      // a discard is the user's own choice, not a save result - no feedback Toast
+      if (reason === "saved") {
+        toast.show({
+          variant: "success",
+          label: t("cbt_form.thought_saved"),
+          icon: <Feather name="check" size={16} />,
+        });
+      }
+    },
+    // an immediate, synchronous outbox-insertion failure: fire-and-forget Toast
+    // feedback only. A later write/cleanup failure surfaces through the durable
+    // recovery banner instead, since by then the user may have moved on.
+    onFailure: () => {
+      toast.show({
+        variant: "danger",
+        label: t("cbt_form.thought_save_failed"),
+      });
     },
   });
   const [paused, setPaused] = React.useState(false);
@@ -62,7 +81,7 @@ function Home({ model, dispatch, translate: t }: ModelLoadedProps) {
         onPress={pause}
       >
         <View className="w-full max-w-3xl flex-1 gap-3 px-4 py-4">
-          <ThoughtSaveRecovery model={model} />
+          <HomeThoughtRecovery model={model} dispatch={dispatch} translate={t} />
           {Thought.isMeaningfulSpec(draft.spec) && !draft.discarding ? (
             <Button
               testID="discard-draft"

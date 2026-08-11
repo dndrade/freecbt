@@ -242,7 +242,16 @@
     "discard_draft": "Discard draft",
     "discard_draft_confirm": "Discard this draft? Your saved thoughts are not affected.",
     "discard_draft_yes": "Discard",
-    "discard_draft_no": "Keep editing"
+    "discard_draft_no": "Keep editing",
+    "thought_saved": "Thought saved",
+    "thought_save_failed": "Couldn't save your thought",
+    "recovery_header": "Needs attention (%{count})",
+    "recovery_dismiss": "Dismiss",
+    "recovery_retry": "Retry",
+    "recovery_item_label": "Recovery needed",
+    "recovery_cleanup_label": "Saved - cleanup needed",
+    "recovery_cleanup_description": "Your thought is saved. Some local bookkeeping still needs to finish.",
+    "recovery_draft_cleanup_note": "Old draft text couldn't be cleared automatically. This doesn't change what's saved above."
   },
   "explanation_screen": {
     "header": "FreeCBT.",

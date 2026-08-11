@@ -24,11 +24,22 @@ const navigation = { setOptions };
 jest.mock("expo-router", () => ({
   useRouter: () => router,
   useNavigation: () => navigation,
+  useFocusEffect: (effect: () => void | (() => void)) => {
+    React.useEffect(effect, []);
+  },
 }));
 
 jest.mock("@/src/i18n/use-i18n", () => ({
   ...jest.requireActual("@/src/i18n/use-i18n"),
   useTranslate: () => (key: string) => key,
+}));
+
+// this file isn't about the save Toast; a real Toast render needs a
+// `SafeAreaProvider` this harness doesn't have (HeroUI Native's Toast reads
+// `useSafeAreaInsets()` directly), so keep it a no-op here.
+jest.mock("heroui-native", () => ({
+  ...jest.requireActual("heroui-native"),
+  useToast: () => ({ toast: { show: jest.fn(), hide: jest.fn() } }),
 }));
 
 function Host(props: { children: React.ReactNode }) {

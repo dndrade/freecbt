@@ -41,6 +41,12 @@ jest.mock("expo-router", () => ({
   // screens tweak their own navigation options (e.g. hiding the tab bar); off a
   // navigator there's nothing to set, so accept and drop it.
   useNavigation: () => ({ setOptions: () => {} }),
+  // off a real navigator there's no focus/blur to observe, so just run the
+  // effect once - tests that care about refocus behavior mock this themselves.
+  useFocusEffect: (effect: () => void | (() => void)) => {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    require("react").useEffect(effect, []);
+  },
 }));
 
 // expo-secure-store's native module isn't linked in the jest environment,
