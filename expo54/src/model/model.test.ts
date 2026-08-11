@@ -99,6 +99,44 @@ test("ready normalizes an interrupted active outbox record without changing its 
   ]);
 });
 
+test("seeds the draft revision past every stuck outbox record", () => {
+  const stuck: ThoughtSaveOutboxRecord = {
+    ...makeOutboxRecord(1, "failed"),
+    sourceDraftRevision: 5,
+  };
+  const standalone: ThoughtSaveOutboxRecord = {
+    ...makeOutboxRecord(2, "failed"),
+    sourceDraftRevision: Model.NO_HOME_DRAFT_REVISION,
+  };
+
+  // a restart with no draft used to restart the counter at 0, so the next
+  // draft could be handed revision 5 all over again
+  const hydrated = Model.ready({
+    ...emptyReady,
+    homeThoughtDraft: null,
+    thoughtSaveOutbox: [stuck, standalone],
+  });
+  expect(hydrated.homeThoughtDraftRevision).toBe(5);
+
+  const [typed] = Model.update(
+    hydrated,
+    Action.updateHomeThoughtDraft(
+      sampleSpec({ automaticThought: "typed after the restart" }),
+      new Date("2026-08-11T12:00:00.000Z")
+    )
+  );
+  const draft = (typed as Model.Ready).homeThoughtDraft!;
+  expect(draft.sourceRevision).toBe(6);
+
+  // and the next restart restores it: no false collision with the stuck record
+  const restarted = Model.ready({
+    ...emptyReady,
+    homeThoughtDraft: draft,
+    thoughtSaveOutbox: [stuck, standalone],
+  });
+  expect(Model.restorableHomeThoughtDraft(restarted)).toEqual(draft.spec);
+});
+
 test("import archive merges thoughts without deleting local-only thoughts", () => {
     const localThought = Thought.create(Thought.emptySpec(), new Date(0));
     const importedThought = Thought.create(Thought.emptySpec(), new Date(1));

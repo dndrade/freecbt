@@ -56,8 +56,15 @@ export function ready(p: Omit<Ready, "status">): Ready {
   return {
     status: "ready",
     ...p,
-    homeThoughtDraftRevision:
+    // monotonic across restarts: a counter that restarts at 0 can re-issue a
+    // revision a stuck outbox record still refers to, and `restorableHomeThoughtDraft`
+    // reads that collision as "already submitted" and hides a live draft.
+    homeThoughtDraftRevision: Math.max(
       p.homeThoughtDraft?.sourceRevision ?? p.homeThoughtDraftRevision,
+      ...p.thoughtSaveOutbox
+        .map((record) => record.sourceDraftRevision)
+        .filter((revision) => revision !== NO_HOME_DRAFT_REVISION)
+    ),
     thoughtSaveOutbox: p.thoughtSaveOutbox.map((record) =>
       record.status === "active" ? { ...record, status: "uncertain" } : record
     ),
