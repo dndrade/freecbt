@@ -16,10 +16,14 @@ import { BackHandler, Keyboard } from "react-native";
 const push = jest.fn();
 const navigate = jest.fn();
 const setOptions = jest.fn();
+// stable across renders, like the real useRouter singleton: a fresh object every
+// render would re-run every effect that depends on the router and hide bugs
+const router = { push, navigate };
+const navigation = { setOptions };
 
 jest.mock("expo-router", () => ({
-  useRouter: () => ({ push, navigate }),
-  useNavigation: () => ({ setOptions }),
+  useRouter: () => router,
+  useNavigation: () => navigation,
 }));
 
 jest.mock("@/src/i18n/use-i18n", () => ({
@@ -85,8 +89,13 @@ beforeEach(async () => {
   setOptions.mockClear();
 });
 
+// AsyncStorage's jest mock is itself a jest.fn, so restoreAllMocks leaves it
+// stripped of its implementation rather than restored: put it back by hand.
+const realSetItem = (AsyncStorage.setItem as jest.Mock).getMockImplementation()!;
+
 afterEach(() => {
   jest.restoreAllMocks();
+  (AsyncStorage.setItem as jest.Mock).mockImplementation(realSetItem);
 });
 
 async function seedHomeDraft(automaticThought: string) {
@@ -143,6 +152,32 @@ describe("Home thought entry", () => {
     // returning to a control inside the flow takes focus again
     fireEvent.press(view.getByTestId("thought-entry-previous"));
     expect(tabBarStyle()).toEqual({ display: "none" });
+  });
+
+  test("returns the tabs and the first step once a save is durable", async () => {
+    const view = await mount(<Home />);
+    fireEvent.changeText(
+      view.getByTestId("automatic-thought-input"),
+      "back to idle when this lands"
+    );
+    toLastStep(view);
+    await act(async () => {
+      fireEvent.press(view.getByTestId("thought-entry-save"));
+    });
+
+    await waitFor(async () =>
+      expect(
+        (await Storage.thoughts(DistortionData, AsyncStorage).readAll()).thoughts
+          .size
+      ).toBe(1)
+    );
+    await settle();
+
+    expect(
+      setOptions.mock.calls[setOptions.mock.calls.length - 1][0].tabBarStyle
+    ).toBeUndefined();
+    expect(view.getByTestId("automatic-thought-input").props.value).toBe("");
+    expect(view.queryByTestId("thought-entry-save")).toBeNull();
   });
 
   test("hides the tabs when the user advances past the first step alone", async () => {
@@ -210,14 +245,12 @@ describe("compatibility thought entry", () => {
   });
 
   test("stays put when the Thought never reaches storage", async () => {
-    const setItem = AsyncStorage.setItem as jest.Mock;
-    const real = setItem.getMockImplementation()!;
     jest
       .spyOn(AsyncStorage, "setItem")
       .mockImplementation((key, value, cb) =>
         key.startsWith(Thought.KEY_PREFIX)
           ? Promise.reject(new Error("disk full"))
-          : real(key, value, cb)
+          : realSetItem(key, value, cb)
       );
 
     const view = await mount(<Create />);
@@ -238,6 +271,52 @@ describe("compatibility thought entry", () => {
     expect(
       (await Storage.thoughts(DistortionData, AsyncStorage).readAll()).thoughts.size
     ).toBe(0);
+    // and the user can try again: a failed save never latches Save shut
+    expect(
+      view.getByTestId("thought-entry-save").props.accessibilityState
+    ).toMatchObject({ disabled: false });
+  });
+
+  test("re-enables Save when the model rejects the submission outright", async () => {
+    const view = await mount(<Create />);
+    toLastStep(view);
+
+    // an empty spec is never submitted, so the model state does not change at all
+    await act(async () => {
+      fireEvent.press(view.getByTestId("thought-entry-save"));
+    });
+    await settle();
+
+    expect(
+      view.getByTestId("thought-entry-save").props.accessibilityState
+    ).toMatchObject({ disabled: false });
+    expect(view.queryByText("Saving…")).toBeNull();
+  });
+
+  test("saving here never touches Home's durable draft", async () => {
+    const stored = await seedHomeDraft("home draft, still mine");
+    const view = await mount(<Create />);
+
+    fireEvent.changeText(
+      view.getByTestId("automatic-thought-input"),
+      "saved from the compatibility screen"
+    );
+    toLastStep(view);
+    await act(async () => {
+      fireEvent.press(view.getByTestId("thought-entry-save"));
+    });
+    await waitFor(() => expect(push).toHaveBeenCalledTimes(1));
+    await settle();
+
+    await expect(AsyncStorage.getItem(HOME_THOUGHT_DRAFT_KEY)).resolves.toBe(
+      stored
+    );
+    view.unmount();
+
+    const home = await mount(<Home />);
+    expect(home.getByTestId("automatic-thought-input").props.value).toBe(
+      "home draft, still mine"
+    );
   });
 
   test("never shows or writes Home's durable draft", async () => {

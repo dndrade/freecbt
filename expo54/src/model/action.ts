@@ -101,8 +101,17 @@ export function homeThoughtDraftCleanupFailed(
     now,
   } as const;
 }
-export function createThought(spec: Thought.Spec, now: Date) {
-  return { action: "create-thought", spec, now } as const;
+/**
+ * Where a submission came from. Only "home" is tied to Home's durable draft, so
+ * only "home" may trigger the draft cleanup that follows a durable save.
+ */
+export type ThoughtSaveOrigin = "home" | "standalone";
+export function createThought(
+  spec: Thought.Spec,
+  now: Date,
+  origin: ThoughtSaveOrigin = "home"
+) {
+  return { action: "create-thought", spec, now, origin } as const;
 }
 export function beginThoughtSave(submissionId: Thought.Id, now: Date) {
   return { action: "begin-thought-save", submissionId, now } as const;

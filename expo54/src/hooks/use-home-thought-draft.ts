@@ -27,6 +27,8 @@ export interface HomeThoughtDraft {
 export function useHomeThoughtDraft(props: {
   model: Model.Ready;
   dispatch: Action.Dispatch;
+  /** The visible input was just emptied - by a durable save, or by a discard. */
+  onReset?: () => void;
 }): HomeThoughtDraft {
   const { model, dispatch } = props;
   const [spec, setSpec] = useState<Thought.Spec>(
@@ -57,8 +59,10 @@ export function useHomeThoughtDraft(props: {
 
   // subscribe once, but always flush with the newest state
   const flushRef = useRef(flush);
+  const onResetRef = useRef(props.onReset);
   useEffect(() => {
     flushRef.current = flush;
+    onResetRef.current = props.onReset;
   });
 
   useEffect(() => {
@@ -102,6 +106,7 @@ export function useHomeThoughtDraft(props: {
     }
     cancelDebounce();
     setSpec(Thought.emptySpec());
+    onResetRef.current?.();
   }, [cancelDebounce, model.thoughtSaveOutbox, model.thoughtSaveResult]);
 
   const change = useCallback((next: Thought.Spec) => {
@@ -114,13 +119,14 @@ export function useHomeThoughtDraft(props: {
   const submit = useCallback(() => {
     cancelDebounce();
     requested.current = true;
-    dispatch(Action.createThought(spec, new Date()));
+    dispatch(Action.createThought(spec, new Date(), "home"));
   }, [cancelDebounce, dispatch, spec]);
 
   const confirmDiscard = useCallback(() => {
     cancelDebounce();
     setSpec(Thought.emptySpec());
     setDiscarding(false);
+    onResetRef.current?.();
     // draft-only: never touches in-flight or completed outbox submissions
     dispatch(Action.clearHomeThoughtDraft());
   }, [cancelDebounce, dispatch]);

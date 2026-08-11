@@ -18,8 +18,19 @@ export default function Index() {
  * presentation. Home never navigates to a saved Thought - a save resets in place.
  */
 function Home({ model, dispatch, translate: t }: ModelLoadedProps) {
-  const draft = useHomeThoughtDraft({ model, dispatch });
   const [step, setStep] = React.useState(0);
+  // a reset empties the input, so the flow must return to its first step too -
+  // otherwise `step > 0` alone would keep the tabs hidden after a durable save.
+  // the flow owns its own step, so remounting it is what puts it back to step 1.
+  const [entryKey, setEntryKey] = React.useState(0);
+  const draft = useHomeThoughtDraft({
+    model,
+    dispatch,
+    onReset: () => {
+      setStep(0);
+      setEntryKey((key) => key + 1);
+    },
+  });
   const [paused, setPaused] = React.useState(false);
   const background = useThemeColor("background");
   const isSaving = model.thoughtSaveOutbox.some(
@@ -92,6 +103,7 @@ function Home({ model, dispatch, translate: t }: ModelLoadedProps) {
             </View>
           ) : null}
           <ThoughtEntryForm
+            key={entryKey}
             route="home"
             translate={t}
             distortions={model.distortionData.list}

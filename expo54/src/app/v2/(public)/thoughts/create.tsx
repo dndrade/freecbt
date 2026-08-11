@@ -20,45 +20,48 @@ function Ready({ model, dispatch, translate: t }: ModelLoadedProps) {
   const [value, setValue] = useState(Thought.emptySpec());
   const router = useRouter();
   const requested = useRef(false);
-  const awaiting = useRef<Thought.Id | null>(null);
   // one submission at a time: the input stays on screen until we navigate, so an
-  // enabled Save button here would let a second tap duplicate the Thought.
-  const [isSaving, setSaving] = useState(false);
+  // enabled Save button here would let a second tap duplicate the Thought. Both
+  // halves are observable model state, so a rejected or failed save can never
+  // latch Save shut - there is nothing to un-latch.
+  const [awaiting, setAwaiting] = useState<Thought.Id | null>(null);
+  const isSaving =
+    awaiting !== null ||
+    model.thoughtSaveOutbox.some(
+      (record) => record.status === "insertion-pending"
+    );
 
   useEffect(() => {
     if (requested.current) {
       // arm only on a submission the model actually accepted
       requested.current = false;
-      awaiting.current =
+      setAwaiting(
         model.thoughtSaveOutbox.find(
           (record) => record.status === "insertion-pending"
-        )?.submissionId ?? null;
-      if (awaiting.current === null) setSaving(false);
-    }
-    const id = awaiting.current;
-    if (id === null) return;
-    if (
-      model.thoughtSaveResult !== "idle" &&
-      model.thoughtSaveResult.submissionId === id
-    ) {
-      // the save failed: stay here with the input intact, recovery surfaced above
-      awaiting.current = null;
-      setSaving(false);
+        )?.submissionId ?? null
+      );
       return;
     }
+    if (awaiting === null) return;
     // the saved Thought reaches `thoughts` only once its write succeeded, so this
     // is the confirmed-persistence signal - never the mere acceptance of a save.
-    if (!model.thoughts.has(Thought.keyFromId.decode(id))) return;
-    awaiting.current = null;
-    setSaving(false);
-    setValue(Thought.emptySpec());
-    router.push(Routes.thoughtViewV2(id));
-  }, [
-    model.thoughtSaveOutbox,
-    model.thoughtSaveResult,
-    model.thoughts,
-    router,
-  ]);
+    if (model.thoughts.has(Thought.keyFromId.decode(awaiting))) {
+      setAwaiting(null);
+      setValue(Thought.emptySpec());
+      router.push(Routes.thoughtViewV2(awaiting));
+      return;
+    }
+    // still on its way, or done for: a dropped or failed record stays here with
+    // the input intact and Save usable again, recovery surfaced above.
+    const record = model.thoughtSaveOutbox.find(
+      (candidate) => candidate.submissionId === awaiting
+    );
+    const inFlight =
+      record?.status === "insertion-pending" ||
+      record?.status === "pending" ||
+      record?.status === "active";
+    if (!inFlight) setAwaiting(null);
+  }, [awaiting, model.thoughtSaveOutbox, model.thoughts, router]);
 
   return (
     <Screen scroll={false} contentClassName="flex-1 gap-3">
@@ -72,8 +75,9 @@ function Ready({ model, dispatch, translate: t }: ModelLoadedProps) {
         onChange={setValue}
         onSave={() => {
           requested.current = true;
-          setSaving(true);
-          dispatch(Action.createThought(value, new Date()));
+          // "standalone": this input never came from Home's draft, so a durable
+          // save here must not trigger the cleanup that clears that draft
+          dispatch(Action.createThought(value, new Date(), "standalone"));
         }}
       />
     </Screen>

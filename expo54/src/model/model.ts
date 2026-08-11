@@ -225,7 +225,7 @@ function updateReady(m: Ready, a: Action.Action): readonly [Model, Cmd.List] {
       ];
     }
     case "create-thought": {
-      return createThoughtSubmission(m, a.spec, a.now);
+      return createThoughtSubmission(m, a.spec, a.now, a.origin);
     }
     case "home-thought-draft-cleanup-failed": {
       // Keep whatever the user has now; only record why the durable clear failed.
@@ -498,8 +498,16 @@ function clearHomeDraft(m: Ready): readonly [Model, Cmd.List] {
 }
 
 /**
+ * Stamped on submissions that did not come from Home's draft, so "B" skips them.
+ * A sentinel rather than null because the persisted outbox schema types this
+ * field as a nonnegative integer, and no draft revision can ever count this high.
+ */
+export const NO_HOME_DRAFT_REVISION = Number.MAX_SAFE_INTEGER;
+
+/**
  * "B" of the A→B handoff: clear the Home draft the accepted submission was
- * snapshotted from. Guarded by revision, so newer user input is never erased.
+ * snapshotted from. Guarded by revision, so newer user input is never erased,
+ * and skipped entirely for submissions Home's draft never fed.
  */
 function reconcileHomeDraft(
   m: Ready,
@@ -507,6 +515,7 @@ function reconcileHomeDraft(
 ): readonly [Ready, Cmd.List] {
   const draft = m.homeThoughtDraft;
   if (accepted === undefined || draft === null) return [m, []];
+  if (accepted.sourceDraftRevision === NO_HOME_DRAFT_REVISION) return [m, []];
   if (m.homeThoughtDraftRevision !== accepted.sourceDraftRevision) return [m, []];
   return [
     {
@@ -527,7 +536,8 @@ function reconcileHomeDraft(
 function createThoughtSubmission(
   m: Ready,
   spec: Thought.Spec,
-  now: Date
+  now: Date,
+  origin: Action.ThoughtSaveOrigin
 ): readonly [Model, Cmd.List] {
   if (!Thought.isMeaningfulSpec(spec)) return [m, []];
   if (m.thoughtSaveOutbox.length >= 20) return [m, []];
@@ -541,7 +551,9 @@ function createThoughtSubmission(
     submissionId: thought.uuid,
     thought,
     sourceDraftRevision:
-      m.homeThoughtDraft?.sourceRevision ?? m.homeThoughtDraftRevision,
+      origin === "home"
+        ? m.homeThoughtDraft?.sourceRevision ?? m.homeThoughtDraftRevision
+        : NO_HOME_DRAFT_REVISION,
     attemptCount: 0,
     lastAttemptAt: now,
     lastError: null,
