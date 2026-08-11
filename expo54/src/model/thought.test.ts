@@ -132,3 +132,24 @@ test("encode", () => {
   const json = T.fromJson.encode(t);
   expect(json).toEqual(fixture);
 });
+
+test("creates a thought without the runtime global crypto API", () => {
+  const originalRandomUUID = globalThis.crypto.randomUUID;
+
+  globalThis.crypto.randomUUID = () => {
+    throw new Error("global crypto.randomUUID must not be used");
+  };
+
+  try {
+    const now = new Date("2026-08-11T00:00:00.000Z");
+    const thought = Thought.create(Thought.emptySpec(), now);
+
+    expect(thought.uuid).toMatch(
+      /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+    );
+    expect(thought.createdAt).toBe(now);
+    expect(thought.updatedAt).toBe(now);
+  } finally {
+    globalThis.crypto.randomUUID = originalRandomUUID;
+  }
+});

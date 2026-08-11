@@ -3,6 +3,7 @@ import { z } from "zod";
 import { AssertExtends } from "../type-utils";
 import * as Distortion from "./distortion";
 import * as Settings from "./settings";
+import * as Crypto from "expo-crypto";
 
 export const VERSION = "Thought-v2";
 
@@ -88,7 +89,7 @@ export function isKey(key: string): boolean {
 export function create(spec: Spec, now: Date): Thought {
   const createdAt = now;
   const updatedAt = now;
-  const uuid = Id.decode(crypto.randomUUID());
+  const uuid = Id.decode(Crypto.randomUUID());
   return { ...spec, createdAt, updatedAt, uuid };
 }
 export function toSpec(t: Thought): Spec {
