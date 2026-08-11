@@ -153,8 +153,22 @@ function useCmdRunner(data: Distortion.Data, storage: AsyncStorageStatic) {
           return;
         }
         case "update-thought-save-outbox": {
-          await outbox.update(c.value);
-          dispatch(Action.thoughtSaveOutboxUpdated(c.value));
+          try {
+            await outbox.update(c.value);
+            dispatch(Action.thoughtSaveOutboxUpdated(c.value));
+          } catch (error) {
+            // an unreported failure here is fatal to the processor: the record
+            // stays `active`, which gates every later record, and no recovery
+            // surface renders an `active` record. Report it as a save failure,
+            // which the model turns into a recoverable `failed` record.
+            dispatch(
+              Action.thoughtSaveWriteFailed(
+                c.value.submissionId,
+                error,
+                new Date()
+              )
+            );
+          }
           return;
         }
         case "remove-thought-save-outbox": {

@@ -366,7 +366,26 @@ function updateReady(m: Ready, a: Action.Action): readonly [Model, Cmd.List] {
       const record = m.thoughtSaveOutbox.find(
         (candidate) => candidate.submissionId === a.submissionId
       );
-      if (record?.status !== "active" || record.thoughtPersisted) return [m, []];
+      if (record === undefined) return [m, []];
+      if (record.status !== "active" || record.thoughtPersisted) {
+        // The same action reports a durable outbox update that never landed.
+        // On a non-active record that update was the queued Retry itself, and a
+        // stranded `retryRequested` disables every Retry button in the app.
+        // Storage still holds the pre-update record, so clearing the flag in
+        // memory re-syncs with disk - no further write to attempt.
+        if (!record.retryRequested) return [m, []];
+        return [
+          {
+            ...m,
+            thoughtSaveOutbox: m.thoughtSaveOutbox.map((candidate) =>
+              candidate.submissionId === a.submissionId
+                ? { ...candidate, retryRequested: false }
+                : candidate
+            ),
+          },
+          [],
+        ];
+      }
       return updateThoughtSaveRecord(m, a.submissionId, (record) => ({
         ...record,
         status: "failed",

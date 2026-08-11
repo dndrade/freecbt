@@ -1,6 +1,7 @@
 /**
  * @jest-environment jsdom
  */
+import { Storage } from "@/src";
 import Home from "@/src/app/v2/(public)/(tabs)/index";
 import { ModelProvider } from "@/src/hooks/use-model";
 import { DistortionData, Thought } from "@/src/model";
@@ -173,6 +174,60 @@ describe("Home save Toast + recovery wiring", () => {
     await settle();
     // never a second (failure) Toast for the same submission
     expect(toastShow).toHaveBeenCalledTimes(1);
+  });
+
+  test("a failed durable outbox update stays recoverable and never wedges the outbox", async () => {
+    let outboxWrites = 0;
+    jest
+      .spyOn(AsyncStorage, "setItem")
+      .mockImplementation((key, value, cb) => {
+        if (key === THOUGHT_SAVE_OUTBOX_KEY) {
+          outboxWrites += 1;
+          // 1 is the insertion; 2 is the transition to `active` - the write
+          // whose failure used to leave the record `active` forever, invisible
+          // to every recovery filter and blocking every later record.
+          if (outboxWrites === 2) {
+            return Promise.reject(new Error("disk full"));
+          }
+        }
+        return realSetItem(key, value, cb);
+      });
+
+    const view = await mount();
+    fireEvent.changeText(
+      view.getByTestId("automatic-thought-input"),
+      "stuck mid-flight"
+    );
+    toLastStep(view);
+    await act(async () => {
+      fireEvent.press(view.getByTestId("thought-entry-save"));
+    });
+
+    // recoverable, with a usable Retry - not an invisible `active` record
+    await waitFor(() =>
+      expect(view.getByTestId("home-thought-recovery")).toBeTruthy()
+    );
+    await settle();
+    expect(
+      view.getByTestId(/^home-thought-recovery-retry-/).props
+        .accessibilityState
+    ).toMatchObject({ disabled: false });
+
+    // and the processor still runs: a later submission saves normally
+    fireEvent.changeText(
+      view.getByTestId("automatic-thought-input"),
+      "the next one still saves"
+    );
+    toLastStep(view);
+    await act(async () => {
+      fireEvent.press(view.getByTestId("thought-entry-save"));
+    });
+    await waitFor(async () =>
+      expect(
+        (await Storage.thoughts(DistortionData, AsyncStorage).readAll()).thoughts
+          .size
+      ).toBe(1)
+    );
   });
 
   test("never sets a tab badge", async () => {

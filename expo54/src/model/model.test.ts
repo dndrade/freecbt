@@ -661,6 +661,70 @@ test("processes one durable FIFO record at a time and skips failures", () => {
   ]);
 });
 
+test("a durable update that never lands leaves the record recoverable, not stuck active", () => {
+  const first = makeOutboxRecord(90, "pending");
+  const second = makeOutboxRecord(91, "pending");
+  let m: Model.Model = { ...emptyReady, thoughtSaveOutbox: [first, second] };
+  const now = new Date("2026-08-11T09:00:00.000Z");
+
+  let cmds: Cmd.List;
+  [m, cmds] = Model.update(m, Action.runThoughtSaveOutbox(now));
+  expect((m as Model.Ready).thoughtSaveOutbox[0].status).toBe("active");
+
+  // the runner's `update-thought-save-outbox` write threw: nothing durable
+  // changed, so the record must not stay `active` and gate the whole processor
+  [m, cmds] = Model.update(
+    m,
+    Action.thoughtSaveWriteFailed(first.submissionId, new Error("disk full"), now)
+  );
+  expect((m as Model.Ready).thoughtSaveOutbox[0]).toMatchObject({
+    status: "failed",
+    lastError: "disk full",
+  });
+
+  // ...and the next eligible record can be selected right after
+  [m, cmds] = Model.update(
+    m,
+    Action.runThoughtSaveOutbox(new Date("2026-08-11T09:00:01.000Z"))
+  );
+  expect((m as Model.Ready).thoughtSaveOutbox.map((r) => r.status)).toEqual([
+    "failed",
+    "active",
+  ]);
+  expect(cmds).toEqual([
+    Cmd.updateThoughtSaveOutbox((m as Model.Ready).thoughtSaveOutbox[1]),
+  ]);
+});
+
+test("a durable update that never lands releases the queued Retry it was persisting", () => {
+  const stuck: ThoughtSaveOutboxRecord = {
+    ...makeOutboxRecord(92, "failed"),
+    retryRequested: true,
+  };
+  const other = makeOutboxRecord(93, "failed");
+
+  // the write that was persisting `retryRequested: true` threw. Storage still
+  // holds the pre-update record, so dropping the flag re-syncs with disk - and
+  // without it every Retry button in the app stays disabled forever.
+  const [m, cmds] = Model.update(
+    { ...emptyReady, thoughtSaveOutbox: [stuck, other] },
+    Action.thoughtSaveWriteFailed(
+      stuck.submissionId,
+      new Error("disk full"),
+      new Date("2026-08-11T09:10:00.000Z")
+    )
+  );
+  expect((m as Model.Ready).thoughtSaveOutbox[0]).toEqual({
+    ...stuck,
+    retryRequested: false,
+  });
+  expect(cmds).toEqual([]);
+
+  // and Retry works again
+  const [retried] = Model.update(m, Action.retryThoughtSave(other.submissionId));
+  expect((retried as Model.Ready).thoughtSaveOutbox[1].retryRequested).toBe(true);
+});
+
 test("gives one explicit failed retry priority without activating it beside current work", () => {
   const failed = makeOutboxRecord(80, "failed");
   const active = makeOutboxRecord(81, "active");
