@@ -110,9 +110,15 @@ export type ThoughtSaveOrigin = "home" | "standalone";
 export function createThought(
   spec: Thought.Spec,
   now: Date,
-  origin: ThoughtSaveOrigin = "home"
+  origin: ThoughtSaveOrigin = "home",
+  /**
+   * The submission's stable id, minted here so the screen that submitted can
+   * watch that exact submission instead of guessing from shared outbox state -
+   * every screen shares one model, so "whatever is in flight" is not ownership.
+   */
+  submissionId: Thought.Id = Thought.newId()
 ) {
-  return { action: "create-thought", spec, now, origin } as const;
+  return { action: "create-thought", spec, now, origin, submissionId } as const;
 }
 export function beginThoughtSave(submissionId: Thought.Id, now: Date) {
   return { action: "begin-thought-save", submissionId, now } as const;

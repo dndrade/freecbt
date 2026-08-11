@@ -230,6 +230,55 @@ describe("Home save Toast + recovery wiring", () => {
     );
   });
 
+  test("explains a full outbox instead of dropping the save silently", async () => {
+    const outbox = Storage.thoughtSaveOutbox(DistortionData, AsyncStorage);
+    for (let seed = 0; seed < 20; seed++) {
+      const thought = Thought.create(
+        { ...Thought.emptySpec(), automaticThought: `stuck ${seed}` },
+        new Date(Date.UTC(2026, 7, 11, 0, 0, seed))
+      );
+      await outbox.insert({
+        submissionId: thought.uuid,
+        thought,
+        sourceDraftRevision: seed,
+        attemptCount: 1,
+        lastAttemptAt: new Date(Date.UTC(2026, 7, 11, 0, 10, seed)),
+        lastError: "disk full",
+        retryRequested: false,
+        thoughtPersisted: false,
+        updatedAt: new Date(Date.UTC(2026, 7, 11, 0, 20, seed)),
+        status: "failed",
+      });
+    }
+
+    const view = await mount();
+    fireEvent.changeText(
+      view.getByTestId("automatic-thought-input"),
+      "no room for this one"
+    );
+    toLastStep(view);
+    await act(async () => {
+      fireEvent.press(view.getByTestId("thought-entry-save"));
+    });
+    await settle();
+
+    expect(toastShow).toHaveBeenCalledTimes(1);
+    expect(toastShow.mock.calls[0][0]).toMatchObject({
+      variant: "danger",
+      // distinct from the generic insertion failure: nothing was attempted
+      label: "cbt_form.thought_save_capacity",
+    });
+    // the editable input is never cleared or reset by a capacity rejection...
+    fireEvent.press(view.getByTestId("thought-entry-previous"));
+    fireEvent.press(view.getByTestId("thought-entry-previous"));
+    fireEvent.press(view.getByTestId("thought-entry-previous"));
+    expect(view.getByTestId("automatic-thought-input").props.value).toBe(
+      "no room for this one"
+    );
+    // ...and the recovery surface is right there to resolve the backlog
+    expect(view.getByTestId("home-thought-recovery")).toBeTruthy();
+  });
+
   test("never sets a tab badge", async () => {
     jest
       .spyOn(AsyncStorage, "setItem")

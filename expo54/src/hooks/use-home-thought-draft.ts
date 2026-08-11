@@ -46,7 +46,7 @@ export function useHomeThoughtDraft(props: {
   const [discarding, setDiscarding] = useState(false);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pending = useRef<Thought.Spec | null>(null);
-  const requested = useRef(false);
+  const requested = useRef<Thought.Id | null>(null);
   const armed = useRef<Thought.Id | null>(null);
 
   const cancelDebounce = useCallback(() => {
@@ -90,30 +90,39 @@ export function useHomeThoughtDraft(props: {
   // "A" resolved: Home resets on durable insertion alone, never waiting on "B"
   // (the revision-guarded draft cleanup the model runs from the same action).
   useEffect(() => {
-    if (requested.current && armed.current === null) {
-      // arm only on a submit the model actually accepted. A rejected one - empty
-      // spec, outbox at capacity, insertion already in flight - changes nothing,
-      // so it must never leave a watcher behind to wipe later typing.
-      requested.current = false;
-      armed.current =
-        model.thoughtSaveOutbox.find((r) => r.status === "insertion-pending")
-          ?.submissionId ?? null;
-      return;
+    const failure =
+      model.thoughtSaveResult === "idle" ? null : model.thoughtSaveResult;
+    const submitted = requested.current;
+    if (submitted !== null) {
+      requested.current = null;
+      // arm on the submission this screen started, by id. Every screen shares
+      // one model, so "whatever is insertion-pending" could be someone else's
+      // save - and resetting on that would wipe a draft nobody saved.
+      if (
+        model.thoughtSaveOutbox.some(
+          (r) => r.submissionId === submitted && r.status === "insertion-pending"
+        )
+      ) {
+        armed.current = submitted;
+        return;
+      }
+      // rejected outright - empty spec, outbox at capacity, or an insertion
+      // already in flight. The text stays on screen; only an explicit result
+      // (capacity) is worth reporting. A redundant Save falls through: the
+      // submission already armed is still the one that governs the reset.
+      if (failure?.submissionId === submitted) {
+        onFailureRef.current?.(failure);
+        return;
+      }
     }
-    // a redundant submit while one is already in flight changes nothing: the
-    // submission we armed on is still the one that governs the reset.
-    requested.current = false;
     const id = armed.current;
     if (id === null) return;
     const record = model.thoughtSaveOutbox.find((r) => r.submissionId === id);
     if (record?.status === "insertion-pending") return;
     armed.current = null;
     // a rejected insertion keeps the user's text on screen instead
-    if (
-      model.thoughtSaveResult !== "idle" &&
-      model.thoughtSaveResult.submissionId === id
-    ) {
-      onFailureRef.current?.(model.thoughtSaveResult);
+    if (failure?.submissionId === id) {
+      onFailureRef.current?.(failure);
       return;
     }
     cancelDebounce();
@@ -130,8 +139,9 @@ export function useHomeThoughtDraft(props: {
 
   const submit = useCallback(() => {
     cancelDebounce();
-    requested.current = true;
-    dispatch(Action.createThought(spec, new Date(), "home"));
+    const action = Action.createThought(spec, new Date(), "home");
+    requested.current = action.submissionId;
+    dispatch(action);
   }, [cancelDebounce, dispatch, spec]);
 
   const confirmDiscard = useCallback(() => {

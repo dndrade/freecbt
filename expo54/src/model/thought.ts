@@ -86,10 +86,13 @@ export function isKey(key: string): boolean {
   return Key.safeDecode(key).success;
 }
 
+export function newId(): Id {
+  return Id.decode(Crypto.randomUUID());
+}
 export function create(spec: Spec, now: Date): Thought {
   const createdAt = now;
   const updatedAt = now;
-  const uuid = Id.decode(Crypto.randomUUID());
+  const uuid = newId();
   return { ...spec, createdAt, updatedAt, uuid };
 }
 export function toSpec(t: Thought): Spec {

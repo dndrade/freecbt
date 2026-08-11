@@ -2,7 +2,7 @@
  * @jest-environment jsdom
  */
 import { act, renderHook } from "@testing-library/react";
-import { DistortionData, Model, Settings, Thought } from "../model";
+import { Action, DistortionData, Model, Settings, Thought } from "../model";
 import type { ThoughtSaveOutboxRecord } from "../platform/storage/storage";
 import { useHomeThoughtDraft } from "./use-home-thought-draft";
 
@@ -29,12 +29,15 @@ function spec(automaticThought: string): Thought.Spec {
 
 function outboxRecord(
   seed: number,
-  status: ThoughtSaveOutboxRecord["status"]
+  status: ThoughtSaveOutboxRecord["status"],
+  submissionId?: Thought.Id
 ): ThoughtSaveOutboxRecord {
-  const thought = Thought.create(
+  const created = Thought.create(
     spec(`unrelated ${seed}`),
     new Date(Date.UTC(2026, 7, 11, 0, 0, seed))
   );
+  const thought =
+    submissionId === undefined ? created : { ...created, uuid: submissionId };
   return {
     submissionId: thought.uuid,
     thought,
@@ -49,13 +52,23 @@ function outboxRecord(
   };
 }
 
-function renderDraft(initial: Model.Ready = emptyReady) {
+function renderDraft(
+  initial: Model.Ready = emptyReady,
+  props: Partial<Parameters<typeof useHomeThoughtDraft>[0]> = {}
+) {
   const dispatch = jest.fn();
   const hook = renderHook(
-    (model: Model.Ready) => useHomeThoughtDraft({ model, dispatch }),
+    (model: Model.Ready) => useHomeThoughtDraft({ model, dispatch, ...props }),
     { initialProps: initial }
   );
-  return { ...hook, dispatch };
+  /** The submission id of the last Save this hook actually dispatched. */
+  const submissionId = (): Thought.Id => {
+    const calls = dispatch.mock.calls.filter(
+      ([a]) => a.action === "create-thought"
+    );
+    return calls[calls.length - 1][0].submissionId;
+  };
+  return { ...hook, dispatch, submissionId };
 }
 
 test("a rejected Save never arms the reset watcher", () => {
@@ -86,13 +99,13 @@ test("a rejected Save never arms the reset watcher", () => {
 });
 
 test("resets only after the submission it armed becomes durable", () => {
-  const { result, rerender } = renderDraft();
+  const { result, rerender, submissionId } = renderDraft();
 
   act(() => result.current.change(spec("save me")));
   act(() => result.current.submit());
 
   const accepted = {
-    ...outboxRecord(30, "insertion-pending"),
+    ...outboxRecord(30, "insertion-pending", submissionId()),
     sourceDraftRevision: 1,
   };
   rerender({ ...emptyReady, thoughtSaveOutbox: [accepted] });
@@ -106,13 +119,13 @@ test("resets only after the submission it armed becomes durable", () => {
 });
 
 test("still resets when a redundant Save lands while the first is in flight", () => {
-  const { result, rerender } = renderDraft();
+  const { result, rerender, submissionId } = renderDraft();
 
   act(() => result.current.change(spec("save me")));
   act(() => result.current.submit());
 
   const accepted = {
-    ...outboxRecord(32, "insertion-pending"),
+    ...outboxRecord(32, "insertion-pending", submissionId()),
     sourceDraftRevision: 1,
   };
   rerender({ ...emptyReady, thoughtSaveOutbox: [accepted] });
@@ -130,12 +143,12 @@ test("still resets when a redundant Save lands while the first is in flight", ()
 });
 
 test("keeps the text on screen when the durable insertion is rejected", () => {
-  const { result, rerender } = renderDraft();
+  const { result, rerender, submissionId } = renderDraft();
 
   act(() => result.current.change(spec("save me")));
   act(() => result.current.submit());
 
-  const accepted = outboxRecord(31, "insertion-pending");
+  const accepted = outboxRecord(31, "insertion-pending", submissionId());
   rerender({ ...emptyReady, thoughtSaveOutbox: [accepted] });
   rerender({
     ...emptyReady,
@@ -149,6 +162,70 @@ test("keeps the text on screen when the durable insertion is rejected", () => {
   });
 
   expect(result.current.spec.automaticThought).toBe("save me");
+});
+
+test("another screen's submission never resets Home's draft", () => {
+  // Home stays mounted under the pushed create screen and shares one model, so
+  // a rejected Save here must never leave a watcher that arms on someone else's
+  // submission - resetting on it would drop text nobody ever saved.
+  const full: Model.Ready = {
+    ...emptyReady,
+    thoughtSaveOutbox: Array.from({ length: 20 }, (_, i) =>
+      outboxRecord(i + 1, "pending")
+    ),
+  };
+  const onReset = jest.fn();
+  const { result, rerender } = renderDraft(full, { onReset });
+
+  act(() => result.current.change(spec("mine, unsaved")));
+  act(() => result.current.submit());
+
+  // the other screen's save is accepted...
+  const foreign = outboxRecord(99, "insertion-pending");
+  rerender({ ...full, thoughtSaveOutbox: [...full.thoughtSaveOutbox, foreign] });
+  // ...and resolves
+  rerender({
+    ...full,
+    thoughtSaveOutbox: [
+      ...full.thoughtSaveOutbox,
+      { ...foreign, status: "pending" as const },
+    ],
+  });
+
+  expect(result.current.spec.automaticThought).toBe("mine, unsaved");
+  expect(onReset).not.toHaveBeenCalled();
+});
+
+test("reports a capacity rejection instead of failing silently", () => {
+  const full: Model.Ready = {
+    ...emptyReady,
+    thoughtSaveOutbox: Array.from({ length: 20 }, (_, i) =>
+      outboxRecord(i + 1, "pending")
+    ),
+  };
+  const onFailure = jest.fn();
+  const { result, rerender, submissionId } = renderDraft(full, { onFailure });
+
+  act(() => result.current.change(spec("no room for this")));
+  act(() => result.current.submit());
+
+  const result2 = Model.update(
+    full,
+    // the real reducer decides: this is the rejection the model produces
+    Action.createThought(
+      spec("no room for this"),
+      new Date(),
+      "home",
+      submissionId()
+    )
+  )[0] as Model.Ready;
+  rerender(result2);
+
+  expect(onFailure).toHaveBeenCalledWith(
+    expect.objectContaining({ stage: "capacity" })
+  );
+  // the editable input is untouched by the rejection
+  expect(result.current.spec.automaticThought).toBe("no room for this");
 });
 
 test("does not re-present a draft that was already accepted into the outbox", () => {

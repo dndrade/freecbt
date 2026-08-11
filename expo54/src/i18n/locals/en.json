@@ -245,6 +245,7 @@
     "discard_draft_no": "Keep editing",
     "thought_saved": "Thought saved",
     "thought_save_failed": "Couldn't save your thought",
+    "thought_save_capacity": "Too many unfinished saves. Your text is safe here - resolve some below, then save again.",
     "recovery_header": "Needs attention (%{count})",
     "recovery_dismiss": "Dismiss",
     "recovery_retry": "Retry",

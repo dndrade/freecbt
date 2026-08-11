@@ -42,7 +42,11 @@ export type ThoughtSaveResult =
   | {
       status: "failure";
       submissionId: Thought.Id;
-      stage: "outbox-insert";
+      /**
+       * "outbox-insert": the durable insertion itself was rejected.
+       * "capacity": all 20 unresolved slots are taken, so nothing was submitted.
+       */
+      stage: "outbox-insert" | "capacity";
       error: unknown;
     };
 
@@ -225,7 +229,7 @@ function updateReady(m: Ready, a: Action.Action): readonly [Model, Cmd.List] {
       ];
     }
     case "create-thought": {
-      return createThoughtSubmission(m, a.spec, a.now, a.origin);
+      return createThoughtSubmission(m, a.spec, a.now, a.origin, a.submissionId);
     }
     case "home-thought-draft-cleanup-failed": {
       // Keep whatever the user has now; only record why the durable clear failed.
@@ -574,16 +578,32 @@ function createThoughtSubmission(
   m: Ready,
   spec: Thought.Spec,
   now: Date,
-  origin: Action.ThoughtSaveOrigin
+  origin: Action.ThoughtSaveOrigin,
+  submissionId: Thought.Id
 ): readonly [Model, Cmd.List] {
   if (!Thought.isMeaningfulSpec(spec)) return [m, []];
-  if (m.thoughtSaveOutbox.length >= 20) return [m, []];
+  if (m.thoughtSaveOutbox.length >= 20) {
+    // nothing to run, but never a silent no-op: the design requires an explicit
+    // recoverable capacity message, and existing records are never evicted.
+    return [
+      {
+        ...m,
+        thoughtSaveResult: {
+          status: "failure",
+          submissionId,
+          stage: "capacity",
+          error: null,
+        },
+      },
+      [],
+    ];
+  }
   if (
     m.thoughtSaveOutbox.some((record) => record.status === "insertion-pending")
   ) {
     return [m, []];
   }
-  const thought = Thought.create(cloneSpec(spec), now);
+  const thought = { ...Thought.create(cloneSpec(spec), now), uuid: submissionId };
   const record: ThoughtSaveOutboxRecord = {
     submissionId: thought.uuid,
     thought,

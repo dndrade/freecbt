@@ -43,10 +43,16 @@ function Home({ model, dispatch, translate: t }: ModelLoadedProps) {
     // an immediate, synchronous outbox-insertion failure: fire-and-forget Toast
     // feedback only. A later write/cleanup failure surfaces through the durable
     // recovery banner instead, since by then the user may have moved on.
-    onFailure: () => {
+    onFailure: (result) => {
       toast.show({
         variant: "danger",
-        label: t("cbt_form.thought_save_failed"),
+        label: t(
+          // a full outbox is not "something went wrong": nothing was attempted,
+          // and the way out is resolving the records in the recovery surface
+          result.stage === "capacity"
+            ? "cbt_form.thought_save_capacity"
+            : "cbt_form.thought_save_failed"
+        ),
       });
     },
   });

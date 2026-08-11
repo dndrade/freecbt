@@ -468,14 +468,20 @@ test("reserves insertion-pending capacity and blocks duplicate save while insert
   };
   const spec = sampleSpec({ automaticThought: "reserve me" });
 
-  const [reserved, reserveCmds] = Model.update(
-    m,
-    Action.createThought(spec, new Date("2026-08-11T02:00:00.000Z"))
+  const reserve = Action.createThought(
+    spec,
+    new Date("2026-08-11T02:00:00.000Z")
   );
+  const [reserved, reserveCmds] = Model.update(m, reserve);
   m = reserved;
   expect((m as Model.Ready).thoughtSaveOutbox).toHaveLength(20);
   expect((m as Model.Ready).thoughtSaveOutbox[19].status).toBe(
     "insertion-pending"
+  );
+  // the submission carries the id its caller already knows, so the caller can
+  // watch exactly its own submission
+  expect((m as Model.Ready).thoughtSaveOutbox[19].submissionId).toBe(
+    reserve.submissionId
   );
   expect(reserveCmds).toHaveLength(1);
 
@@ -486,6 +492,10 @@ test("reserves insertion-pending capacity and blocks duplicate save while insert
   expect((duplicate as Model.Ready).thoughtSaveOutbox).toHaveLength(20);
   expect(duplicateCmds).toEqual([]);
 
+  const atCapacity = Action.createThought(
+    sampleSpec({ automaticThought: "blocked by capacity" }),
+    new Date("2026-08-11T02:00:02.000Z")
+  );
   const [overflow, overflowCmds] = Model.update(
     {
       ...(duplicate as Model.Ready),
@@ -493,13 +503,18 @@ test("reserves insertion-pending capacity and blocks duplicate save while insert
         makeOutboxRecord(30 + i)
       ),
     },
-    Action.createThought(
-      sampleSpec({ automaticThought: "blocked by capacity" }),
-      new Date("2026-08-11T02:00:02.000Z")
-    )
+    atCapacity
   );
   expect((overflow as Model.Ready).thoughtSaveOutbox).toHaveLength(20);
   expect(overflowCmds).toEqual([]);
+  // no cmd to run, but the rejection is never silent: the UI needs something
+  // observable to explain why nothing was saved
+  expect((overflow as Model.Ready).thoughtSaveResult).toEqual({
+    status: "failure",
+    submissionId: atCapacity.submissionId,
+    stage: "capacity",
+    error: null,
+  });
 });
 
 test("releases a failed insertion reservation and later submissions still proceed", () => {
