@@ -3,16 +3,12 @@ import { LoadModel, ModelLoadedProps } from "@/src/hooks/use-model";
 import { Reminders, useReminders } from "@/src/features/reminders/use-reminders";
 import { Action } from "@/src/model";
 import { useSafeWindowDimensions } from "@/src/hooks/use-safe-area";
-import { ImagePath } from "@/src/components";
+import { ImagePath, SegmentedProgress } from "@/src/components";
 import { Link, useRouter } from "expo-router";
 import React from "react";
 import { Image, Keyboard, Text, TouchableOpacity, View } from "react-native";
 import { useSharedValue } from "react-native-reanimated";
-import Carousel, {
-  CarouselRenderItem,
-  ICarouselInstance,
-  Pagination,
-} from "react-native-reanimated-carousel";
+import Carousel, { CarouselRenderItem, ICarouselInstance } from "react-native-reanimated-carousel";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function Index() {
@@ -26,6 +22,7 @@ export function Ready(props: ModelLoadedProps) {
   const { style: s } = props;
   const ref = React.useRef<ICarouselInstance>(null);
   const completionRequested = React.useRef(false);
+  const [activeIndex, setActiveIndex] = React.useState(0);
   const router = useRouter();
   const progress = useSharedValue<number>(0);
   const reminders = useReminders();
@@ -44,9 +41,9 @@ export function Ready(props: ModelLoadedProps) {
     completionRequested.current = true;
     props.dispatch(Action.beginOnboardingCompletion());
   }
-  const onPressPagination = (index: number) => {
+  const onPressStep = (count: number) => {
     ref.current?.scrollTo({
-      count: index - progress.value,
+      count,
       animated: true,
     });
   };
@@ -69,11 +66,12 @@ export function Ready(props: ModelLoadedProps) {
           })}
           width={width}
           height={w.height - 150}
-          onSnapToItem={(index) => {
-            Keyboard.dismiss();
-          }}
           loop={false}
           defaultIndex={0}
+          onSnapToItem={(index) => {
+            setActiveIndex(index);
+            Keyboard.dismiss();
+          }}
           mode="parallax"
           modeConfig={{
             parallaxScrollingScale: 0.9,
@@ -85,14 +83,40 @@ export function Ready(props: ModelLoadedProps) {
             gesture.activeOffsetX([-10, 10]);
           }}
         />
-        <Pagination.Basic
-          progress={progress}
-          data={[...slides]}
-          dotStyle={s.paginationDot}
-          activeDotStyle={s.activePaginationDot}
-          containerStyle={{ gap: 5, marginTop: 10 }}
-          onPress={onPressPagination}
+        <SegmentedProgress
+          currentIndex={activeIndex}
+          count={slides.length}
+          accessibilityLabel="Onboarding progress"
         />
+        <View
+          style={{
+            flexDirection: "row",
+            justifyContent: "space-between",
+            alignItems: "center",
+            marginTop: 10,
+          }}
+        >
+          {activeIndex > 0 ? (
+            <TouchableOpacity
+              accessibilityRole="button"
+              accessibilityLabel="Previous"
+              style={[s.button, { width: 44, height: 44 }]}
+              onPress={() => onPressStep(-1)}
+            >
+              <Text style={[s.buttonText]}>‹</Text>
+            </TouchableOpacity>
+          ) : <View style={{ width: 44, height: 44 }} />}
+          {activeIndex < slides.length - 1 ? (
+            <TouchableOpacity
+              accessibilityRole="button"
+              accessibilityLabel="Next"
+              style={[s.button, { width: 44, height: 44 }]}
+              onPress={() => onPressStep(1)}
+            >
+              <Text style={[s.buttonText]}>›</Text>
+            </TouchableOpacity>
+          ) : null}
+        </View>
       </View>
     </SafeAreaView>
   );

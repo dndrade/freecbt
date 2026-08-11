@@ -40,6 +40,7 @@ jest.mock("@/src/components", () => ({
     logo: 3,
     notifications: 4,
   },
+  SegmentedProgress: () => React.createElement(View),
 }));
 
 jest.mock("@/src/features/reminders/use-reminders", () => ({
@@ -78,6 +79,16 @@ const mockStyle: Record<string, object> = new Proxy(
   >,
   { get: (target, key: string) => target[key] ?? {} }
 );
+
+function textContent(node: React.ReactNode): string {
+  if (typeof node === "string") return node;
+  if (Array.isArray(node)) return node.map(textContent).join("");
+  if (React.isValidElement(node)) {
+    const { children } = node.props as { children?: React.ReactNode };
+    return textContent(children);
+  }
+  return "";
+}
 
 function intro(completion: "idle" | "saving" | { status: "failure"; error: Error }) {
   return React.createElement(Ready, {
@@ -182,10 +193,12 @@ describe("post-onboarding navigation", () => {
     expect(mockPush).not.toHaveBeenCalled();
 
     view.rerender(intro("saving"));
-    expect(view.getByText("Saving…")).toBeTruthy();
-    expect(view.UNSAFE_getAllByType(TouchableOpacity).at(-1)?.props.disabled).toBe(
-      true
-    );
+    const savingLabel = view.getByText("Saving…");
+    expect(savingLabel).toBeTruthy();
+    const savingButton = view
+      .UNSAFE_getAllByType(TouchableOpacity)
+      .find((button) => textContent(button.props.children).includes("Saving…"));
+    expect(savingButton?.props.disabled).toBe(true);
     expect(mockPush).not.toHaveBeenCalled();
 
     view.rerender(intro({ status: "failure", error: new Error("failed") }));
