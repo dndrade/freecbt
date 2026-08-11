@@ -2,12 +2,40 @@
  * @jest-environment jsdom
  */
 import { Storage } from "@/src";
-import { Action, DistortionData, Model, Thought } from "@/src/model";
-import { ModelProvider, useModel } from "@/src/hooks/use-model";
+import { DistortionData, Thought } from "@/src/model";
+import { ModelProvider } from "@/src/hooks/use-model";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { renderHook, waitFor } from "@testing-library/react";
+import { render, waitFor } from "@testing-library/react-native";
 import React from "react";
 import type { ThoughtSaveOutboxRecord } from "@/src/platform/storage/storage";
+import Home from "@/src/app/v2/(public)/(tabs)/index";
+import { View } from "react-native";
+
+jest.mock("@/src/components", () => ({
+  ImagePath: { bubbles: [1] },
+}));
+
+jest.mock("@/src/i18n/use-i18n", () => ({
+  ...jest.requireActual("@/src/i18n/use-i18n"),
+  useTranslate: () => (key: string) => key,
+}));
+
+jest.mock("@/src/hooks/use-safe-area", () => ({
+  useSafeWindowDimensions: () => ({ width: 400, height: 800 }),
+}));
+
+jest.mock("react-native-reanimated", () => ({
+  useSharedValue: () => ({ value: 0, get: () => 0 }),
+}));
+
+jest.mock("react-native-reanimated-carousel", () => ({
+  __esModule: true,
+  default: (props: {
+    data: readonly Thought.SlideName[];
+    renderItem: (props: { item: Thought.SlideName }) => React.ReactNode;
+  }) => React.createElement(View, null, props.renderItem({ item: props.data[0] })),
+  Pagination: { Basic: () => null },
+}));
 
 function spec(automaticThought: string): Thought.Spec {
   return { ...Thought.emptySpec(), automaticThought };
@@ -35,7 +63,7 @@ function record(
   };
 }
 
-test("Home receives all unresolved recovery records and full capacity after restart", async () => {
+test("Home displays restarted recovery records without labeling normal recovery as saved Thought cleanup", async () => {
   await AsyncStorage.clear();
   const records = [
     record(1, "insertion-pending"),
@@ -50,32 +78,20 @@ test("Home receives all unresolved recovery records and full capacity after rest
   for (const item of records) await outbox.insert(item);
   const setItem = jest.spyOn(AsyncStorage, "setItem");
   setItem.mockClear();
-  const wrapper = ({ children }: { children: React.ReactNode }) => (
-    React.createElement(ModelProvider, null, children)
+  const view = render(
+    React.createElement(ModelProvider, null, React.createElement(Home))
   );
-  const { result } = renderHook(() => useModel(), { wrapper });
 
-  await waitFor(() => expect(result.current[0].status).toBe("ready"));
+  await waitFor(() => expect(view.getByTestId("thought-save-recovery")).toBeTruthy());
 
-  const hydrated = result.current[0] as Model.Ready;
-  expect(hydrated.thoughtSaveOutbox).toEqual([
-    ...records.slice(0, 3),
-    { ...records[3], status: "uncertain" },
-    ...records.slice(4),
-  ]);
-  expect(hydrated.thoughtSaveOutbox).toHaveLength(20);
-  expect(hydrated.thoughtSaveOutbox.filter((item) => item.status === "cleanup-failed")).toEqual([
-    records[5],
-  ]);
-  expect(hydrated.thoughtSaveOutbox.filter((item) => item.status === "failed")).toEqual([
-    records[4],
-  ]);
-  expect(
-    Model.update(
-      hydrated,
-      Action.createThought(spec("capacity is full"), new Date("2026-08-11T01:00:00.000Z"))
-    )[1]
-  ).toEqual([]);
+  expect(view.getByText("Recovery needed: recovery 2")).toBeTruthy();
+  expect(view.getByText("Recovery needed: recovery 3")).toBeTruthy();
+  expect(view.getByText("Recovery needed: recovery 4")).toBeTruthy();
+  expect(view.getByText("Recovery needed: recovery 5")).toBeTruthy();
+  expect(view.getByText("Saved Thought cleanup needed: recovery 6")).toBeTruthy();
+  expect(view.queryByText("Saved Thought cleanup needed: recovery 2")).toBeNull();
+  expect(view.queryByText("Saved Thought cleanup needed: recovery 3")).toBeNull();
+  expect(view.queryByText("Saved Thought cleanup needed: recovery 5")).toBeNull();
   expect(setItem).not.toHaveBeenCalled();
   setItem.mockRestore();
 });
