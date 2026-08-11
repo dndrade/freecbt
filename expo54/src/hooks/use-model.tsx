@@ -74,9 +74,13 @@ function useCmdRunner(data: Distortion.Data, storage: AsyncStorageStatic) {
       switch (c.cmd) {
         case "load-model": {
           if (typeof window === "undefined") return; // web platform ssr + asyncstorage bugs out
-          // const [settings, tm] = await Promise.all([s.read(), t.readAll()]);
-          const settings = await s.read();
-          const tm = await t.readAll();
+          const [settings, tm, homeThoughtDraft, thoughtSaveOutbox] =
+            await Promise.all([
+              s.read(),
+              t.readAll(),
+              drafts.read(),
+              outbox.readAll(),
+            ]);
           const deviceLocale = defaultLocale();
           const deviceColorScheme = Appearance.getColorScheme() ?? null;
           const m = Model.ready({
@@ -86,10 +90,10 @@ function useCmdRunner(data: Distortion.Data, storage: AsyncStorageStatic) {
             deviceLocale,
             settings,
             onboardingCompletion: "idle",
-            homeThoughtDraft: null,
+            homeThoughtDraft,
             homeThoughtDraftRevision: 0,
             homeThoughtDraftPersistence: "idle",
-            thoughtSaveOutbox: [],
+            thoughtSaveOutbox,
             thoughtSaveResult: "idle",
             ...tm,
           });

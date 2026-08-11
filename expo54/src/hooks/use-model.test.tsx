@@ -6,6 +6,8 @@ import React from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Action, Model, Settings, Thought } from "../model";
 import { ModelProvider, useModel } from "./use-model";
+import { Storage } from "..";
+import { DistortionData } from "../model";
 import { THOUGHT_SAVE_OUTBOX_KEY } from "../platform/storage/thought-save-outbox";
 
 function sampleSpec(overrides: Partial<Thought.Spec> = {}): Thought.Spec {
@@ -15,6 +17,10 @@ function sampleSpec(overrides: Partial<Thought.Spec> = {}): Thought.Spec {
     ...overrides,
   };
 }
+
+afterEach(async () => {
+  await AsyncStorage.clear();
+});
 
 test("use-model basics", async () => {
   const wrapper = ({ children }: { children: React.ReactNode }) => (
@@ -38,6 +44,57 @@ test("use-model basics", async () => {
   expect(ready().thoughtSaveOutbox).toEqual([]);
   act(() => dispatch()(Action.setTheme("dark")));
   expect(ready().settings.theme).toBe("dark");
+});
+
+test("use-model hydrates the durable draft and unresolved outbox without writing", async () => {
+  await AsyncStorage.clear();
+  const draft = {
+    spec: sampleSpec({ automaticThought: "restored draft" }),
+    sourceRevision: 4,
+    updatedAt: new Date("2026-08-11T00:00:00.000Z"),
+    draftCleanup: {
+      status: "clear-failed" as const,
+      sourceRevision: 3,
+      outboxSubmissionId: "00000000-0000-4000-8000-000000000004" as Thought.Id,
+      lastError: "draft clear failed",
+      updatedAt: new Date("2026-08-11T00:00:01.000Z"),
+    },
+  };
+  const thought = Thought.create(
+    sampleSpec({ automaticThought: "interrupted save" }),
+    new Date("2026-08-11T00:00:02.000Z")
+  );
+  const active = {
+    submissionId: thought.uuid,
+    thought,
+    sourceDraftRevision: 4,
+    attemptCount: 2,
+    lastAttemptAt: new Date("2026-08-11T00:00:03.000Z"),
+    lastError: "network interrupted",
+    retryRequested: true,
+    thoughtPersisted: false,
+    updatedAt: new Date("2026-08-11T00:00:04.000Z"),
+    status: "active" as const,
+  };
+  await Storage.homeThoughtDraft(DistortionData, AsyncStorage).write(draft);
+  await Storage.thoughtSaveOutbox(DistortionData, AsyncStorage).insert(active);
+  const setItem = jest.spyOn(AsyncStorage, "setItem");
+  setItem.mockClear();
+  const wrapper = ({ children }: { children: React.ReactNode }) => (
+    <ModelProvider>{children}</ModelProvider>
+  );
+  const { result } = renderHook(() => useModel(), { wrapper });
+
+  await waitFor(() => expect(result.current[0].status).toBe("ready"));
+
+  const hydrated = result.current[0] as Model.Ready;
+  expect(hydrated.homeThoughtDraft).toEqual(draft);
+  expect(hydrated.homeThoughtDraftRevision).toBe(4);
+  expect(hydrated.thoughtSaveOutbox).toEqual([
+    { ...active, status: "uncertain" },
+  ]);
+  expect(setItem).not.toHaveBeenCalled();
+  setItem.mockRestore();
 });
 
 // Regression test for #7: confirm every setting propagates through the real

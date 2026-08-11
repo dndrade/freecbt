@@ -49,7 +49,15 @@ export type ThoughtSaveResult =
 export const loading = { status: "loading" } as const;
 export const init: readonly [Model, Cmd.List] = [loading, [Cmd.loadModel]];
 export function ready(p: Omit<Ready, "status">): Ready {
-  return { status: "ready", ...p };
+  return {
+    status: "ready",
+    ...p,
+    homeThoughtDraftRevision:
+      p.homeThoughtDraft?.sourceRevision ?? p.homeThoughtDraftRevision,
+    thoughtSaveOutbox: p.thoughtSaveOutbox.map((record) =>
+      record.status === "active" ? { ...record, status: "uncertain" } : record
+    ),
+  };
 }
 
 export interface Match<O> {

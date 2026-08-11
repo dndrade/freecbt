@@ -71,6 +71,34 @@ test("basic actions", () => {
   expect(ready().settings.theme).toBe("dark");
 });
 
+test("ready normalizes an interrupted active outbox record without changing its metadata", () => {
+  const active = makeOutboxRecord(1, "active");
+  const draft: HomeThoughtDraftRecord = {
+    spec: sampleSpec(),
+    sourceRevision: 7,
+    updatedAt: new Date("2026-08-11T00:00:00.000Z"),
+    draftCleanup: {
+      status: "clear-failed",
+      sourceRevision: 6,
+      outboxSubmissionId: active.submissionId,
+      lastError: "draft clear failed",
+      updatedAt: new Date("2026-08-11T00:00:01.000Z"),
+    },
+  };
+
+  const hydrated = Model.ready({
+    ...emptyReady,
+    homeThoughtDraft: draft,
+    thoughtSaveOutbox: [active],
+  });
+
+  expect(hydrated.homeThoughtDraft).toEqual(draft);
+  expect(hydrated.homeThoughtDraftRevision).toBe(7);
+  expect(hydrated.thoughtSaveOutbox).toEqual([
+    { ...active, status: "uncertain" },
+  ]);
+});
+
 test("import archive merges thoughts without deleting local-only thoughts", () => {
     const localThought = Thought.create(Thought.emptySpec(), new Date(0));
     const importedThought = Thought.create(Thought.emptySpec(), new Date(1));
