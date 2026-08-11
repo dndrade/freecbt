@@ -1,5 +1,5 @@
 import { Storage } from "@/src";
-import { Action, Cmd, Distortion, DistortionData, Model } from "@/src/model";
+import { Action, Cmd, Distortion, DistortionData, Model, Thought } from "@/src/model";
 import AsyncStorage, {
   AsyncStorageStatic,
 } from "@react-native-async-storage/async-storage";
@@ -10,6 +10,7 @@ import { ActivityIndicator, Appearance } from "react-native";
 import { createElmArch, useElmArch } from "./use-elm-arch";
 import { defaultLocale, TranslateFn, useTranslate } from "@/src/i18n/use-i18n";
 import { Style, useStyle } from "./use-style";
+import _ from "lodash";
 
 const Ctx = createElmArch<Model.Model, Action.Action, Cmd.Cmd>();
 
@@ -132,7 +133,7 @@ function useCmdRunner(data: Distortion.Data, storage: AsyncStorageStatic) {
         case "insert-thought-save-outbox": {
           try {
             await outbox.insert(c.value);
-            dispatch(Action.thoughtSaveOutboxInsertionSucceeded(c.value.submissionId));
+            dispatch(Action.thoughtSaveOutboxInsertionSucceeded(c.value.submissionId, new Date()));
           } catch (error) {
             dispatch(
               Action.thoughtSaveOutboxInsertionFailed(
@@ -145,10 +146,35 @@ function useCmdRunner(data: Distortion.Data, storage: AsyncStorageStatic) {
         }
         case "update-thought-save-outbox": {
           await outbox.update(c.value);
+          dispatch(Action.thoughtSaveOutboxUpdated(c.value));
           return;
         }
         case "remove-thought-save-outbox": {
-          await outbox.remove(c.value);
+          try {
+            await outbox.remove(c.value);
+            dispatch(Action.thoughtSaveOutboxRemoved(c.value, new Date()));
+          } catch (error) {
+            dispatch(Action.thoughtSaveOutboxRemovalFailed(c.value, error, new Date()));
+          }
+          return;
+        }
+        case "write-submitted-thought": {
+          try {
+            const existing = await t.read(Thought.key(c.thought));
+            if (!_.isEqual(existing, c.thought)) await t.write(c.thought);
+            dispatch(Action.thoughtSaveWriteSucceeded(c.submissionId, c.thought));
+          } catch (error) {
+            if (error instanceof Error && error.message.startsWith("no such thought-id:")) {
+              try {
+                await t.write(c.thought);
+                dispatch(Action.thoughtSaveWriteSucceeded(c.submissionId, c.thought));
+              } catch (writeError) {
+                dispatch(Action.thoughtSaveWriteFailed(c.submissionId, writeError, new Date()));
+              }
+            } else {
+              dispatch(Action.thoughtSaveWriteFailed(c.submissionId, error, new Date()));
+            }
+          }
           return;
         }
         case "write-thought": {

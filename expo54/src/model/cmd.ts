@@ -16,6 +16,7 @@ export type Cmd =
       | typeof insertThoughtSaveOutbox
       | typeof updateThoughtSaveOutbox
       | typeof removeThoughtSaveOutbox
+      | typeof writeSubmittedThought
       | typeof writeThought
       | typeof deleteThought
       | typeof navigate
@@ -43,6 +44,12 @@ export function updateThoughtSaveOutbox(value: ThoughtSaveOutboxRecord) {
 }
 export function removeThoughtSaveOutbox(value: Thought.Id) {
   return { cmd: "remove-thought-save-outbox", value } as const;
+}
+export function writeSubmittedThought(
+  submissionId: Thought.Id,
+  thought: Thought.Thought
+) {
+  return { cmd: "write-submitted-thought", submissionId, thought } as const;
 }
 export function writeThought(value: Thought.Thought) {
   return { cmd: "write-thought", value } as const;

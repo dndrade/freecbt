@@ -350,3 +350,181 @@ test("a failed active write does not block a later pending submission", () => {
     Cmd.updateThoughtSaveOutbox((next as Model.Ready).thoughtSaveOutbox[1]),
   ]);
 });
+
+test("processes one durable FIFO record at a time and skips failures", () => {
+  const first = makeOutboxRecord(70, "pending");
+  const second = makeOutboxRecord(71, "pending");
+  let m: Model.Model = { ...emptyReady, thoughtSaveOutbox: [first, second] };
+  const now = new Date("2026-08-11T07:00:00.000Z");
+
+  let cmds: Cmd.List;
+  [m, cmds] = Model.update(
+    m,
+    Action.runThoughtSaveOutbox(now)
+  );
+  expect((m as Model.Ready).thoughtSaveOutbox.map((record) => record.status)).toEqual([
+    "active",
+    "pending",
+  ]);
+  expect(cmds).toEqual([
+    Cmd.updateThoughtSaveOutbox((m as Model.Ready).thoughtSaveOutbox[0]),
+  ]);
+  const active = m as Model.Ready;
+
+  [m, cmds] = Model.update(
+    m,
+    Action.thoughtSaveOutboxUpdated((m as Model.Ready).thoughtSaveOutbox[0])
+  );
+  expect(cmds).toEqual([
+    Cmd.writeSubmittedThought(first.submissionId, first.thought),
+  ]);
+
+  [m, cmds] = Model.update(
+    m,
+    Action.thoughtSaveWriteFailed(first.submissionId, new Error("offline"), now)
+  );
+  expect((m as Model.Ready).thoughtSaveOutbox[0]).toEqual({
+    ...(active as Model.Ready).thoughtSaveOutbox[0],
+    status: "failed",
+    lastError: "offline",
+    updatedAt: now,
+  });
+  expect(cmds).toEqual([
+    Cmd.updateThoughtSaveOutbox((m as Model.Ready).thoughtSaveOutbox[0]),
+  ]);
+
+  [m, cmds] = Model.update(
+    m,
+    Action.thoughtSaveOutboxUpdated((m as Model.Ready).thoughtSaveOutbox[0])
+  );
+  expect((m as Model.Ready).thoughtSaveOutbox.map((record) => record.status)).toEqual([
+    "failed",
+    "active",
+  ]);
+  expect(cmds).toEqual([
+    Cmd.updateThoughtSaveOutbox((m as Model.Ready).thoughtSaveOutbox[1]),
+  ]);
+});
+
+test("gives one explicit failed retry priority without activating it beside current work", () => {
+  const failed = makeOutboxRecord(80, "failed");
+  const active = makeOutboxRecord(81, "active");
+  let m: Model.Model = { ...emptyReady, thoughtSaveOutbox: [failed, active] };
+  const now = new Date("2026-08-11T08:00:00.000Z");
+
+  let cmds: Cmd.List;
+  [m, cmds] = Model.update(m, Action.retryThoughtSave(failed.submissionId));
+  expect((m as Model.Ready).thoughtSaveOutbox[0]).toEqual({
+    ...failed,
+    retryRequested: true,
+  });
+  expect(cmds).toEqual([
+    Cmd.updateThoughtSaveOutbox((m as Model.Ready).thoughtSaveOutbox[0]),
+  ]);
+
+  [m, cmds] = Model.update(
+    m,
+    Action.thoughtSaveOutboxUpdated((m as Model.Ready).thoughtSaveOutbox[0])
+  );
+  expect(cmds).toEqual([]);
+
+  const completedActive = (m as Model.Ready).thoughtSaveOutbox[1];
+  [m, cmds] = Model.update(
+    m,
+    Action.thoughtSaveOutboxRemoved(completedActive.submissionId, now)
+  );
+  expect((m as Model.Ready).thoughtSaveOutbox).toEqual([
+    expect.objectContaining({
+      submissionId: failed.submissionId,
+      status: "active",
+      retryRequested: false,
+      attemptCount: 1,
+    }),
+  ]);
+  expect(cmds).toEqual([
+    Cmd.updateThoughtSaveOutbox((m as Model.Ready).thoughtSaveOutbox[0]),
+  ]);
+});
+
+test("ignores a stale write result after its active record has failed", () => {
+  const first = makeOutboxRecord(90, "active");
+  const second = makeOutboxRecord(91, "pending");
+  const now = new Date("2026-08-11T09:00:00.000Z");
+  let m: Model.Model = { ...emptyReady, thoughtSaveOutbox: [first, second] };
+
+  [m] = Model.update(
+    m,
+    Action.thoughtSaveWriteFailed(first.submissionId, new Error("offline"), now)
+  );
+  const [stale, cmds] = Model.update(
+    m,
+    Action.thoughtSaveWriteSucceeded(first.submissionId, first.thought)
+  );
+
+  expect(stale).toBe(m);
+  expect(cmds).toEqual([]);
+});
+
+test("removes a persisted thought before starting the next FIFO record", () => {
+  const first = { ...makeOutboxRecord(100, "active"), attemptCount: 1 };
+  const second = makeOutboxRecord(101, "pending");
+  const now = new Date("2026-08-11T10:00:00.000Z");
+  let m: Model.Model = { ...emptyReady, thoughtSaveOutbox: [first, second] };
+
+  let cmds: Cmd.List;
+  [m, cmds] = Model.update(
+    m,
+    Action.thoughtSaveWriteSucceeded(first.submissionId, first.thought)
+  );
+  expect((m as Model.Ready).thoughts.get(Thought.key(first.thought))).toEqual(first.thought);
+  expect(cmds).toEqual([
+    Cmd.updateThoughtSaveOutbox((m as Model.Ready).thoughtSaveOutbox[0]),
+  ]);
+
+  [m, cmds] = Model.update(
+    m,
+    Action.thoughtSaveOutboxUpdated((m as Model.Ready).thoughtSaveOutbox[0])
+  );
+  expect(cmds).toEqual([Cmd.removeThoughtSaveOutbox(first.submissionId)]);
+
+  [m, cmds] = Model.update(m, Action.thoughtSaveOutboxRemoved(first.submissionId, now));
+  expect((m as Model.Ready).thoughtSaveOutbox).toEqual([
+    expect.objectContaining({ submissionId: second.submissionId, status: "active" }),
+  ]);
+  expect(cmds).toEqual([
+    Cmd.updateThoughtSaveOutbox((m as Model.Ready).thoughtSaveOutbox[0]),
+  ]);
+});
+
+test("retries cleanup failures by removal only and does not auto-retry after hydration", () => {
+  const cleanupFailed = {
+    ...makeOutboxRecord(110, "cleanup-failed"),
+    thoughtPersisted: true,
+  };
+  const hydrated = Model.ready({ ...emptyReady, thoughtSaveOutbox: [cleanupFailed] });
+  expect(Model.update(Model.loading, Action.modelReady(hydrated))[1]).toEqual([]);
+
+  let m: Model.Model = hydrated;
+  let cmds: Cmd.List;
+  [m, cmds] = Model.update(m, Action.retryThoughtSave(cleanupFailed.submissionId));
+  [m, cmds] = Model.update(
+    m,
+    Action.thoughtSaveOutboxUpdated((m as Model.Ready).thoughtSaveOutbox[0])
+  );
+  expect(cmds).toEqual([
+    Cmd.updateThoughtSaveOutbox((m as Model.Ready).thoughtSaveOutbox[0]),
+  ]);
+
+  [m, cmds] = Model.update(
+    m,
+    Action.thoughtSaveOutboxUpdated((m as Model.Ready).thoughtSaveOutbox[0])
+  );
+  expect((m as Model.Ready).thoughtSaveOutbox[0]).toEqual(
+    expect.objectContaining({
+      submissionId: cleanupFailed.submissionId,
+      status: "active",
+      thoughtPersisted: true,
+    })
+  );
+  expect(cmds).toEqual([Cmd.removeThoughtSaveOutbox(cleanupFailed.submissionId)]);
+});

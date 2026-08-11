@@ -196,7 +196,7 @@ test("use-model reports completion success only after persistence resolves", asy
   multiSet.mockRestore();
 });
 
-test("use-model persists one submitted snapshot after outbox insertion succeeds and ignores duplicate save while insertion is pending", async () => {
+test("use-model persists one submitted snapshot after outbox insertion succeeds", async () => {
   let releaseWrite!: () => void;
   const writePending = new Promise<void>((resolve) => {
     releaseWrite = resolve;
@@ -226,25 +226,21 @@ test("use-model persists one submitted snapshot after outbox insertion succeeds 
   releaseWrite();
 
   await waitFor(() =>
-    expect((result.current[0] as Model.Ready).thoughtSaveOutbox[0].status).toBe(
-      "pending"
-    )
+    expect((result.current[0] as Model.Ready).thoughtSaveOutbox).toEqual([])
+  );
+  expect((result.current[0] as Model.Ready).thoughts).toEqual(
+    new Map([[expect.any(String), expect.objectContaining({ automaticThought: "original snapshot" })]])
   );
 
   const outboxWrites = setItem.mock.calls.filter(
     ([key]) => key === THOUGHT_SAVE_OUTBOX_KEY
   );
-  expect(outboxWrites).toHaveLength(1);
-  expect(JSON.parse(outboxWrites[0][1] as string)).toEqual({
-    v: "thought-save-outbox/v1",
-    records: [
-      expect.objectContaining({
-        thought: expect.objectContaining({
-          automaticThought: "original snapshot",
-        }),
-      }),
-    ],
-  });
+  expect(outboxWrites.map(([, value]) => JSON.parse(value as string).records)).toEqual([
+    [expect.objectContaining({ status: "insertion-pending" })],
+    [expect.objectContaining({ status: "active", thoughtPersisted: false })],
+    [expect.objectContaining({ status: "active", thoughtPersisted: true })],
+    [],
+  ]);
   setItem.mockRestore();
 });
 

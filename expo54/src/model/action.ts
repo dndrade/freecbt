@@ -23,8 +23,14 @@ export type Action = ReturnType<
   | typeof homeThoughtDraftWriteFailed
   | typeof createThought
   | typeof beginThoughtSave
+  | typeof runThoughtSaveOutbox
+  | typeof retryThoughtSave
   | typeof thoughtSaveOutboxInsertionSucceeded
   | typeof thoughtSaveOutboxInsertionFailed
+  | typeof thoughtSaveOutboxUpdated
+  | typeof thoughtSaveOutboxRemoved
+  | typeof thoughtSaveOutboxRemovalFailed
+  | typeof thoughtSaveWriteSucceeded
   | typeof thoughtSaveWriteFailed
   | typeof deleteThought
   | typeof updateThought
@@ -86,10 +92,17 @@ export function createThought(spec: Thought.Spec, now: Date) {
 export function beginThoughtSave(submissionId: Thought.Id, now: Date) {
   return { action: "begin-thought-save", submissionId, now } as const;
 }
+export function runThoughtSaveOutbox(now: Date) {
+  return { action: "run-thought-save-outbox", now } as const;
+}
+export function retryThoughtSave(submissionId: Thought.Id) {
+  return { action: "retry-thought-save", submissionId } as const;
+}
 export function thoughtSaveOutboxInsertionSucceeded(
-  submissionId: Thought.Id
+  submissionId: Thought.Id,
+  now: Date
 ) {
-  return { action: "thought-save-outbox-insertion-succeeded", submissionId } as const;
+  return { action: "thought-save-outbox-insertion-succeeded", submissionId, now } as const;
 }
 export function thoughtSaveOutboxInsertionFailed(
   submissionId: Thought.Id,
@@ -100,6 +113,32 @@ export function thoughtSaveOutboxInsertionFailed(
     submissionId,
     error,
   } as const;
+}
+export function thoughtSaveOutboxUpdated(
+  value: Model.Ready["thoughtSaveOutbox"][number]
+) {
+  return { action: "thought-save-outbox-updated", value } as const;
+}
+export function thoughtSaveOutboxRemoved(submissionId: Thought.Id, now: Date) {
+  return { action: "thought-save-outbox-removed", submissionId, now } as const;
+}
+export function thoughtSaveOutboxRemovalFailed(
+  submissionId: Thought.Id,
+  error: unknown,
+  now: Date
+) {
+  return {
+    action: "thought-save-outbox-removal-failed",
+    submissionId,
+    error,
+    now,
+  } as const;
+}
+export function thoughtSaveWriteSucceeded(
+  submissionId: Thought.Id,
+  thought: Thought.Thought
+) {
+  return { action: "thought-save-write-succeeded", submissionId, thought } as const;
 }
 export function thoughtSaveWriteFailed(
   submissionId: Thought.Id,

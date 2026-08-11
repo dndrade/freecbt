@@ -200,18 +200,17 @@ function updateReady(m: Ready, a: Action.Action): readonly [Model, Cmd.List] {
       return createThoughtSubmission(m, a.spec, a.now);
     }
     case "thought-save-outbox-insertion-succeeded": {
-      return [
+      return selectNextThoughtSave(
         {
           ...m,
           thoughtSaveOutbox: m.thoughtSaveOutbox.map((record) =>
-            record.submissionId === a.submissionId &&
-            record.status === "insertion-pending"
+            record.submissionId === a.submissionId && record.status === "insertion-pending"
               ? { ...record, status: "pending" }
               : record
           ),
         },
-        [],
-      ];
+        a.now
+      );
     }
     case "thought-save-outbox-insertion-failed": {
       return [
@@ -231,18 +230,90 @@ function updateReady(m: Ready, a: Action.Action): readonly [Model, Cmd.List] {
       ];
     }
     case "begin-thought-save": {
-      return updateThoughtSaveRecord(m, a.submissionId, (record) => ({
-        ...record,
-        status: "active",
-        attemptCount: record.attemptCount + 1,
-        lastAttemptAt: a.now,
-        updatedAt: a.now,
+      return selectNextThoughtSave(m, a.now, a.submissionId);
+    }
+    case "run-thought-save-outbox": {
+      return selectNextThoughtSave(m, a.now);
+    }
+    case "retry-thought-save": {
+      if (m.thoughtSaveOutbox.some((record) => record.retryRequested)) {
+        return [m, []];
+      }
+      return updateThoughtSaveRecord(m, a.submissionId, (record) => {
+        if (record.status !== "failed" && record.status !== "cleanup-failed") {
+          return record;
+        }
+        return { ...record, retryRequested: true };
+      });
+    }
+    case "thought-save-outbox-updated": {
+      const current = m.thoughtSaveOutbox.find(
+        (record) => record.submissionId === a.value.submissionId
+      );
+      if (current === undefined || !sameThoughtSaveRecord(current, a.value)) {
+        return [m, []];
+      }
+      if (current.status === "active") {
+        return current.thoughtPersisted
+          ? [m, [Cmd.removeThoughtSaveOutbox(current.submissionId)]]
+          : [m, [Cmd.writeSubmittedThought(current.submissionId, current.thought)]];
+      }
+      if (current.status === "failed" || current.status === "cleanup-failed") {
+        return selectNextThoughtSave(m, current.updatedAt);
+      }
+      return [m, []];
+    }
+    case "thought-save-write-succeeded": {
+      const record = m.thoughtSaveOutbox.find(
+        (candidate) => candidate.submissionId === a.submissionId
+      );
+      if (
+        record === undefined ||
+        record.status !== "active" ||
+        record.thoughtPersisted ||
+        !sameThought(record.thought, a.thought)
+      ) {
+        return [m, []];
+      }
+      const [next, cmds] = updateThoughtSaveRecord(m, a.submissionId, (current) => ({
+        ...current,
+        thoughtPersisted: true,
       }));
+      const thoughts = new Map(m.thoughts);
+      thoughts.set(Thought.key(a.thought), a.thought);
+      return [{ ...(next as Ready), thoughts }, cmds];
     }
     case "thought-save-write-failed": {
+      const record = m.thoughtSaveOutbox.find(
+        (candidate) => candidate.submissionId === a.submissionId
+      );
+      if (record?.status !== "active" || record.thoughtPersisted) return [m, []];
       return updateThoughtSaveRecord(m, a.submissionId, (record) => ({
         ...record,
         status: "failed",
+        lastError: a.error instanceof Error ? a.error.message : String(a.error),
+        updatedAt: a.now,
+      }));
+    }
+    case "thought-save-outbox-removed": {
+      return selectNextThoughtSave(
+        {
+          ...m,
+          thoughtSaveOutbox: m.thoughtSaveOutbox.filter(
+            (record) => record.submissionId !== a.submissionId
+          ),
+        },
+        a.now
+      );
+    }
+    case "thought-save-outbox-removal-failed": {
+      const record = m.thoughtSaveOutbox.find(
+        (candidate) => candidate.submissionId === a.submissionId
+      );
+      if (record?.status !== "active" || !record.thoughtPersisted) return [m, []];
+      return updateThoughtSaveRecord(m, a.submissionId, (current) => ({
+        ...current,
+        status: "cleanup-failed",
         lastError: a.error instanceof Error ? a.error.message : String(a.error),
         updatedAt: a.now,
       }));
@@ -426,6 +497,64 @@ function updateThoughtSaveRecord(
     { ...m, thoughtSaveOutbox: nextOutbox },
     [Cmd.updateThoughtSaveOutbox(nextRecord)],
   ];
+}
+
+function selectNextThoughtSave(
+  m: Ready,
+  now: Date,
+  submissionId?: Thought.Id
+): readonly [Model, Cmd.List] {
+  if (m.thoughtSaveOutbox.some((record) => record.status === "active")) {
+    return [m, []];
+  }
+  const record = submissionId === undefined
+    ? m.thoughtSaveOutbox.find(
+        (candidate) =>
+          candidate.retryRequested &&
+          (candidate.status === "failed" || candidate.status === "cleanup-failed")
+      ) ?? m.thoughtSaveOutbox.find((candidate) => candidate.status === "pending")
+    : m.thoughtSaveOutbox.find(
+        (candidate) => candidate.submissionId === submissionId && candidate.status === "pending"
+      );
+  if (record === undefined) return [m, []];
+  const active = {
+    ...record,
+    status: "active" as const,
+    retryRequested: false,
+    attemptCount: record.attemptCount + 1,
+    lastAttemptAt: now,
+    updatedAt: now,
+  };
+  return [
+    {
+      ...m,
+      thoughtSaveOutbox: m.thoughtSaveOutbox.map((candidate) =>
+        candidate.submissionId === active.submissionId ? active : candidate
+      ),
+    },
+    [Cmd.updateThoughtSaveOutbox(active)],
+  ];
+}
+
+function sameThoughtSaveRecord(
+  left: ThoughtSaveOutboxRecord,
+  right: ThoughtSaveOutboxRecord
+): boolean {
+  return (
+    left.submissionId === right.submissionId &&
+    left.status === right.status &&
+    left.attemptCount === right.attemptCount &&
+    left.lastAttemptAt.getTime() === right.lastAttemptAt.getTime() &&
+    left.lastError === right.lastError &&
+    left.retryRequested === right.retryRequested &&
+    left.thoughtPersisted === right.thoughtPersisted &&
+    left.updatedAt.getTime() === right.updatedAt.getTime() &&
+    sameThought(left.thought, right.thought)
+  );
+}
+
+function sameThought(left: Thought.Thought, right: Thought.Thought): boolean {
+  return _.isEqual(left, right);
 }
 
 function updateSettings(
