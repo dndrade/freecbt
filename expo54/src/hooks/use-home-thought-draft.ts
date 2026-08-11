@@ -28,7 +28,16 @@ export function useHomeThoughtDraft(props: {
   model: Model.Ready;
   dispatch: Action.Dispatch;
   /** The visible input was just emptied - by a durable save, or by a discard. */
-  onReset?: () => void;
+  onReset?: (reason: "saved" | "discarded") => void;
+  /**
+   * The just-submitted record was rejected at outbox insertion - an immediate,
+   * synchronous failure. The user's text stays on screen (unlike `onReset`);
+   * this is presentation notification only, e.g. a transient Toast, never
+   * durable recovery state.
+   */
+  onFailure?: (
+    result: Extract<Model.ThoughtSaveResult, { status: "failure" }>
+  ) => void;
 }): HomeThoughtDraft {
   const { model, dispatch } = props;
   const [spec, setSpec] = useState<Thought.Spec>(
@@ -60,9 +69,11 @@ export function useHomeThoughtDraft(props: {
   // subscribe once, but always flush with the newest state
   const flushRef = useRef(flush);
   const onResetRef = useRef(props.onReset);
+  const onFailureRef = useRef(props.onFailure);
   useEffect(() => {
     flushRef.current = flush;
     onResetRef.current = props.onReset;
+    onFailureRef.current = props.onFailure;
   });
 
   useEffect(() => {
@@ -102,11 +113,12 @@ export function useHomeThoughtDraft(props: {
       model.thoughtSaveResult !== "idle" &&
       model.thoughtSaveResult.submissionId === id
     ) {
+      onFailureRef.current?.(model.thoughtSaveResult);
       return;
     }
     cancelDebounce();
     setSpec(Thought.emptySpec());
-    onResetRef.current?.();
+    onResetRef.current?.("saved");
   }, [cancelDebounce, model.thoughtSaveOutbox, model.thoughtSaveResult]);
 
   const change = useCallback((next: Thought.Spec) => {
@@ -126,7 +138,7 @@ export function useHomeThoughtDraft(props: {
     cancelDebounce();
     setSpec(Thought.emptySpec());
     setDiscarding(false);
-    onResetRef.current?.();
+    onResetRef.current?.("discarded");
     // draft-only: never touches in-flight or completed outbox submissions
     dispatch(Action.clearHomeThoughtDraft());
   }, [cancelDebounce, dispatch]);
