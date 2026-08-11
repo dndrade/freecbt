@@ -5,9 +5,11 @@ import { useFocusEffect } from "expo-router";
 import { Button, Typography } from "heroui-native";
 import React from "react";
 import { View } from "react-native";
+import type { ThoughtEntryRoute } from "./thought-entry-form";
 
 /**
- * Home-only aggregated recovery surface for outbox records that need attention.
+ * Aggregated recovery surface for outbox records that need attention. Hosted by
+ * Home, and by the compatibility create screen, which shares the same outbox.
  *
  * Durable, non-Toast: unlike the transient save Toast, this stays visible across
  * a whole Home visit and is rediscoverable on a later one - dismissal here is
@@ -23,8 +25,10 @@ export function HomeThoughtRecovery(props: {
   model: Model.Ready;
   dispatch: Action.Dispatch;
   translate: TranslateFn;
+  /** Home's durable draft is Home's alone: its cleanup note never leaves it. */
+  route?: ThoughtEntryRoute;
 }) {
-  const { model, dispatch, translate: t } = props;
+  const { model, dispatch, translate: t, route = "home" } = props;
   const [dismissed, setDismissed] = React.useState(false);
 
   // a "visit" is one focus session: returning to Home later rediscovers whatever
@@ -49,6 +53,7 @@ export function HomeThoughtRecovery(props: {
   // subordinate metadata attached to whichever outbox record it reconciles
   // against (or, if that record already resolved, shown as a standalone note).
   const draftCleanup =
+    route === "home" &&
     model.homeThoughtDraft?.draftCleanup?.status === "clear-failed"
       ? model.homeThoughtDraft.draftCleanup
       : null;

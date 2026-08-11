@@ -246,6 +246,9 @@ describe("compatibility thought entry", () => {
       fireEvent.press(view.getByTestId("thought-entry-save"));
     });
 
+    // a healthy in-flight save is not a recovery situation
+    expect(view.queryByTestId("home-thought-recovery")).toBeNull();
+
     await waitFor(() => expect(push).toHaveBeenCalledTimes(1));
     const saved = Array.from(
       (await Storage.thoughts(DistortionData, AsyncStorage).readAll()).thoughts.values()
@@ -270,14 +273,27 @@ describe("compatibility thought entry", () => {
       "never persisted"
     );
     toLastStep(view);
+    // nothing has failed yet, so nothing to recover from
+    expect(view.queryByTestId("home-thought-recovery")).toBeNull();
+
     await act(async () => {
       fireEvent.press(view.getByTestId("thought-entry-save"));
     });
 
+    // the record is stuck for real: a failure-only surface, with Retry that
+    // resumes this very submission rather than creating a second Thought
     await waitFor(() =>
-      expect(view.getByTestId("thought-save-recovery")).toBeTruthy()
+      expect(view.getByTestId("home-thought-recovery")).toBeTruthy()
     );
     await settle();
+    const [stuck] = await Storage.thoughtSaveOutbox(
+      DistortionData,
+      AsyncStorage
+    ).readAll();
+    expect(stuck.status).toBe("failed");
+    expect(
+      view.getByTestId(`home-thought-recovery-item-${stuck.submissionId}`)
+    ).toBeTruthy();
     expect(push).not.toHaveBeenCalled();
     expect(
       (await Storage.thoughts(DistortionData, AsyncStorage).readAll()).thoughts.size
@@ -286,6 +302,97 @@ describe("compatibility thought entry", () => {
     expect(
       view.getByTestId("thought-entry-save").props.accessibilityState
     ).toMatchObject({ disabled: false });
+  });
+
+  test("Retry on the compatibility screen resumes the same submission", async () => {
+    let failWrites = true;
+    jest
+      .spyOn(AsyncStorage, "setItem")
+      .mockImplementation((key, value, cb) =>
+        failWrites && key.startsWith(Thought.KEY_PREFIX)
+          ? Promise.reject(new Error("disk full"))
+          : realSetItem(key, value, cb)
+      );
+
+    const view = await mount(<Create />);
+    fireEvent.changeText(
+      view.getByTestId("automatic-thought-input"),
+      "retry me, do not duplicate me"
+    );
+    toLastStep(view);
+    await act(async () => {
+      fireEvent.press(view.getByTestId("thought-entry-save"));
+    });
+    await waitFor(() =>
+      expect(view.getByTestId("home-thought-recovery")).toBeTruthy()
+    );
+    const [stuck] = await Storage.thoughtSaveOutbox(
+      DistortionData,
+      AsyncStorage
+    ).readAll();
+
+    failWrites = false;
+    await act(async () => {
+      fireEvent.press(
+        view.getByTestId(`home-thought-recovery-retry-${stuck.submissionId}`)
+      );
+    });
+    await settle();
+
+    const saved = Array.from(
+      (await Storage.thoughts(DistortionData, AsyncStorage).readAll()).thoughts.values()
+    );
+    // one user intent, one Thought: Retry resumes the stored submission instead
+    // of minting a new one the way a second Save would
+    expect(saved).toHaveLength(1);
+    expect(saved[0].uuid).toBe(stuck.submissionId);
+  });
+
+  test("explains a full outbox instead of dropping the save silently", async () => {
+    const outbox = Storage.thoughtSaveOutbox(DistortionData, AsyncStorage);
+    for (let seed = 0; seed < 20; seed++) {
+      const thought = Thought.create(
+        { ...Thought.emptySpec(), automaticThought: `stuck ${seed}` },
+        new Date(Date.UTC(2026, 7, 11, 0, 0, seed))
+      );
+      await outbox.insert({
+        submissionId: thought.uuid,
+        thought,
+        sourceDraftRevision: seed,
+        attemptCount: 1,
+        lastAttemptAt: new Date(Date.UTC(2026, 7, 11, 0, 10, seed)),
+        lastError: "disk full",
+        retryRequested: false,
+        thoughtPersisted: false,
+        updatedAt: new Date(Date.UTC(2026, 7, 11, 0, 20, seed)),
+        status: "failed",
+      });
+    }
+
+    const view = await mount(<Create />);
+    fireEvent.changeText(
+      view.getByTestId("automatic-thought-input"),
+      "no room for this one"
+    );
+    toLastStep(view);
+    await act(async () => {
+      fireEvent.press(view.getByTestId("thought-entry-save"));
+    });
+    await settle();
+
+    // its own copy, not the generic insertion failure
+    expect(view.getByTestId("thought-entry-save-error")).toBeTruthy();
+    expect(view.getByText("cbt_form.thought_save_capacity")).toBeTruthy();
+    expect(view.queryByText("cbt_form.thought_save_failed")).toBeNull();
+    // the editable input is left exactly as it was, Save still usable
+    fireEvent.press(view.getByTestId("thought-entry-previous"));
+    fireEvent.press(view.getByTestId("thought-entry-previous"));
+    fireEvent.press(view.getByTestId("thought-entry-previous"));
+    expect(view.getByTestId("automatic-thought-input").props.value).toBe(
+      "no room for this one"
+    );
+    // and the recovery surface is right there to resolve the backlog
+    expect(view.getByTestId("home-thought-recovery")).toBeTruthy();
   });
 
   test("re-enables Save when the model rejects the submission outright", async () => {
