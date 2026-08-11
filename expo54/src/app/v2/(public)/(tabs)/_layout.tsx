@@ -1,6 +1,4 @@
 // src/app/v2/(public)/(tabs)/_layout.tsx
-// Data-driven tab navigation using TAB_CONFIG
-// Replaces hardcoded <Tabs.Screen> declarations
 
 import { Feather } from "@expo/vector-icons";
 import { Tabs } from "expo-router";
@@ -22,8 +20,10 @@ function TabIcon({
     focused: boolean;
 }) {
     return (
-        <View className={focused ? "rounded-full bg-accent p-1" : "p-1"}>
-            <Feather name={name} color={color} size={size} />
+        <View className="tabs-icon">
+            <View className={focused ? "tabs-pill tabs-active" : "tabs-pill"}>
+                <Feather name={name} color={color} size={size} />
+            </View>
         </View>
     );
 }
@@ -45,7 +45,7 @@ export default function Layout() {
                     key={tab.name}
                     name={tab.name}
                     options={{
-                        title: t(tab.labelKey), // Translates "hub.journal.label" → "Journal"
+                        title: t(tab.labelKey),
                         tabBarIcon: ({ color, size, focused }) => (
                             <TabIcon
                                 name={tab.icon}

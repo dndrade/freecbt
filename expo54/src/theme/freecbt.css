@@ -149,3 +149,20 @@
         --link: var(--accent);
     }
 }
+
+/* Tab navigation styling */
+.tabs-icon {
+    @apply flex items-center justify-center;
+}
+
+.tabs-pill {
+    @apply rounded-full p-2 transition-all duration-200;
+}
+
+.tabs-active {
+    @apply bg-accent;
+}
+
+.tabs-glyph {
+    @apply w-6 h-6;
+}
