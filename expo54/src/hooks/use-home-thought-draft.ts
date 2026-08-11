@@ -30,12 +30,13 @@ export function useHomeThoughtDraft(props: {
 }): HomeThoughtDraft {
   const { model, dispatch } = props;
   const [spec, setSpec] = useState<Thought.Spec>(
-    () => model.homeThoughtDraft?.spec ?? Thought.emptySpec()
+    () => Model.restorableHomeThoughtDraft(model) ?? Thought.emptySpec()
   );
   const [discarding, setDiscarding] = useState(false);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pending = useRef<Thought.Spec | null>(null);
-  const submitting = useRef(false);
+  const requested = useRef(false);
+  const armed = useRef<Thought.Id | null>(null);
 
   const cancelDebounce = useCallback(() => {
     if (timer.current !== null) clearTimeout(timer.current);
@@ -74,11 +75,28 @@ export function useHomeThoughtDraft(props: {
   // "A" resolved: Home resets on durable insertion alone, never waiting on "B"
   // (the revision-guarded draft cleanup the model runs from the same action).
   useEffect(() => {
-    if (!submitting.current) return;
-    if (model.thoughtSaveOutbox.some((r) => r.status === "insertion-pending")) return;
-    submitting.current = false;
+    if (requested.current) {
+      // arm only on a submit the model actually accepted. A rejected one - empty
+      // spec, outbox at capacity, insertion already in flight - changes nothing,
+      // so it must never leave a watcher behind to wipe later typing.
+      requested.current = false;
+      armed.current =
+        model.thoughtSaveOutbox.find((r) => r.status === "insertion-pending")
+          ?.submissionId ?? null;
+      return;
+    }
+    const id = armed.current;
+    if (id === null) return;
+    const record = model.thoughtSaveOutbox.find((r) => r.submissionId === id);
+    if (record?.status === "insertion-pending") return;
+    armed.current = null;
     // a rejected insertion keeps the user's text on screen instead
-    if (model.thoughtSaveResult !== "idle") return;
+    if (
+      model.thoughtSaveResult !== "idle" &&
+      model.thoughtSaveResult.submissionId === id
+    ) {
+      return;
+    }
     cancelDebounce();
     setSpec(Thought.emptySpec());
   }, [cancelDebounce, model.thoughtSaveOutbox, model.thoughtSaveResult]);
@@ -92,7 +110,7 @@ export function useHomeThoughtDraft(props: {
 
   const submit = useCallback(() => {
     cancelDebounce();
-    submitting.current = true;
+    requested.current = true;
     dispatch(Action.createThought(spec, new Date()));
   }, [cancelDebounce, dispatch, spec]);
 

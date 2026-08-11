@@ -80,6 +80,34 @@ export function locale(m: Model): LocaleTag {
     loading: () => "en",
   });
 }
+/**
+ * The draft spec Home should pre-fill, or null. A draft snapshot the outbox has
+ * already accepted - including one whose post-acceptance cleanup failed - is
+ * already accounted for; re-presenting it would invite a duplicate Thought.
+ * We only decline to show it: the record itself is never erased here.
+ */
+export function restorableHomeThoughtDraft(m: Ready): Thought.Spec | null {
+  const draft = m.homeThoughtDraft;
+  if (draft === null) return null;
+  if (
+    draft.draftCleanup?.status === "clear-failed" &&
+    draft.draftCleanup.sourceRevision === draft.sourceRevision
+  ) {
+    return null;
+  }
+  // ponytail: revision equality only. A stale outbox record could collide with a
+  // later session's revision and suppress a legitimate restore (draft stays on
+  // disk, just not pre-filled). Compare snapshot content too if that ever bites.
+  if (
+    m.thoughtSaveOutbox.some(
+      (record) => record.sourceDraftRevision === draft.sourceRevision
+    )
+  ) {
+    return null;
+  }
+  return draft.spec;
+}
+
 export function thoughtsList(m: Ready): readonly Thought.Thought[] {
   return _.sortBy(Array.from(m.thoughts.values()), (t) => t.createdAt);
 }

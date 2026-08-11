@@ -1,0 +1,148 @@
+/**
+ * @jest-environment jsdom
+ */
+import { act, renderHook } from "@testing-library/react";
+import { DistortionData, Model, Settings, Thought } from "../model";
+import type { ThoughtSaveOutboxRecord } from "../platform/storage/storage";
+import { useHomeThoughtDraft } from "./use-home-thought-draft";
+
+const emptyReady: Model.Ready = {
+  status: "ready",
+  thoughts: new Map(),
+  thoughtParseErrors: new Map(),
+  deviceColorScheme: null,
+  deviceLocale: "en",
+  distortionData: DistortionData,
+  sessionAuthed: false,
+  settings: Settings.empty(),
+  onboardingCompletion: "idle",
+  homeThoughtDraft: null,
+  homeThoughtDraftRevision: 0,
+  homeThoughtDraftPersistence: "idle",
+  thoughtSaveOutbox: [],
+  thoughtSaveResult: "idle",
+};
+
+function spec(automaticThought: string): Thought.Spec {
+  return { ...Thought.emptySpec(), automaticThought };
+}
+
+function outboxRecord(
+  seed: number,
+  status: ThoughtSaveOutboxRecord["status"]
+): ThoughtSaveOutboxRecord {
+  const thought = Thought.create(
+    spec(`unrelated ${seed}`),
+    new Date(Date.UTC(2026, 7, 11, 0, 0, seed))
+  );
+  return {
+    submissionId: thought.uuid,
+    thought,
+    sourceDraftRevision: seed,
+    attemptCount: 0,
+    lastAttemptAt: new Date(Date.UTC(2026, 7, 11, 0, 0, seed)),
+    lastError: null,
+    retryRequested: false,
+    thoughtPersisted: false,
+    updatedAt: new Date(Date.UTC(2026, 7, 11, 0, 0, seed)),
+    status,
+  };
+}
+
+function renderDraft(initial: Model.Ready = emptyReady) {
+  const dispatch = jest.fn();
+  const hook = renderHook(
+    (model: Model.Ready) => useHomeThoughtDraft({ model, dispatch }),
+    { initialProps: initial }
+  );
+  return { ...hook, dispatch };
+}
+
+test("a rejected Save never arms the reset watcher", () => {
+  // an outbox at capacity makes createThought a no-op: nothing is submitted
+  const full: Model.Ready = {
+    ...emptyReady,
+    thoughtSaveOutbox: Array.from({ length: 20 }, (_, i) =>
+      outboxRecord(i + 1, "pending")
+    ),
+  };
+  const { result, rerender, dispatch } = renderDraft(full);
+
+  act(() => result.current.change(spec("typed before save")));
+  act(() => result.current.submit());
+  expect(dispatch).toHaveBeenCalled();
+
+  act(() => result.current.change(spec("typed after the rejected save")));
+
+  // an unrelated outbox mutation later: it must not wipe what the user typed
+  rerender({
+    ...full,
+    thoughtSaveOutbox: full.thoughtSaveOutbox.slice(1),
+  });
+
+  expect(result.current.spec.automaticThought).toBe(
+    "typed after the rejected save"
+  );
+});
+
+test("resets only after the submission it armed becomes durable", () => {
+  const { result, rerender } = renderDraft();
+
+  act(() => result.current.change(spec("save me")));
+  act(() => result.current.submit());
+
+  const accepted = {
+    ...outboxRecord(30, "insertion-pending"),
+    sourceDraftRevision: 1,
+  };
+  rerender({ ...emptyReady, thoughtSaveOutbox: [accepted] });
+  expect(result.current.spec.automaticThought).toBe("save me");
+
+  rerender({
+    ...emptyReady,
+    thoughtSaveOutbox: [{ ...accepted, status: "pending" }],
+  });
+  expect(result.current.spec.automaticThought).toBe("");
+});
+
+test("keeps the text on screen when the durable insertion is rejected", () => {
+  const { result, rerender } = renderDraft();
+
+  act(() => result.current.change(spec("save me")));
+  act(() => result.current.submit());
+
+  const accepted = outboxRecord(31, "insertion-pending");
+  rerender({ ...emptyReady, thoughtSaveOutbox: [accepted] });
+  rerender({
+    ...emptyReady,
+    thoughtSaveOutbox: [],
+    thoughtSaveResult: {
+      status: "failure",
+      submissionId: accepted.submissionId,
+      stage: "outbox-insert",
+      error: new Error("disk full"),
+    },
+  });
+
+  expect(result.current.spec.automaticThought).toBe("save me");
+});
+
+test("does not re-present a draft that was already accepted into the outbox", () => {
+  const draft = {
+    spec: spec("already submitted"),
+    sourceRevision: 4,
+    updatedAt: new Date(Date.UTC(2026, 7, 11, 1, 0, 0)),
+    draftCleanup: null,
+  };
+  const { result } = renderDraft(
+    Model.ready({
+      ...emptyReady,
+      homeThoughtDraft: draft,
+      thoughtSaveOutbox: [
+        { ...outboxRecord(40, "pending"), sourceDraftRevision: 4 },
+      ],
+    })
+  );
+
+  expect(result.current.spec.automaticThought).toBe("");
+});

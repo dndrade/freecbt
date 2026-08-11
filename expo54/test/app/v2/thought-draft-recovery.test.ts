@@ -236,6 +236,31 @@ describe("Home draft lifecycle", () => {
     expect(draftWrites(setItem)).toHaveLength(0);
   });
 
+  test("never re-presents a draft whose cleanup failed after a durable save", async () => {
+    const submissionId = record(60, "pending").submissionId;
+    await Storage.homeThoughtDraft(DistortionData, AsyncStorage).write({
+      spec: spec("already saved as a thought"),
+      sourceRevision: 6,
+      updatedAt: new Date(Date.UTC(2026, 7, 11, 1, 0, 0)),
+      draftCleanup: {
+        status: "clear-failed",
+        sourceRevision: 6,
+        outboxSubmissionId: submissionId,
+        lastError: "disk full",
+        updatedAt: new Date(Date.UTC(2026, 7, 11, 1, 0, 1)),
+      },
+    });
+
+    const view = await mounted();
+
+    expect(view.getByTestId("automatic-thought-input").props.value).toBe("");
+    // the failure is still on disk and still surfaced, just not re-offered for saving
+    expect(view.getByTestId("thought-save-recovery")).toBeTruthy();
+    await expect(
+      AsyncStorage.getItem(HOME_THOUGHT_DRAFT_KEY)
+    ).resolves.not.toBeNull();
+  });
+
   test("resets Home once the submission is durable, and cleans up the matching draft", async () => {
     const view = await mounted();
     fireEvent.changeText(view.getByTestId("automatic-thought-input"), "submit me");

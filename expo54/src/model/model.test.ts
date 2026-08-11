@@ -358,7 +358,12 @@ describe("home draft A→B handoff", () => {
   });
 
   test("keeps an A-succeeded, B-interrupted handoff reconcilable across a restart", () => {
-    const accepted = { ...makeOutboxRecord(120, "pending"), sourceDraftRevision: 4 };
+    // the realistic on-disk state after a crash between the durable insert and
+    // the status flip B rides on
+    const accepted = {
+      ...makeOutboxRecord(120, "insertion-pending"),
+      sourceDraftRevision: 4,
+    };
     const draft: HomeThoughtDraftRecord = {
       spec: sampleSpec({ automaticThought: "thought 120" }),
       sourceRevision: 4,
@@ -371,18 +376,71 @@ describe("home draft A→B handoff", () => {
       homeThoughtDraft: draft,
       thoughtSaveOutbox: [accepted],
     });
+    // nothing is erased, and nothing runs on its own
     expect(hydrated.homeThoughtDraft).toEqual(draft);
     expect(hydrated.thoughtSaveOutbox).toEqual([accepted]);
     expect(Model.update(Model.loading, Action.modelReady(hydrated))[1]).toEqual([]);
+    // ...but Home must not re-present content the outbox already accepted
+    expect(Model.restorableHomeThoughtDraft(hydrated)).toBeNull();
+  });
 
-    // a replayed insertion result must not re-run B or duplicate the submission
+  test("ignores a replayed insertion result for an already-flipped record", () => {
+    const accepted = { ...makeOutboxRecord(121, "pending"), sourceDraftRevision: 4 };
+    const draft: HomeThoughtDraftRecord = {
+      spec: sampleSpec({ automaticThought: "thought 121" }),
+      sourceRevision: 4,
+      updatedAt: draftAt,
+      draftCleanup: null,
+    };
+    const hydrated = Model.ready({
+      ...emptyReady,
+      homeThoughtDraft: draft,
+      thoughtSaveOutbox: [accepted],
+    });
+
     const [replayed, cmds] = Model.update(
       hydrated,
       Action.thoughtSaveOutboxInsertionSucceeded(accepted.submissionId, insertedAt)
     );
+
     expect((replayed as Model.Ready).homeThoughtDraft).toEqual(draft);
     expect(cmds.some((cmd) => cmd.cmd === "clear-home-thought-draft")).toBe(false);
     expect((replayed as Model.Ready).thoughtSaveOutbox).toHaveLength(1);
+  });
+
+  test("re-presents only a draft that is not already accounted for", () => {
+    const draft: HomeThoughtDraftRecord = {
+      spec: sampleSpec({ automaticThought: "still mine" }),
+      sourceRevision: 5,
+      updatedAt: draftAt,
+      draftCleanup: null,
+    };
+    const unrelated = { ...makeOutboxRecord(122, "failed"), sourceDraftRevision: 2 };
+    const restorable = Model.ready({
+      ...emptyReady,
+      homeThoughtDraft: draft,
+      thoughtSaveOutbox: [unrelated],
+    });
+    expect(Model.restorableHomeThoughtDraft(restorable)).toEqual(draft.spec);
+
+    expect(Model.restorableHomeThoughtDraft(emptyReady)).toBeNull();
+
+    // B's clear failed after the same revision was accepted: already accounted for
+    const cleanupFailed = Model.ready({
+      ...emptyReady,
+      homeThoughtDraft: {
+        ...draft,
+        draftCleanup: {
+          status: "clear-failed",
+          sourceRevision: 5,
+          outboxSubmissionId: unrelated.submissionId,
+          lastError: "disk full",
+          updatedAt: insertedAt,
+        },
+      },
+      thoughtSaveOutbox: [],
+    });
+    expect(Model.restorableHomeThoughtDraft(cleanupFailed)).toBeNull();
   });
 
   test("discarding a draft leaves the outbox and saved thoughts alone", () => {
