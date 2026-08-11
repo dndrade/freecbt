@@ -98,8 +98,6 @@ export function HomeThoughtRecovery(props: {
           translate={t}
           label={t("cbt_form.recovery_item_label")}
           retryQueued={retryQueued}
-          // this record's own text was never confirmed saved - say so plainly
-          discardConfirmCopy={t("cbt_form.recovery_discard_confirm_lossy")}
           note={
             record === draftCleanupTarget
               ? t("cbt_form.recovery_draft_cleanup_note")
@@ -116,8 +114,6 @@ export function HomeThoughtRecovery(props: {
           label={t("cbt_form.recovery_cleanup_label")}
           description={t("cbt_form.recovery_cleanup_description")}
           retryQueued={retryQueued}
-          // the Thought is already safely saved - Discard here is safe/neutral
-          discardConfirmCopy={t("cbt_form.recovery_discard_confirm_safe")}
           note={
             record === draftCleanupTarget
               ? t("cbt_form.recovery_draft_cleanup_note")
@@ -142,24 +138,26 @@ function RecoveryItem(props: {
   description?: string;
   note: string | null;
   retryQueued: boolean;
-  discardConfirmCopy: string;
 }) {
-  const {
-    record,
-    dispatch,
-    translate: t,
-    label,
-    description,
-    note,
-    retryQueued,
-    discardConfirmCopy,
-  } = props;
+  const { record, dispatch, translate: t, label, description, note, retryQueued } =
+    props;
   const id = record.submissionId;
   const [discarding, setDiscarding] = React.useState(false);
   // internal IDs are never shown as a label - an empty Automatic Thought
   // falls back to a localized placeholder instead
   const excerpt =
     record.thought.automaticThought || t("cbt_form.recovery_untitled");
+  // driven by the record's own `thoughtPersisted` flag, never by which status
+  // list it came from: a "cleanup-failed" record is always persisted (storage
+  // invariant), but an "uncertain" one (a restart-interrupted write, see
+  // `Model.ready`) can be persisted too if the crash landed between the write
+  // succeeding and the outbox record being removed - claiming that Thought was
+  // "never saved" would be flatly false, which the design explicitly forbids.
+  const discardConfirmCopy = record.thoughtPersisted
+    ? t("cbt_form.recovery_discard_confirm_safe")
+    : record.status === "uncertain"
+      ? t("cbt_form.recovery_discard_confirm_uncertain")
+      : t("cbt_form.recovery_discard_confirm_lossy");
   return (
     <View
       testID={`home-thought-recovery-item-${id}`}

@@ -367,6 +367,63 @@ describe("HomeThoughtRecovery", () => {
     ).toBeNull();
   });
 
+  test("Discard on an uncertain-but-already-persisted record uses the safe copy, never the false 'never saved' claim", () => {
+    // the crash-between-persisted-flag-and-removal case: `Model.ready`'s
+    // restart normalization can leave `status: "uncertain"` with
+    // `thoughtPersisted: true` when the write landed but the outbox removal
+    // never got the chance to run before the app died
+    const record = {
+      ...makeOutboxRecord(1, "uncertain"),
+      thoughtPersisted: true,
+    };
+    const model: Model.Ready = {
+      ...emptyReady,
+      thoughtSaveOutbox: [record],
+    };
+    render(<Harness model={model} dispatch={jest.fn()} />);
+
+    fireEvent.press(
+      screen.getByTestId(`home-thought-recovery-discard-${record.submissionId}`)
+    );
+    expect(
+      screen.getByText("cbt_form.recovery_discard_confirm_safe")
+    ).toBeTruthy();
+    // this Thought IS saved - never claim it was never saved / cannot be
+    // recovered, and never the softer-but-still-uncertain wording either
+    expect(
+      screen.queryByText("cbt_form.recovery_discard_confirm_lossy")
+    ).toBeNull();
+    expect(
+      screen.queryByText("cbt_form.recovery_discard_confirm_uncertain")
+    ).toBeNull();
+  });
+
+  test("Discard on an uncertain, not-yet-confirmed-persisted record is honest about the uncertainty", () => {
+    const record = {
+      ...makeOutboxRecord(1, "uncertain"),
+      thoughtPersisted: false,
+    };
+    const model: Model.Ready = {
+      ...emptyReady,
+      thoughtSaveOutbox: [record],
+    };
+    render(<Harness model={model} dispatch={jest.fn()} />);
+
+    fireEvent.press(
+      screen.getByTestId(`home-thought-recovery-discard-${record.submissionId}`)
+    );
+    expect(
+      screen.getByText("cbt_form.recovery_discard_confirm_uncertain")
+    ).toBeTruthy();
+    // it's genuinely unknown, not confirmed lost - never assert either outcome
+    expect(
+      screen.queryByText("cbt_form.recovery_discard_confirm_lossy")
+    ).toBeNull();
+    expect(
+      screen.queryByText("cbt_form.recovery_discard_confirm_safe")
+    ).toBeNull();
+  });
+
   test("a record in an ineligible (in-flight) status has no recovery item, so no Discard control at all", () => {
     const record = makeOutboxRecord(1, "pending");
     const model: Model.Ready = {

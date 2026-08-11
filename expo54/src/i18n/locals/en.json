@@ -255,6 +255,7 @@
     "recovery_untitled": "Untitled thought",
     "recovery_discard": "Discard",
     "recovery_discard_confirm_lossy": "Discard this? The text you entered was never saved and cannot be recovered.",
+    "recovery_discard_confirm_uncertain": "Discard this? It's unclear whether this was saved before the interruption - if it wasn't, this text can't be recovered.",
     "recovery_discard_confirm_safe": "Discard this cleanup reminder? Your thought is already saved - this only stops the app from retrying the redundant bookkeeping step.",
     "recovery_discard_yes": "Discard",
     "recovery_discard_no": "Cancel"
