@@ -162,7 +162,3 @@
 .tabs-active {
     @apply bg-accent;
 }
-
-.tabs-glyph {
-    @apply w-6 h-6;
-}

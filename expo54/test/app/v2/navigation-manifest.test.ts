@@ -113,20 +113,31 @@ describe("production route namespace", () => {
       ),
       "utf8"
     );
-    expect(
-      Array.from(tabsLayout.matchAll(/<Tabs\.Screen\s+name="([^"]+)"/g), ([, name]) => name)
-    ).toEqual(["thoughts/index", "index", "settings/index"]);
-    expect(tabsLayout).toContain('title: t("settings.hub.journal.label")');
-    expect(tabsLayout).toContain('title: "Home"');
-    expect(tabsLayout).toContain('title: t("accessibility.settings_button")');
+    // Tab screens are rendered from TAB_CONFIG rather than declared inline;
+    // verify the layout maps over it instead of matching literal JSX.
+    expect(tabsLayout).toContain("TAB_CONFIG.map((tab) =>");
+    expect(tabsLayout).toContain("<Tabs.Screen");
+    expect(tabsLayout).toContain("key={tab.name}");
+    expect(tabsLayout).toContain("name={tab.name}");
+    expect(tabsLayout).toContain("title: t(tab.labelKey)");
     expect(tabsLayout).toContain('useThemeColor(["accent", "muted"])');
     expect(tabsLayout).toContain("tabBarActiveTintColor: accent");
     expect(tabsLayout).toContain("tabBarInactiveTintColor: muted");
-    expect(tabsLayout).toContain('name="book-open"');
-    expect(tabsLayout).toContain('name="home"');
-    expect(tabsLayout).toContain('name="settings"');
-    expect(tabsLayout).toContain("focused ? \"rounded-full bg-accent p-1\" : \"p-1\"");
     expect(tabsLayout).not.toMatch(/accessibilityState/);
+
+    const tabsConfig = fs.readFileSync(
+      path.join(__dirname, "../../../src/constants/tabs-config.ts"),
+      "utf8"
+    );
+    expect(
+      Array.from(tabsConfig.matchAll(/name:\s*"([^"]+)"/g), ([, name]) => name)
+    ).toEqual(["thoughts/index", "index", "settings/index"]);
+    expect(tabsConfig).toContain('labelKey: "settings.hub.journal.label"');
+    expect(tabsConfig).toContain('labelKey: "settings.hub.home.label"');
+    expect(tabsConfig).toContain('labelKey: "accessibility.settings_button"');
+    expect(tabsConfig).toContain('icon: "book-open"');
+    expect(tabsConfig).toContain('icon: "home"');
+    expect(tabsConfig).toContain('icon: "settings"');
 
     const publicLayout = fs.readFileSync(
       path.join(__dirname, "../../../src/app/v2/(public)/_layout.tsx"),
