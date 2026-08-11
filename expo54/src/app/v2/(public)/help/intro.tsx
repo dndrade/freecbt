@@ -3,13 +3,12 @@ import { LoadModel, ModelLoadedProps } from "@/src/hooks/use-model";
 import { Reminders, useReminders } from "@/src/features/reminders/use-reminders";
 import { Action } from "@/src/model";
 import { useSafeWindowDimensions } from "@/src/hooks/use-safe-area";
-import { ImagePath, SegmentedProgress } from "@/src/components";
+import { ImagePath, Screen, Section, SegmentedProgress } from "@/src/components";
+import { Button, Typography } from "heroui-native";
 import { Link, useRouter } from "expo-router";
 import React from "react";
-import { Image, Keyboard, Text, TouchableOpacity, View } from "react-native";
-import { useSharedValue } from "react-native-reanimated";
+import { Image, Keyboard, Pressable, ScrollView, View } from "react-native";
 import Carousel, { CarouselRenderItem, ICarouselInstance } from "react-native-reanimated-carousel";
-import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function Index() {
   return <LoadModel ready={Ready} />;
@@ -19,12 +18,10 @@ export type SlideName = (typeof slideNames)[number];
 // export const SlideName = z.enum(slideNames);
 // export type SlideName = z.infer<typeof SlideName>;
 export function Ready(props: ModelLoadedProps) {
-  const { style: s } = props;
   const ref = React.useRef<ICarouselInstance>(null);
   const completionRequested = React.useRef(false);
   const [activeIndex, setActiveIndex] = React.useState(0);
   const router = useRouter();
-  const progress = useSharedValue<number>(0);
   const reminders = useReminders();
   const isSaving = props.model.onboardingCompletion === "saving";
   const hasFailed =
@@ -49,14 +46,13 @@ export function Ready(props: ModelLoadedProps) {
   };
   const slides = reminders.isSupported() ? slideNames : slideNames.slice(0, -1);
   const w = useSafeWindowDimensions();
-  const width = Math.min(w.width, s.container.maxWidth);
+  const width = Math.min(w.width - 32, 768);
   return (
-    <SafeAreaView style={[s.view, s.p0, s.py4]}>
-      <View style={[s.container]}>
+    <Screen scroll={false} contentClassName="flex-1 py-6">
+      <View className="flex-1">
         <Carousel
           ref={ref}
           data={[...slides]}
-          onProgressChange={progress}
           renderItem={IntroItem({
             ...props,
             reminders,
@@ -83,42 +79,39 @@ export function Ready(props: ModelLoadedProps) {
             gesture.activeOffsetX([-10, 10]);
           }}
         />
-        <SegmentedProgress
-          currentIndex={activeIndex}
-          count={slides.length}
-          accessibilityLabel="Onboarding progress"
-        />
-        <View
-          style={{
-            flexDirection: "row",
-            justifyContent: "space-between",
-            alignItems: "center",
-            marginTop: 10,
-          }}
-        >
+        <Section className="mt-4 gap-4">
+          <SegmentedProgress
+            currentIndex={activeIndex}
+            count={slides.length}
+            accessibilityLabel="Onboarding progress"
+          />
+          <View className="flex-row items-center justify-between">
           {activeIndex > 0 ? (
-            <TouchableOpacity
+            <Pressable
               accessibilityRole="button"
               accessibilityLabel="Previous"
-              style={[s.button, { width: 44, height: 44 }]}
+              className="h-11 w-11 items-center justify-center rounded-full border border-border bg-surface-secondary"
+              style={{ width: 44, height: 44 }}
               onPress={() => onPressStep(-1)}
             >
-              <Text style={[s.buttonText]}>‹</Text>
-            </TouchableOpacity>
-          ) : <View style={{ width: 44, height: 44 }} />}
+              <Typography type="h4">‹</Typography>
+            </Pressable>
+          ) : <View className="h-11 w-11" />}
           {activeIndex < slides.length - 1 ? (
-            <TouchableOpacity
+            <Pressable
               accessibilityRole="button"
               accessibilityLabel="Next"
-              style={[s.button, { width: 44, height: 44 }]}
+              className="h-11 w-11 items-center justify-center rounded-full border border-border bg-surface-secondary"
+              style={{ width: 44, height: 44 }}
               onPress={() => onPressStep(1)}
             >
-              <Text style={[s.buttonText]}>›</Text>
-            </TouchableOpacity>
+              <Typography type="h4">›</Typography>
+            </Pressable>
           ) : null}
         </View>
+        </Section>
       </View>
-    </SafeAreaView>
+    </Screen>
   );
 }
 
@@ -130,7 +123,7 @@ function IntroItem(
     onPressGetStarted: () => void;
   }
 ): CarouselRenderItem<SlideName> {
-  const { reminders, dispatch, style: s, translate: t, isSaving, hasFailed, onPressGetStarted } = props;
+  const { reminders, dispatch, translate: t, isSaving, hasFailed, onPressGetStarted } = props;
 
   async function onPressYes() {
     await reminders.enable(dispatch, t);
@@ -140,102 +133,111 @@ function IntroItem(
   }
   function renderGetStarted() {
     return (
-      <>
+      <Section className="w-full gap-3">
         {hasFailed ? (
-          <Text style={[s.errorText]}>Unable to save. Try again.</Text>
+          <Typography type="body-sm" className="text-danger">
+            Unable to save. Try again.
+          </Typography>
         ) : null}
-        <TouchableOpacity
-          style={[s.button]}
-          disabled={isSaving}
-          onPress={onPressGetStarted}
-        >
-          <Text style={[s.buttonText]}>
-            {isSaving ? "Saving…" : "Get started"}
-          </Text>
-        </TouchableOpacity>
-      </>
+        <Button isDisabled={isSaving} onPress={onPressGetStarted}>
+          {isSaving ? "Saving…" : "Get started"}
+        </Button>
+      </Section>
+    );
+  }
+  function slideContent(children: React.ReactNode) {
+    return (
+      <ScrollView
+        className="flex-1"
+        contentContainerClassName="grow justify-center px-2 pb-6"
+        showsVerticalScrollIndicator={false}
+        style={{ flex: 1 }}
+      >
+        <Section className="items-center gap-4">
+          {children}
+        </Section>
+      </ScrollView>
     );
   }
   return function IntroItem({ item }) {
     switch (item) {
       case "record": {
-        return (
+        return slideContent(
           <>
             <Image
               source={ImagePath.looker}
               resizeMode="contain"
-              style={[s.selfCenter, s.my4, { width: 156, height: 156 }]}
+              accessibilityRole="image"
+              className="h-40 w-40"
             />
-            <Text style={[s.header]}>{t("onboarding_screen.readme")}</Text>
+            <Typography type="h1" accessibilityRole="header" className="text-center">
+              {t("onboarding_screen.readme")}
+            </Typography>
             <Link
-              style={[s.flex1, s.border, s.rounded, s.p2, s.button]}
+              asChild
               href="https://freecbt.erosson.org/explanation/?ref=quirk"
+              accessibilityLabel={t("onboarding_screen.header")}
             >
-              <TouchableOpacity style={[s.flex1]}>
-                <Text style={[s.buttonText]}>
-                  {t("onboarding_screen.header")}
-                </Text>
-              </TouchableOpacity>
+              <Button variant="secondary">{t("onboarding_screen.header")}</Button>
             </Link>
           </>
         );
       }
       case "challenge": {
-        return (
+        return slideContent(
           <>
             <Image
               source={ImagePath.eater}
               resizeMode="contain"
-              style={[s.selfCenter, s.my4, { width: 156, height: 156 }]}
+              accessibilityRole="image"
+              className="h-40 w-40"
             />
-            <Text style={[s.header]}>
+            <Typography type="h1" accessibilityRole="header" className="text-center">
               {t("onboarding_screen.block1.header")}
-            </Text>
-            <Text style={[s.subheader]}>
+            </Typography>
+            <Typography type="body" color="muted" className="text-center">
               {t("onboarding_screen.block1.body")}
-            </Text>
+            </Typography>
           </>
         );
       }
       case "change": {
-        return (
+        return slideContent(
           <>
             <Image
               source={ImagePath.logo}
               resizeMode="contain"
-              style={[s.selfCenter, s.my4, { width: 156, height: 156 }]}
+              accessibilityRole="image"
+              className="h-40 w-40"
             />
-            <Text style={[s.header]}>
+            <Typography type="h1" accessibilityRole="header" className="text-center">
               {t("onboarding_screen.block2.header")}
-            </Text>
-            <Text style={[s.subheader]}>
+            </Typography>
+            <Typography type="body" color="muted" className="text-center">
               {t("onboarding_screen.block2.body")}
-            </Text>
+            </Typography>
             {reminders.isSupported() ? null : renderGetStarted()}
           </>
         );
       }
       case "reminders": {
-        return (
+        return slideContent(
           <>
             <Image
               source={ImagePath.notifications}
               resizeMode="contain"
-              style={[s.selfCenter, s.my4, { width: 256, height: 196 }]}
+              accessibilityRole="image"
+              className="h-48 w-64"
             />
-            <Text style={[s.header]}>
+            <Typography type="h1" accessibilityRole="header" className="text-center">
               {t("onboarding_screen.reminders.header")}
-            </Text>
-            <TouchableOpacity style={[s.button]} onPress={onPressYes}>
-              <Text style={[s.buttonText]}>
-                {t("onboarding_screen.reminders.button.yes")}
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={[s.button]} onPress={onPressNo}>
-              <Text style={[s.buttonText]}>
-                {t("onboarding_screen.reminders.button.no")}
-              </Text>
-            </TouchableOpacity>
+            </Typography>
+            <Button onPress={onPressYes}>
+              {t("onboarding_screen.reminders.button.yes")}
+            </Button>
+            <Button variant="secondary" onPress={onPressNo}>
+              {t("onboarding_screen.reminders.button.no")}
+            </Button>
             {renderGetStarted()}
           </>
         );

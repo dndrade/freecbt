@@ -1,17 +1,36 @@
 import React from "react";
 import { fireEvent, render } from "@testing-library/react-native";
-import { Text, View } from "react-native";
+import { Image, ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { Ready } from "@/src/app/v2/(public)/help/intro";
 
 const mockDispatch = jest.fn();
 const mockScrollTo = jest.fn();
 let remindersSupported = true;
 let currentIndex = 0;
+let mockWindowHeight = 800;
 
 jest.mock("expo-router", () => ({
   useRouter: () => ({ push: jest.fn() }),
-  Link: (props: { children: React.ReactNode }) =>
-    React.createElement(View, null, props.children),
+  Link: (props: {
+    asChild?: boolean;
+    children: React.ReactNode;
+    accessibilityLabel?: string;
+  }) => {
+    if (props.asChild && React.isValidElement(props.children)) {
+      return React.cloneElement(props.children as React.ReactElement<any>, {
+        accessibilityLabel: props.accessibilityLabel,
+        accessibilityRole: "link",
+      });
+    }
+    return React.createElement(
+      View,
+      {
+        accessibilityRole: "link",
+        accessibilityLabel: props.accessibilityLabel,
+      },
+      props.children
+    );
+  },
 }));
 
 jest.mock("@/src", () => ({
@@ -20,10 +39,20 @@ jest.mock("@/src", () => ({
 
 jest.mock("@/src/components", () => ({
   ImagePath: { looker: 1, eater: 2, logo: 3, notifications: 4 },
-  SegmentedProgress: ({ count, currentIndex }: { count: number; currentIndex: number }) =>
+  Screen: (props: { children: React.ReactNode }) => React.createElement(View, null, props.children),
+  Section: (props: { children: React.ReactNode }) => React.createElement(View, null, props.children),
+  SegmentedProgress: ({
+    count,
+    currentIndex,
+    accessibilityLabel,
+  }: {
+    count: number;
+    currentIndex: number;
+    accessibilityLabel?: string;
+  }) =>
     React.createElement(
       View,
-      { accessibilityRole: "progressbar" },
+      { accessibilityRole: "progressbar", accessibilityLabel },
       ...Array.from({ length: count }, (_, index) =>
         React.createElement(View, {
           key: index,
@@ -43,7 +72,46 @@ jest.mock("@/src/features/reminders/use-reminders", () => ({
 }));
 
 jest.mock("@/src/hooks/use-safe-area", () => ({
-  useSafeWindowDimensions: () => ({ width: 400, height: 800 }),
+  useSafeWindowDimensions: () => ({ width: 400, height: mockWindowHeight }),
+}));
+
+jest.mock("heroui-native", () => ({
+  Button: (props: {
+    children: React.ReactNode;
+    onPress?: () => void;
+    isDisabled?: boolean;
+  }) => {
+    const accessibilityLabel =
+      typeof props.children === "string" ? props.children : undefined;
+    return React.createElement(
+      TouchableOpacity,
+      {
+        accessibilityLabel,
+        accessibilityRole: "button",
+        disabled: props.isDisabled,
+        onPress: props.onPress,
+      },
+      props.children
+    );
+  },
+  Typography: (props: {
+    children: React.ReactNode;
+    type?: string;
+    accessibilityRole?: "header";
+  }) => {
+    const role =
+      props.accessibilityRole ??
+      (props.type?.startsWith("h") ? ("header" as const) : undefined);
+    return (
+    React.createElement(
+      Text,
+      {
+        accessibilityRole: role,
+      },
+      props.children
+    )
+  );
+  },
 }));
 
 jest.mock("react-native-reanimated", () => ({
@@ -100,6 +168,7 @@ describe("onboarding navigation", () => {
   beforeEach(() => {
     remindersSupported = true;
     currentIndex = 0;
+    mockWindowHeight = 800;
     jest.clearAllMocks();
   });
 
@@ -135,8 +204,35 @@ describe("onboarding navigation", () => {
     fireEvent.press(view.getByRole("button", { name: "Next" }));
     fireEvent.press(view.getByRole("button", { name: "Next" }));
 
-    expect(view.getByText("Get started")).toBeTruthy();
+    expect(view.getByRole("button", { name: "Get started" })).toBeTruthy();
     expect(view.queryByRole("button", { name: "Next" })).toBeNull();
     expect(view.queryByRole("button", { name: "Previous" })).toBeTruthy();
+  });
+
+  it("renders accessible onboarding hierarchy with a labeled help link", () => {
+    const view = render(intro());
+
+    expect(view.getByLabelText("Onboarding progress")).toBeTruthy();
+    expect(view.getByRole("header", { name: "onboarding_screen.readme" })).toBeTruthy();
+    expect(view.UNSAFE_getAllByType(Image)).toHaveLength(1);
+    expect(
+      view.UNSAFE_getByProps({
+        accessibilityLabel: "onboarding_screen.header",
+        accessibilityRole: "link",
+      })
+    ).toBeTruthy();
+  });
+
+  it("keeps each slide in a scroll container for tight heights", () => {
+    mockWindowHeight = 320;
+    remindersSupported = false;
+    const view = render(intro());
+
+    fireEvent.press(view.getByRole("button", { name: "Next" }));
+    fireEvent.press(view.getByRole("button", { name: "Next" }));
+
+    const [slideScrollView] = view.UNSAFE_getAllByType(ScrollView);
+    expect(slideScrollView.props.style).toEqual(expect.objectContaining({ flex: 1 }));
+    expect(view.getByRole("button", { name: "Get started" })).toBeTruthy();
   });
 });

@@ -15,6 +15,7 @@ const mockReminders = {
 };
 let mockPathname = "/v2";
 let mockExistingUser = false;
+let mockWindowHeight = 800;
 
 jest.mock("expo-router", () => ({
   usePathname: () => mockPathname,
@@ -40,6 +41,8 @@ jest.mock("@/src/components", () => ({
     logo: 3,
     notifications: 4,
   },
+  Screen: (props: { children: React.ReactNode }) => React.createElement(View, null, props.children),
+  Section: (props: { children: React.ReactNode }) => React.createElement(View, null, props.children),
   SegmentedProgress: () => React.createElement(View),
 }));
 
@@ -48,7 +51,46 @@ jest.mock("@/src/features/reminders/use-reminders", () => ({
 }));
 
 jest.mock("@/src/hooks/use-safe-area", () => ({
-  useSafeWindowDimensions: () => ({ width: 400, height: 800 }),
+  useSafeWindowDimensions: () => ({ width: 400, height: mockWindowHeight }),
+}));
+
+jest.mock("heroui-native", () => ({
+  Button: (props: {
+    children: React.ReactNode;
+    onPress?: () => void;
+    isDisabled?: boolean;
+  }) => {
+    const accessibilityLabel =
+      typeof props.children === "string" ? props.children : undefined;
+    return React.createElement(
+      TouchableOpacity,
+      {
+        accessibilityLabel,
+        accessibilityRole: "button",
+        disabled: props.isDisabled,
+        onPress: props.onPress,
+      },
+      props.children
+    );
+  },
+  Typography: (props: {
+    children: React.ReactNode;
+    type?: string;
+    accessibilityRole?: "header";
+  }) => {
+    const role =
+      props.accessibilityRole ??
+      (props.type?.startsWith("h") ? ("header" as const) : undefined);
+    return (
+    React.createElement(
+      Text,
+      {
+        accessibilityRole: role,
+      },
+      props.children
+    )
+  );
+  },
 }));
 
 jest.mock("react-native-reanimated", () => ({
@@ -80,16 +122,6 @@ const mockStyle: Record<string, object> = new Proxy(
   { get: (target, key: string) => target[key] ?? {} }
 );
 
-function textContent(node: React.ReactNode): string {
-  if (typeof node === "string") return node;
-  if (Array.isArray(node)) return node.map(textContent).join("");
-  if (React.isValidElement(node)) {
-    const { children } = node.props as { children?: React.ReactNode };
-    return textContent(children);
-  }
-  return "";
-}
-
 function intro(completion: "idle" | "saving" | { status: "failure"; error: Error }) {
   return React.createElement(Ready, {
     model: { onboardingCompletion: completion } as never,
@@ -115,6 +147,7 @@ describe("post-onboarding navigation", () => {
   beforeEach(() => {
     mockPathname = "/v2";
     mockExistingUser = false;
+    mockWindowHeight = 800;
     jest.clearAllMocks();
   });
 
@@ -167,25 +200,41 @@ describe("post-onboarding navigation", () => {
     expect(intro.match(/renderGetStarted\(\)/g)).toHaveLength(3);
     expect(intro).toMatch(/Saving…/);
     expect(intro).toMatch(/Unable to save\. Try again\./);
-    expect(intro).toMatch(/disabled=\{isSaving\}/);
+    expect(intro).toMatch(/isDisabled=\{isSaving\}/);
   });
 
-  it("keeps reminder choices persistence-only and unsupported Change content-only", () => {
+  it("keeps unsupported Change as the final content step", () => {
     const intro = fs.readFileSync(
       path.join(__dirname, "../../../src/app/v2/(public)/help/intro.tsx"),
       "utf8"
     );
 
-    expect(intro).toMatch(/async function onPressYes\(\)[\s\S]*?reminders\.enable\(dispatch, t\);[\s\S]*?\}/);
-    expect(intro).toMatch(/async function onPressNo\(\)[\s\S]*?reminders\.disable\(dispatch\);[\s\S]*?\}/);
     expect(intro).toMatch(/reminders\.isSupported\(\) \? null : renderGetStarted\(\)/);
     expect(intro).toMatch(/case "reminders"[\s\S]*?renderGetStarted\(\)/);
+  });
+
+  it("keeps reminder choices persistence-only before completion", () => {
+    const view = render(intro("idle"));
+
+    fireEvent.press(view.getByRole("button", { name: "onboarding_screen.reminders.button.yes" }));
+    expect(mockReminders.enable).toHaveBeenCalledWith(mockDispatch, expect.any(Function));
+    expect(mockDispatch).not.toHaveBeenCalledWith({
+      action: "begin-onboarding-completion",
+    });
+    expect(mockPush).not.toHaveBeenCalled();
+
+    fireEvent.press(view.getByRole("button", { name: "onboarding_screen.reminders.button.no" }));
+    expect(mockReminders.disable).toHaveBeenCalledWith(mockDispatch);
+    expect(mockDispatch).not.toHaveBeenCalledWith({
+      action: "begin-onboarding-completion",
+    });
+    expect(mockPush).not.toHaveBeenCalled();
   });
 
   it("completes only after saving succeeds and keeps failure retryable", () => {
     const view = render(intro("idle"));
 
-    fireEvent.press(view.getByText("Get started"));
+    fireEvent.press(view.getByRole("button", { name: "Get started" }));
     expect(mockDispatch).toHaveBeenCalledTimes(1);
     expect(mockDispatch).toHaveBeenCalledWith({
       action: "begin-onboarding-completion",
@@ -193,18 +242,17 @@ describe("post-onboarding navigation", () => {
     expect(mockPush).not.toHaveBeenCalled();
 
     view.rerender(intro("saving"));
-    const savingLabel = view.getByText("Saving…");
-    expect(savingLabel).toBeTruthy();
-    const savingButton = view
-      .UNSAFE_getAllByType(TouchableOpacity)
-      .find((button) => textContent(button.props.children).includes("Saving…"));
-    expect(savingButton?.props.disabled).toBe(true);
+    const savingButton = view.getByRole("button", { name: "Saving…" }) as {
+      props: { accessibilityState?: { disabled?: boolean } };
+    };
+    expect(savingButton).toBeTruthy();
+    expect(savingButton.props.accessibilityState?.disabled).toBe(true);
     expect(mockPush).not.toHaveBeenCalled();
 
     view.rerender(intro({ status: "failure", error: new Error("failed") }));
     expect(view.getByText("Unable to save. Try again.")).toBeTruthy();
-    expect(view.getByText("Get started")).toBeTruthy();
-    fireEvent.press(view.getByText("Get started"));
+    expect(view.getByRole("button", { name: "Get started" })).toBeTruthy();
+    fireEvent.press(view.getByRole("button", { name: "Get started" }));
     expect(mockDispatch).toHaveBeenCalledTimes(2);
     expect(mockPush).not.toHaveBeenCalled();
 
