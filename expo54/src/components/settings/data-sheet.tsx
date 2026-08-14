@@ -1,4 +1,4 @@
-import { Routes } from "@/src";
+import * as Routes from "@/src/routes";
 import { TranslateFn } from "@/src/i18n/use-i18n";
 import { SettingsCard } from "./settings-card";
 import { SettingsRow } from "./settings-row";
