@@ -2,21 +2,9 @@ import { fireEvent, render, screen } from "@testing-library/react-native";
 import React from "react";
 import { Text, TextInput, View, Pressable } from "react-native";
 import { Action } from "@/src/model";
-import Lock from "./lock";
+import { PinUpdateScreen } from "./pin-update-screen";
 
 const mockDispatch = jest.fn();
-
-jest.mock("@/src/hooks/use-model", () => {
-  const React = require("react");
-
-  return {
-    LoadModel: ({ ready }: { ready: React.ComponentType }) =>
-      React.createElement(ready, {
-        dispatch: mockDispatch,
-        translate: (key: string) => key,
-      }),
-  };
-});
 
 jest.mock("@/src/components", () => {
   const React = require("react");
@@ -64,6 +52,15 @@ jest.mock("expo-router", () => {
   };
 });
 
+function renderPinUpdateScreen() {
+  return render(
+    <PinUpdateScreen
+      dispatch={mockDispatch}
+      translate={(key: string) => key}
+    />
+  );
+}
+
 function completePin(value: string): void {
   fireEvent.changeText(screen.getByTestId("pin"), value);
   fireEvent.press(screen.getByTestId("pin-complete"));
@@ -75,14 +72,14 @@ beforeEach(() => {
 
 describe("Lock PIN update workflow", () => {
   it("starts in the empty PIN-entry state", () => {
-    render(<Lock />);
+    renderPinUpdateScreen();
 
     expect(screen.getByText("lock_screen.update")).toBeTruthy();
     expect(screen.getByTestId("pin").props.value).toBe("");
   });
 
   it("moves to confirmation for four digits and filters non-numeric input", () => {
-    render(<Lock />);
+    renderPinUpdateScreen();
 
     completePin("12a34");
 
@@ -91,7 +88,7 @@ describe("Lock PIN update workflow", () => {
   });
 
   it("resets to empty entry for a non-four-digit first PIN", () => {
-    render(<Lock />);
+    renderPinUpdateScreen();
 
     completePin("123");
 
@@ -101,7 +98,7 @@ describe("Lock PIN update workflow", () => {
   });
 
   it("dispatches a matching PIN once and redirects when done", () => {
-    render(<Lock />);
+    renderPinUpdateScreen();
 
     completePin("1234");
     expect(mockDispatch).not.toHaveBeenCalled();
@@ -114,7 +111,7 @@ describe("Lock PIN update workflow", () => {
   });
 
   it("resets after a mismatched confirmation without dispatching a PIN", () => {
-    render(<Lock />);
+    renderPinUpdateScreen();
 
     completePin("1234");
     completePin("9999");
