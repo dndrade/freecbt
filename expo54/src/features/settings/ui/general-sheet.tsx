@@ -2,9 +2,13 @@ import * as Routes from "@/src/routes";
 import { localeTags, LocaleTag, TranslateFn } from "@/src/i18n/use-i18n";
 import { useReminders } from "@/src/features/reminders/use-reminders";
 import { Action, Model } from "@/src/model";
-import { SettingsCard } from "./settings-card";
-import { SettingsRow } from "./settings-row";
-import { SettingsSheet, useDismissThenNavigate, useResetOnDismiss } from "./settings-sheet";
+import {
+  SettingsCard,
+  SettingsRow,
+  SettingsSheet,
+  useDismissThenNavigate,
+  useResetOnDismiss,
+} from "@/src/components/settings";
 import { Feather } from "@expo/vector-icons";
 import { RadioGroup, Typography } from "heroui-native";
 import React, { useState } from "react";
