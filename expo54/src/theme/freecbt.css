@@ -2,6 +2,89 @@
     --font-normal: system-ui;
     --font-medium: system-ui;
     --font-semibold: system-ui;
+    --font-bold: system-ui;
+
+    /* ── Spacing ──────────────────────────────────────────────────────────
+       Tailwind v4 (and therefore Uniwind) drives the whole spacing scale off
+       a SINGLE base multiplier, not per-step --spacing-1/-2/... tokens: every
+       p-* m-* gap-* size-* utility compiles to calc(var(--spacing) * n). So
+       one declaration defines the entire grid: p-1 = 4px, p-2 = 8px,
+       p-4 = 16px, p-6 = 24px.
+
+       4px is deliberately the common denominator of both platform grids:
+       it *is* the Material 3 4dp grid, and it subdivides the Apple 8pt rhythm
+       exactly, so a single scale reads native on both without per-platform
+       branching.
+
+       Declared in px rather than the Tailwind default 0.25rem because Uniwind
+       resolves rem at *build* time against a fixed root of 16px
+       (`--uniwind-em`, overridable via the metro config `polyfills.rem`).
+       0.25rem and 4px are identical today, so no existing p-* m-* gap-*
+       usage shifts; px just pins the grid so that knob cannot silently
+       rescale the app. */
+    --spacing: 4px;
+
+    /* ── Type scale ───────────────────────────────────────────────────────
+       Tailwind v4 pairs every size token with a `--text-<step>--line-height`
+       sibling, and the heroui-native Typography component consumes exactly
+       these tokens (see heroui-native/src/styles/components/text.css):
+
+         h1 → 4xl   h2 → 3xl   h3 → 2xl   h4 → xl   h5 → lg
+         h6 → base  body → base  body-sm → sm  body-xs/code → xs/sm
+
+       heroui-native itself ships no type tokens, so until now the app was
+       silently inheriting the Tailwind *web* defaults (h1 36px, body 16px on a
+       1.5 ratio). These replace them with one intentional mobile scale.
+
+       Sizes converge Apple HIG Dynamic Type (Large) and Material 3 into a
+       single cross-platform ladder rather than branching per platform:
+
+         32  h1    HIG Large Title 34 · M3 Headline Large 32/40
+         28  h2    HIG Title 1     28 · M3 Headline Medium 28/36
+         24  h3    HIG Title 2     22 · M3 Headline Small  24/32
+         20  h4    HIG Title 3     20 · M3 Title Large     22/28
+         18  h5    HIG Headline    17 · M3 Title Medium    16/24
+         16  body  HIG Body        17 · M3 Body Large      16/24
+         14  sm    HIG Subhead     15 · M3 Body Medium     14/20
+         12  xs    HIG Caption 1   12 · M3 Body Small      12/16
+
+       Every line-height is a multiple of 4 so text blocks land on the same
+       4dp grid as --spacing above.
+
+       Line-heights are absolute px rather than the Tailwind unitless ratios.
+       Uniwind accepts both — a resolved lineHeight below 6 is treated as a
+       multiplier of fontSize at runtime (uniwind/src/core/native/store.ts) —
+       but px keeps every step exactly on the grid instead of rounding.
+
+       Note: heroui hardcodes the body-* leadings to calc(var(--spacing) * 7),
+       * 6 and * 5, so body renders 16/28, body-sm 14/24, body-xs 12/20 —
+       looser than the header leadings here, which is what long-form
+       journaling text wants. The --text-*--line-height values below govern
+       the headings and any bare text-* utility. */
+    --text-xs: 12px;
+    --text-xs--line-height: 16px;
+    --text-sm: 14px;
+    --text-sm--line-height: 20px;
+    --text-base: 16px;
+    --text-base--line-height: 24px;
+    --text-lg: 18px;
+    --text-lg--line-height: 24px;
+    --text-xl: 20px;
+    --text-xl--line-height: 28px;
+    --text-2xl: 24px;
+    --text-2xl--line-height: 32px;
+    --text-3xl: 28px;
+    --text-3xl--line-height: 36px;
+    --text-4xl: 32px;
+    --text-4xl--line-height: 40px;
+
+    /* Tracking is left at the Tailwind defaults on purpose. heroui headings
+       use var(--tracking-tight) = -0.025em, and Uniwind rescopes its em base
+       (--uniwind-em) to the font-size of whichever rule declares one, so that
+       resolves proportionally: -0.8px on h1, -0.5px on h4. Proportional
+       negative tracking on large text is exactly what HIG does and it lands
+       near the M3 value of 0 on small text, so a px override would only add
+       drift. Note this is also why em, unlike rem, stays relative here. */
 
     /* Brand palette (identical light/dark) */
     --brand-blue: oklch(0.580 0.183 271);
@@ -148,6 +231,42 @@
         --focus: var(--accent);
         --link: var(--accent);
     }
+}
+
+/* Typography weight.
+   heroui expresses weight purely as a font *family* swap
+   (font-family: var(--font-semibold)), which assumes the app registers a real
+   per-weight font family. This app deliberately uses the platform system font,
+   where those all collapse to `system-ui` — a family name React Native cannot
+   resolve — so headings would render at regular weight. Mapping the same
+   classes onto font-weight, which RN supports natively, is what makes the type
+   scale above actually read as a hierarchy.
+
+   Ordering mirrors the heroui order: type first, then weight, so an explicit
+   `weight` prop still wins. This file is imported after the heroui styles. */
+.text__root--type-h1,
+.text__root--type-h2,
+.text__root--type-h3,
+.text__root--type-h4,
+.text__root--type-h5,
+.text__root--type-h6 {
+    font-weight: var(--font-weight-semibold);
+}
+
+.text__root--weight-normal {
+    font-weight: var(--font-weight-normal);
+}
+
+.text__root--weight-medium {
+    font-weight: var(--font-weight-medium);
+}
+
+.text__root--weight-semibold {
+    font-weight: var(--font-weight-semibold);
+}
+
+.text__root--weight-bold {
+    font-weight: var(--font-weight-bold);
 }
 
 /* Tab navigation styling */
