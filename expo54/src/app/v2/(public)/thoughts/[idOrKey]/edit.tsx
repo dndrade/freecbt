@@ -1,5 +1,5 @@
 import { Screen } from "@/src/components/screen";
-import { ThoughtEntryForm } from "@/src/components/thought-entry";
+import { ThoughtEntryForm } from "@/src/features/thoughts/thought-entry-form";
 import { LoadModel, ModelLoadedProps } from "@/src/hooks/use-model";
 import { Action, Thought } from "@/src/model";
 import { useLocalSearchParams } from "expo-router";
