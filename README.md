@@ -87,6 +87,8 @@ Of course!
 
 **If you know a language other than English,** help [us translate the app!](/TRANSLATIONS.md)
 
+Translation note: the English locale (`expo54/src/i18n/locals/en.json`) is the source of truth for newly added copy. Other locales may temporarily fall back to English on newer UI surfaces until they are updated.
+
 # FreeCBT and Quirk
 
 FreeCBT is based on [Quirk](https://github.com/Flaque/quirk)'s code. Why did I create a fork?

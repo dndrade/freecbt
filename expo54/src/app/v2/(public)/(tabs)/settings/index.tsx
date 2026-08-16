@@ -1,12 +1,12 @@
 import { LoadModel, ModelLoadedProps } from "@/src/hooks/use-model";
 import { Screen } from "@/src/components";
+import { GeneralSheet } from "@/src/features/settings/ui/general-sheet";
+import { AppearancePicker } from "@/src/features/settings/ui/appearance-picker";
+import { JournalPicker } from "@/src/features/settings/ui/journal-picker";
 import {
   SettingsHeader,
   SettingsCard,
   SettingsRow,
-  GeneralSheet,
-  AppearancePicker,
-  JournalPicker,
   DataSheet,
   WellbeingSheet,
   SupportSheet,

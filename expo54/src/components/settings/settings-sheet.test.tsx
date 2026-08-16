@@ -69,13 +69,13 @@ describe("SettingsSheet", () => {
 
   it("keeps every settings sheet on the shared header", () => {
     const settings = [
-      "general-sheet.tsx",
+      "../../features/settings/ui/general-sheet.tsx",
       "data-sheet.tsx",
       "wellbeing-sheet.tsx",
       "support-sheet.tsx",
       "about-sheet.tsx",
-      "appearance-picker.tsx",
-      "journal-picker.tsx",
+      "../../features/settings/ui/appearance-picker.tsx",
+      "../../features/settings/ui/journal-picker.tsx",
     ];
 
     for (const name of settings) {

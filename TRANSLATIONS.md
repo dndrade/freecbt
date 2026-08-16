@@ -18,6 +18,14 @@ Go through as much as you can and translate into your language. If you can't tra
 
 For consistency, the FreeCBT app should be called "FreeCBT" in all languages, even if your language has a different acronym for "CBT".
 
+## Current translation status
+
+`expo54/src/i18n/locals/en.json` is the schema-leading locale. New UI copy usually lands there first.
+
+If another locale has not been updated for newer screens, sheets, or controls yet, FreeCBT will fall back to English for the missing keys. Mixed-language UI is expected until that locale catches up.
+
+When you update an existing locale, prefer comparing it against the current `en.json` shape first so newly added keys for recent UI work are not missed.
+
 ## Open up `expo54/src/i18n/locals/index.ts` and add your language
 
 In the file, add an import line:
