@@ -1,7 +1,7 @@
 import React from "react";
 import { act, fireEvent, render } from "@testing-library/react-native";
 import { Image, ScrollView, Text, TouchableOpacity, View } from "react-native";
-import { Ready } from "@/src/app/v2/(public)/help/intro";
+import { OnboardingScreen } from "@/src/features/onboarding/onboarding-screen";
 
 const mockDispatch = jest.fn();
 const mockPush = jest.fn();
@@ -165,7 +165,7 @@ const style = new Proxy(
 function intro(
   completion: "idle" | "saving" | { status: "failure"; error: Error } = "idle"
 ) {
-  return React.createElement(Ready, {
+  return React.createElement(OnboardingScreen, {
     model: { onboardingCompletion: completion } as never,
     dispatch: mockDispatch,
     style: style as never,
