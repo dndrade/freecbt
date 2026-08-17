@@ -11,7 +11,7 @@ import {
     Model,
 } from "@/src/model";
 import { createSecureBackup } from "@/src/platform/backup/secure-backup-runtime";
-import RecoveryKeyWorkflow from "@/src/app/v2/debug/demos/backup/recovery-key-workflow";
+import RecoveryKeyWorkflow from "@/src/app/v2/debug/diagnostics/backup/recovery-key-workflow";
 
 const dispatch = jest.fn();
 

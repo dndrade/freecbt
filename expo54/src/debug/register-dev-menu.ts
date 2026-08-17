@@ -10,5 +10,10 @@ export async function registerDevMenu() {
             shouldCollapse: true,
             callback: () => router.push("/v2/debug"),
         },
+        {
+            name: "UI/UX Lab",
+            shouldCollapse: true,
+            callback: () => router.push("/v2/debug/lab"),
+        },
     ]);
 }
