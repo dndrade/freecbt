@@ -28,10 +28,7 @@ function mockPanel(name: string) {
 
 jest.mock("@/src/components", () => ({
   Screen: ({ children }: { children: React.ReactNode }) => <View>{children}</View>,
-}));
-
-jest.mock("@/src/components/settings-header", () => ({
-  SettingsHeader: ({ title }: { title: string }) => <Text>{title}</Text>,
+  ScreenHeader: ({ title }: { title: string }) => <Text>{title}</Text>,
 }));
 
 jest.mock("./ui/settings-card", () => ({

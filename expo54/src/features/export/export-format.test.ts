@@ -17,10 +17,7 @@ jest.mock("@/src/platform/sharing/download-or-share", () => ({
 jest.mock("@/src/components", () => ({
   Screen: ({ children }: { children: React.ReactNode }) =>
     React.createElement(View, null, children),
-}));
-
-jest.mock("@/src/components/settings-header", () => ({
-  SettingsHeader: () => null,
+  ScreenHeader: () => null,
 }));
 
 const T = Thought.createParsers(DistortionData);

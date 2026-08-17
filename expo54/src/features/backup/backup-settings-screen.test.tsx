@@ -9,10 +9,7 @@ const backupFlagsMock = backupFlags as { encryptedBackup: boolean };
 jest.mock("@/src/components", () => ({
   Screen: (props: { children: React.ReactNode }) =>
     React.createElement(View, null, props.children),
-}));
-
-jest.mock("@/src/components/settings-header", () => ({
-  SettingsHeader: ({ title }: { title: string }) =>
+  ScreenHeader: ({ title }: { title: string }) =>
     React.createElement(Text, null, title),
 }));
 

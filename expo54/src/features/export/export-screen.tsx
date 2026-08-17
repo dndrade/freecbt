@@ -1,5 +1,4 @@
-import { Screen } from "@/src/components";
-import { SettingsHeader } from "@/src/components/settings-header";
+import { Screen, ScreenHeader } from "@/src/components";
 import { LoadModel, ModelLoadedProps } from "@/src/hooks/use-model";
 import { Archive, Model } from "@/src/model";
 import { DownloadOrShareLink } from "@/src/platform/sharing/download-or-share";
@@ -11,7 +10,7 @@ export function ExportScreen(props: ModelLoadedProps): React.ReactNode {
   const { style: s, translate: t } = props;
   return (
     <Screen>
-      <SettingsHeader title={t("export_screen.header")} />
+      <ScreenHeader title={t("export_screen.header")} />
       <View style={[s.container]} className="mt-2">
         <Text style={[s.text, s.my2]}>{t("export_screen.description")}</Text>
         <MarkdownLink {...props} />

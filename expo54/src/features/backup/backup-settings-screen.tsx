@@ -1,5 +1,4 @@
-import { Screen } from "@/src/components";
-import { SettingsHeader } from "@/src/components/settings-header";
+import { Screen, ScreenHeader } from "@/src/components";
 import { ModelLoadedProps } from "@/src/hooks/use-model";
 import { backupFlags } from "./backup-flags";
 import { EncryptedBackupExport } from "./encrypted-backup-export";
@@ -24,7 +23,7 @@ export function BackupSettingsScreen(
 
   return (
     <Screen>
-      <SettingsHeader title={t("nav.backup")} />
+      <ScreenHeader title={t("nav.backup")} />
       <View className="mt-2">
         <Text style={[s.text, s.my2]}>
           {t("backup_screen.export.description")}

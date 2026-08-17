@@ -11,6 +11,17 @@ jest.mock("@/src/components", () => {
   const { Pressable, Text, TextInput, View } = require("react-native");
 
   return {
+    Screen: ({ children }: { children: React.ReactNode }) => <View>{children}</View>,
+    Section: ({ children }: { children: React.ReactNode }) => <View>{children}</View>,
+    ScreenHeader: ({ title }: { title: string }) => <Text>{title}</Text>,
+  };
+});
+
+jest.mock("./ui/pin-input", () => {
+  const React = require("react");
+  const { Pressable, Text, TextInput, View } = require("react-native");
+
+  return {
     PinInput: ({
       value,
       onChange,
@@ -27,17 +38,6 @@ jest.mock("@/src/components", () => {
         </Pressable>
       </View>
     ),
-    Screen: ({ children }: { children: React.ReactNode }) => <View>{children}</View>,
-    Section: ({ children }: { children: React.ReactNode }) => <View>{children}</View>,
-  };
-});
-
-jest.mock("@/src/components/settings-header", () => {
-  const React = require("react");
-  const { Text } = require("react-native");
-
-  return {
-    SettingsHeader: ({ title }: { title: string }) => <Text>{title}</Text>,
   };
 });
 

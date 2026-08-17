@@ -1,5 +1,4 @@
-import { Screen } from "@/src/components";
-import { SettingsHeader } from "@/src/components/settings-header";
+import { Screen, ScreenHeader } from "@/src/components";
 import { ModelLoadedProps } from "@/src/hooks/use-model";
 import React, { useState } from "react";
 import { AppearancePicker } from "./ui/appearance-picker";
@@ -27,7 +26,7 @@ export function SettingsScreen(props: ModelLoadedProps) {
 
   return (
     <Screen>
-      <SettingsHeader title={t("settings.header")} showBack={false} />
+      <ScreenHeader title={t("settings.header")} showBack={false} />
       <SettingsCard className="mt-2">
         <SettingsRow
           type="nav"

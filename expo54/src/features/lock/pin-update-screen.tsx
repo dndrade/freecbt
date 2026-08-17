@@ -1,5 +1,5 @@
-import { PinInput, Screen, Section } from "@/src/components";
-import { SettingsHeader } from "@/src/components/settings-header";
+import { Screen, ScreenHeader, Section } from "@/src/components";
+import { PinInput } from "./ui/pin-input";
 import { ModelLoadedProps } from "@/src/hooks/use-model";
 import { Action } from "@/src/model";
 import * as Routes from "@/src/routes";
@@ -91,7 +91,7 @@ function PinStep(props: {
   const { header, value, setValue, onComplete } = props;
   return (
     <Screen>
-      <SettingsHeader title={header} />
+      <ScreenHeader title={header} />
       <Section className="items-center gap-4 mt-6">
         <PinInput
           value={value}

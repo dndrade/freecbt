@@ -3,7 +3,7 @@ import { Typography, useThemeColor } from "heroui-native";
 import { useRouter } from "expo-router";
 import { Pressable, View } from "react-native";
 
-export function SettingsHeader(props: { title: string; showBack?: boolean }) {
+export function ScreenHeader(props: { title: string; showBack?: boolean }) {
   const router = useRouter();
   const accent = useThemeColor("accent");
   return (

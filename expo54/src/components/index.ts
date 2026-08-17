@@ -1,5 +1,4 @@
-export * as ImagePath from "./image-path";
-export { Screen } from "./screen";
-export { Section } from "./section";
-export { PinInput } from "./pin-input";
+export { Screen } from "./layout/screen";
+export { ScreenHeader } from "./layout/screen-header";
+export { Section } from "./layout/section";
 export { SegmentedProgress } from "./segmented-progress";

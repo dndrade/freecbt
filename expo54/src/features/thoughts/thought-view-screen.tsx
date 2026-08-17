@@ -1,7 +1,7 @@
 import { Routes } from "@/src";
 import { ModelLoadedProps } from "@/src/hooks/use-model";
 import { Distortion } from "@/src/model";
-import { ImagePath } from "@/src/components";
+import * as ImagePath from "@/src/assets/image-path";
 import { Link } from "expo-router";
 import React from "react";
 import { Image, Text, View } from "react-native";

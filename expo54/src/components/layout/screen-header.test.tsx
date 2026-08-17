@@ -1,13 +1,13 @@
 import { render, screen } from "@testing-library/react-native";
 import { HeroUINativeProvider } from "heroui-native/provider";
 import React from "react";
-import { SettingsHeader } from "./settings-header";
+import { ScreenHeader } from "./screen-header";
 
-describe("SettingsHeader", () => {
+describe("ScreenHeader", () => {
   it("does not expose a back button for the root Settings destination", () => {
     render(
       <HeroUINativeProvider>
-        <SettingsHeader title="Settings" showBack={false} />
+        <ScreenHeader title="Settings" showBack={false} />
       </HeroUINativeProvider>
     );
 

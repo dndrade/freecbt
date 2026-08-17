@@ -2,7 +2,7 @@ import { act, render } from "@testing-library/react-native";
 import React, { useEffect, useReducer } from "react";
 import { View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Screen } from "./screen";
+import { Screen } from "./layout/screen";
 import { SettingsCard } from "@/src/features/settings/ui/settings-card";
 
 let theme: "light" | "dark" = "light";

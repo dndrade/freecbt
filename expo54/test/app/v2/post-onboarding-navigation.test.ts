@@ -35,15 +35,16 @@ jest.mock("@/src", () => ({
 }));
 
 jest.mock("@/src/components", () => ({
-  ImagePath: {
-    looker: 1,
-    eater: 2,
-    logo: 3,
-    notifications: 4,
-  },
   Screen: (props: { children: React.ReactNode }) => React.createElement(View, null, props.children),
   Section: (props: { children: React.ReactNode }) => React.createElement(View, null, props.children),
   SegmentedProgress: () => React.createElement(View),
+}));
+
+jest.mock("@/src/assets/image-path", () => ({
+  looker: 1,
+  eater: 2,
+  logo: 3,
+  notifications: 4,
 }));
 
 jest.mock("@/src/features/reminders/use-reminders", () => ({

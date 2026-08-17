@@ -1,5 +1,5 @@
 import { Routes } from "@/src";
-import { Screen } from "@/src/components/screen";
+import { Screen } from "@/src/components";
 import { HomeThoughtRecovery } from "./home-thought-recovery";
 import { ThoughtEntryForm } from "./thought-entry-form";
 import type { ModelLoadedProps } from "@/src/hooks/use-model";
