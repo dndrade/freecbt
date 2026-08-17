@@ -32,7 +32,7 @@ jest.mock("@/src/components", () => {
   };
 });
 
-jest.mock("@/src/components/settings", () => {
+jest.mock("@/src/components/settings/settings-header", () => {
   const React = require("react");
   const { Text } = require("react-native");
 

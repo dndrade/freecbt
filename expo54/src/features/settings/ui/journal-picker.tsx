@@ -1,8 +1,8 @@
 import { TranslateFn } from "@/src/i18n/use-i18n";
 import { Action, Model, Settings } from "@/src/model";
-import { SettingsSheet } from "@/src/components/settings";
 import { RadioGroup } from "heroui-native";
 import React from "react";
+import { SettingsSheet } from "./settings-sheet";
 
 export function JournalPicker(props: {
   isOpen: boolean;
