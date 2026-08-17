@@ -11,7 +11,11 @@ export default function Layout() {
 
   return (
     <Drawer
-      screenOptions={{ headerShown: true, swipeEnabled: true }}
+      screenOptions={{
+        headerShown: true,
+        swipeEnabled: true,
+        drawerStyle: { width: 240 },
+      }}
       drawerContent={(props) => <DebugDrawerContent {...props} />}
     >
       <Drawer.Screen name="lab" options={{ title: "UI/UX Lab" }} />
