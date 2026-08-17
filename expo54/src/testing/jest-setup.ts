@@ -33,6 +33,36 @@ if (typeof globalThis.crypto === "undefined" || typeof globalThis.crypto.randomU
 // silence some dumb warning
 process.env.EXPO_OS = Platform.OS;
 
+// react-native-safe-area-context's native module isn't linked in the jest
+// environment, so useSafeAreaInsets() throws "No safe area value available"
+// for any component that calls it without an explicit <SafeAreaProvider>
+// ancestor (e.g. @react-navigation/drawer's DrawerContentScrollView). The
+// package ships an official jest mock for exactly this; use it so real
+// components can call the hook directly in tests.
+// https://github.com/th3rdwave/react-native-safe-area-context#jest
+jest.mock("react-native-safe-area-context", () =>
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  require("react-native-safe-area-context/jest/mock").default
+);
+
+// @react-navigation/core's useTheme() throws "Couldn't find a theme" for any
+// component (e.g. @react-navigation/drawer's DrawerItem) that reads it
+// without a <NavigationContainer> ancestor providing ThemeContext — which
+// Expo Router supplies at the real app root, but unit tests don't mount.
+// Fall back to the library's own DefaultTheme when no provider is present,
+// the same fallback-instead-of-throw shape as the official safe-area-context
+// jest mock above.
+jest.mock("@react-navigation/native", () => {
+  const actual = jest.requireActual("@react-navigation/native");
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { useContext } = require("react");
+
+  return {
+    ...actual,
+    useTheme: () => useContext(actual.ThemeContext) ?? actual.DefaultTheme,
+  };
+});
+
 jest.mock("expo-router", () => ({
   useRouter: () => ({
     navigate: () => {},
