@@ -23,7 +23,7 @@ export default function DiagnosticsIndex() {
       <DebugSection title="Notifications">
         <DebugAction
           label="Notifications"
-          detail="Notification architecture exploration"
+          detail="Verify push notification permissions, tokens, and scheduling"
           onPress={() => router.push("/v2/debug/diagnostics/notifications")}
         />
       </DebugSection>
