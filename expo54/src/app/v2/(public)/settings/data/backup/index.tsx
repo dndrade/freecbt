@@ -5,7 +5,7 @@ import { LegacyBackupExport } from "@/src/features/backup/legacy-backup-export";
 import { LegacyBackupImport } from "@/src/features/backup/legacy-backup-import";
 import { LoadModel, ModelLoadedProps } from "@/src/hooks/use-model";
 import { Screen } from "@/src/components";
-import { SettingsHeader } from "@/src/components/settings";
+import { SettingsHeader } from "@/src/components/settings/settings-header";
 import React from "react";
 import { Text, View } from "react-native";
 

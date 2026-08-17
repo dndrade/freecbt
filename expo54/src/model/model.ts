@@ -1,15 +1,15 @@
 import _ from "lodash";
 import { z } from "zod";
 import type { LocaleTag } from "../i18n/use-i18n";
-import type {
-  HomeThoughtDraftRecord,
-  ThoughtSaveOutboxRecord,
-} from "../platform/storage/storage";
 import * as Routes from "../routes";
 import * as Action from "./action";
 import * as Cmd from "./cmd";
 import * as Distortion from "./distortion";
 import * as Settings from "./settings";
+import type {
+  HomeThoughtDraftRecord,
+  ThoughtSaveOutboxRecord,
+} from "./thought-save";
 import * as Thought from "./thought";
 import * as Archive from "./archive/thoughts-archive";
 

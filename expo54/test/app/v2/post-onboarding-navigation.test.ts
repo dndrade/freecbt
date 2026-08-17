@@ -4,7 +4,7 @@ import React from "react";
 import { act, fireEvent, render } from "@testing-library/react-native";
 import { Text, TouchableOpacity, View } from "react-native";
 import { OnboardingGateway } from "@/src/view/gateways/onboarding-gateway";
-import { Ready } from "@/src/app/v2/(public)/help/intro";
+import { OnboardingScreen } from "@/src/features/onboarding/onboarding-screen";
 
 const mockPush = jest.fn();
 const mockDispatch = jest.fn();
@@ -123,7 +123,7 @@ const mockStyle: Record<string, object> = new Proxy(
 );
 
 function intro(completion: "idle" | "saving" | { status: "failure"; error: Error }) {
-  return React.createElement(Ready, {
+  return React.createElement(OnboardingScreen, {
     model: { onboardingCompletion: completion } as never,
     dispatch: mockDispatch,
     style: mockStyle as never,
@@ -189,7 +189,7 @@ describe("post-onboarding navigation", () => {
 
   it("uses one explicit completion action for every onboarding exit", () => {
     const intro = fs.readFileSync(
-      path.join(__dirname, "../../../src/app/v2/(public)/help/intro.tsx"),
+      path.join(__dirname, "../../../src/features/onboarding/onboarding-screen.tsx"),
       "utf8"
     );
 
@@ -205,12 +205,23 @@ describe("post-onboarding navigation", () => {
 
   it("keeps unsupported Change as the final content step", () => {
     const intro = fs.readFileSync(
-      path.join(__dirname, "../../../src/app/v2/(public)/help/intro.tsx"),
+      path.join(__dirname, "../../../src/features/onboarding/onboarding-screen.tsx"),
       "utf8"
     );
 
     expect(intro).toMatch(/reminders\.isSupported\(\) \? null : renderGetStarted\(\)/);
     expect(intro).toMatch(/case "reminders"[\s\S]*?renderGetStarted\(\)/);
+  });
+
+  it("keeps the route file as a thin LoadModel shell", () => {
+    const route = fs.readFileSync(
+      path.join(__dirname, "../../../src/app/v2/(public)/help/intro.tsx"),
+      "utf8"
+    );
+
+    expect(route).toMatch(/LoadModel ready=\{OnboardingScreen\}/);
+    expect(route).not.toMatch(/Action\.beginOnboardingCompletion\(\)/);
+    expect(route).not.toMatch(/renderGetStarted\(\)/);
   });
 
   it("keeps reminder choices persistence-only before completion", () => {

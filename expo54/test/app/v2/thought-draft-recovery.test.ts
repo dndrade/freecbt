@@ -7,7 +7,7 @@ import { ModelProvider } from "@/src/hooks/use-model";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { act, fireEvent, render, waitFor } from "@testing-library/react-native";
 import React from "react";
-import type { ThoughtSaveOutboxRecord } from "@/src/platform/storage/storage";
+import type { ThoughtSaveOutboxRecord } from "@/src/model/thought-save";
 import { HOME_THOUGHT_DRAFT_KEY } from "@/src/platform/storage/home-thought-draft";
 import Home from "@/src/app/v2/(public)/(tabs)/index";
 import { HeroUINativeProvider } from "heroui-native/provider";

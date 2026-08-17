@@ -1,6 +1,6 @@
 import type { TranslateFn } from "@/src/i18n/use-i18n";
 import { Action, Model } from "@/src/model";
-import type { ThoughtSaveOutboxRecord } from "@/src/platform/storage/storage";
+import type { ThoughtSaveOutboxRecord } from "@/src/model/thought-save";
 import { useFocusEffect } from "expo-router";
 import { Button, Typography } from "heroui-native";
 import React from "react";

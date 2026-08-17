@@ -1,5 +1,6 @@
 import { Storage } from "../..";
 import { Archive, DistortionData, Settings, Thought } from "../../model";
+import type { ThoughtSaveOutboxRecord } from "../../model/thought-save";
 import { AsyncStorageStatic } from "@react-native-async-storage/async-storage";
 import { z } from "zod";
 import * as SecureStore from "expo-secure-store";
@@ -429,7 +430,7 @@ describe("thoughts: persistSubmittedThought", () => {
         const thought = sampleThought({ automaticThought: "cleanup-failed thought" });
         const submissionId = thought.uuid;
 
-        const active: Storage.ThoughtSaveOutboxRecord = {
+        const active: ThoughtSaveOutboxRecord = {
             submissionId,
             thought,
             sourceDraftRevision: 0,
@@ -447,7 +448,7 @@ describe("thoughts: persistSubmittedThought", () => {
         await T.persistSubmittedThought(submissionId, thought);
 
         // outbox removal then fails, leaving a cleanup-failed record (thoughtPersisted stays true)
-        const cleanupFailed: Storage.ThoughtSaveOutboxRecord = {
+        const cleanupFailed: ThoughtSaveOutboxRecord = {
             ...active,
             status: "cleanup-failed",
             thoughtPersisted: true,

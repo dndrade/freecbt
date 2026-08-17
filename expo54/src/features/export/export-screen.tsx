@@ -1,5 +1,5 @@
 import { Screen } from "@/src/components";
-import { SettingsHeader } from "@/src/components/settings";
+import { SettingsHeader } from "@/src/components/settings/settings-header";
 import { LoadModel, ModelLoadedProps } from "@/src/hooks/use-model";
 import { Archive, Model } from "@/src/model";
 import { DownloadOrShareLink } from "@/src/platform/sharing/download-or-share";

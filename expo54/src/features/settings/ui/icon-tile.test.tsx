@@ -75,7 +75,7 @@ describe("IconTile", () => {
     // Read the actual CSS source file to ensure variable names stay in sync between
     // icon-tile.tsx's foregroundVariable map and the CSS that defines them.
     // This prevents silent drift if Task 1 or Task 2 rename variables without updating both files.
-    const cssPath = path.join(__dirname, "../../../src/theme/freecbt.css");
+    const cssPath = path.join(__dirname, "../../../../src/theme/freecbt.css");
     const cssContent = fs.readFileSync(cssPath, "utf-8");
 
     // Check that each variable name from foregroundVariable appears in the CSS file
@@ -89,7 +89,7 @@ describe("IconTile", () => {
     // icon-tile.tsx's backgroundClass map and the CSS variables that define them.
     // This prevents silent drift if the --color-brand-* bridge block is removed from freecbt.css
     // without updating backgroundClass.
-    const cssPath = path.join(__dirname, "../../../src/theme/freecbt.css");
+    const cssPath = path.join(__dirname, "../../../../src/theme/freecbt.css");
     const cssContent = fs.readFileSync(cssPath, "utf-8");
 
     // Check that each background class maps to a corresponding CSS variable in the file

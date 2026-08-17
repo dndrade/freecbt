@@ -1,5 +1,6 @@
 import { AsyncStorageStatic } from "@react-native-async-storage/async-storage";
 import { Distortion, Thought } from "@/src/model";
+import type { ThoughtSaveOutboxRecord } from "@/src/model/thought-save";
 import { z } from "zod";
 import { createOrderedStorageWriter } from "./serialized-storage-writer";
 
@@ -32,21 +33,6 @@ const OutboxJson = z.object({
   v: z.literal("thought-save-outbox/v1"),
   records: OutboxRecordJson.array(),
 });
-
-export type ThoughtSaveOutboxStatus = z.infer<typeof OutboxStatus>;
-
-export interface ThoughtSaveOutboxRecord {
-  submissionId: Thought.Id;
-  thought: Thought.Thought;
-  sourceDraftRevision: number;
-  attemptCount: number;
-  lastAttemptAt: Date;
-  lastError: string | null;
-  retryRequested: boolean;
-  thoughtPersisted: boolean;
-  updatedAt: Date;
-  status: ThoughtSaveOutboxStatus;
-}
 
 function assertStatusInvariant(record: ThoughtSaveOutboxRecord): void {
   if (record.status === "cleanup-failed" && !record.thoughtPersisted) {

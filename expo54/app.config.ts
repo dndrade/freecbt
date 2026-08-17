@@ -1,7 +1,9 @@
 import { ConfigContext, ExpoConfig } from "expo/config";
 
+const IS_DEV = process.env.APP_VARIANT === "development";
+
 export default ({ config }: ConfigContext): ExpoConfig => ({
-  name: "FreeCBT",
+  name: IS_DEV ? "FreeCBT Dev" : "FreeCBT",
   slug: "freecbt",
   version: "2.5.0-rc.1",
   owner: "erosson",
@@ -9,12 +11,12 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   platforms: ["android", "ios", "web"],
   orientation: "portrait",
   icon: "./assets/ios.png",
-  scheme: "freecbt",
+  scheme: IS_DEV ? "freecbt-dev" : "freecbt",
   userInterfaceStyle: "automatic",
   newArchEnabled: true,
   primaryColor: "#F8A5C2",
   ios: {
-    bundleIdentifier: "org.erosson.freecbt",
+    bundleIdentifier: IS_DEV ? "org.erosson.freecbt.dev" : "org.erosson.freecbt",
     supportsTablet: true,
     icon: "./assets/ios.png",
     // apple doesn't like my prerelease version tag ("2.5.0-rc.1"). remove this apple-specific override once we're done with prerelease versions.
@@ -26,7 +28,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     },
   },
   android: {
-    package: "org.erosson.freecbt",
+    package: IS_DEV ? "org.erosson.freecbt.dev" : "org.erosson.freecbt",
     permissions: [],
     blockedPermissions: [
       "android.permission.READ_EXTERNAL_STORAGE",
