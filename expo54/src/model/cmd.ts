@@ -4,7 +4,7 @@ import * as Thought from "./thought";
 import type {
   HomeThoughtDraftRecord,
   ThoughtSaveOutboxRecord,
-} from "../platform/storage/storage";
+} from "./thought-save";
 
 export type Cmd =
   | typeof loadModel

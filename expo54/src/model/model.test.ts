@@ -2,7 +2,7 @@ import { Action, Cmd, DistortionData, Model, Settings, Thought } from ".";
 import type {
   HomeThoughtDraftRecord,
   ThoughtSaveOutboxRecord,
-} from "../platform/storage/storage";
+} from "./thought-save";
 
 const emptyReady: Model.Ready = {
   status: "ready",

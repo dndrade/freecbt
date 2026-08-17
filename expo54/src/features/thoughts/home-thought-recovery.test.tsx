@@ -2,7 +2,7 @@ import { Action, DistortionData, Model, Settings, Thought } from "@/src/model";
 import type {
   HomeThoughtDraftRecord,
   ThoughtSaveOutboxRecord,
-} from "@/src/platform/storage/storage";
+} from "@/src/model/thought-save";
 import { act, fireEvent, render, screen } from "@testing-library/react-native";
 import { HeroUINativeProvider } from "heroui-native/provider";
 import React from "react";

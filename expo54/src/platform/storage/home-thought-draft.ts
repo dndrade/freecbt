@@ -1,5 +1,6 @@
 import { AsyncStorageStatic } from "@react-native-async-storage/async-storage";
 import { Distortion, Thought } from "@/src/model";
+import type { HomeThoughtDraftRecord } from "@/src/model/thought-save";
 import { z } from "zod";
 import { createLatestWinsStorageWriter } from "./serialized-storage-writer";
 
@@ -27,21 +28,6 @@ const DraftJson = z.object({
   updatedAt: z.iso.datetime(),
   draftCleanup: DraftCleanupJson.nullable(),
 });
-
-export type HomeThoughtDraftCleanup = {
-  status: "none" | "clear-failed";
-  sourceRevision: number;
-  outboxSubmissionId: Thought.Id;
-  lastError: string | null;
-  updatedAt: Date;
-};
-
-export interface HomeThoughtDraftRecord {
-  spec: Thought.Spec;
-  sourceRevision: number;
-  updatedAt: Date;
-  draftCleanup: HomeThoughtDraftCleanup | null;
-}
 
 function encodeSpec(spec: Thought.Spec) {
   return {
