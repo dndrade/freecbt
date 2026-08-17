@@ -30,7 +30,7 @@ jest.mock("@/src/components", () => ({
   Screen: ({ children }: { children: React.ReactNode }) => <View>{children}</View>,
 }));
 
-jest.mock("@/src/components/settings/settings-header", () => ({
+jest.mock("@/src/components/settings-header", () => ({
   SettingsHeader: ({ title }: { title: string }) => <Text>{title}</Text>,
 }));
 

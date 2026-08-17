@@ -1,5 +1,5 @@
 import { Screen } from "@/src/components";
-import { SettingsHeader } from "@/src/components/settings/settings-header";
+import { SettingsHeader } from "@/src/components/settings-header";
 import { ModelLoadedProps } from "@/src/hooks/use-model";
 import React, { useState } from "react";
 import { AppearancePicker } from "./ui/appearance-picker";

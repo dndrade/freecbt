@@ -11,7 +11,7 @@ jest.mock("@/src/components", () => ({
     React.createElement(View, null, props.children),
 }));
 
-jest.mock("@/src/components/settings/settings-header", () => ({
+jest.mock("@/src/components/settings-header", () => ({
   SettingsHeader: ({ title }: { title: string }) =>
     React.createElement(Text, null, title),
 }));
