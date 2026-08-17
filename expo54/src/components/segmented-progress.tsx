@@ -29,13 +29,13 @@ export function SegmentedProgress({
                 <View
                     key={index}
                     testID="segmented-progress-segment"
-                    className={cn(
+                className={cn(
                         "h-1 flex-1 rounded-full",
                         index < currentIndex
                             ? "bg-accent"
                             : index === currentIndex
                               ? "bg-accent ring-1 ring-accent"
-                              : "bg-disabled"
+                              : "bg-separator"
                     )}
                 />
             ))}

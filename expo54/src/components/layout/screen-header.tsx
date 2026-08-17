@@ -18,7 +18,7 @@ export function ScreenHeader(props: { title: string; showBack?: boolean }) {
           <Feather name="chevron-left" size={20} color={accent} />
         </Pressable>
       )}
-      <Typography type="h4">{props.title}</Typography>
+      <Typography.Heading type="h4">{props.title}</Typography.Heading>
     </View>
   );
 }

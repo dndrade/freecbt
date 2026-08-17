@@ -16,7 +16,7 @@ describe("SegmentedProgress", () => {
         expect(segments[0].props.className).toContain("bg-accent");
         expect(segments[1].props.className).toContain("bg-accent");
         expect(segments[2].props.className).toContain("ring-accent");
-        expect(segments[3].props.className).toContain("bg-disabled");
+        expect(segments[3].props.className).toContain("bg-separator");
     });
 
     it("exposes an accessible progress value without interactivity", () => {
