@@ -1,83 +1,54 @@
 import { DebugAction } from "@/src/debug/ui/debug-action";
 import { DebugScreen } from "@/src/debug/ui/debug-screen";
 import { DebugSection } from "@/src/debug/ui/debug-section";
+import { groupLabCatalog, labCatalog } from "@/src/debug/lab/catalog";
 import { useDefaultStyle } from "@/src/hooks/use-style";
 import { useRouter } from "expo-router";
 import React from "react";
 import { Pressable, Text, View } from "react-native";
 
-type LabSection = {
-  readonly title: string;
-  readonly note: string;
-  readonly items: readonly {
-    readonly label: string;
-    readonly detail?: string;
-    readonly href?: "/v2/debug/lab/onboarding";
-  }[];
-};
-
-const labSections: readonly LabSection[] = [
-  { title: "Foundations", note: "No entries yet.", items: [] },
-  { title: "Components", note: "No entries yet.", items: [] },
-  {
-    title: "Screens",
-    note: "Prototype screens live here.",
-    items: [
-      {
-        label: "Onboarding",
-        detail: "Static onboarding prototype",
-        href: "/v2/debug/lab/onboarding",
-      },
-    ],
-  },
-  { title: "Experiments", note: "No entries yet.", items: [] },
-] as const;
+const labGroups = groupLabCatalog(labCatalog);
 
 export default function LabIndex() {
   const router = useRouter();
   const s = useDefaultStyle();
-  const [open, setOpen] = React.useState<Record<string, boolean>>({
-    Screens: true,
-  });
+  const [collapsed, setCollapsed] = React.useState<Record<string, boolean>>({});
 
   return (
     <DebugScreen
       title="UI/UX Lab"
       description="Prototype and evaluate user experiences."
     >
-      {labSections.map((section) => {
-        const isOpen = open[section.title] ?? false;
+      {labGroups.map((section) => {
+        const isOpen = !collapsed[section.group];
+
         return (
-          <View key={section.title} style={[s.my2]}>
+          <View key={section.group} style={[s.my2]}>
             <Pressable
               accessibilityRole="button"
-              accessibilityLabel={section.title}
+              accessibilityLabel={section.group}
               onPress={() =>
-                setOpen((current) => ({
+                setCollapsed((current) => ({
                   ...current,
-                  [section.title]: !isOpen,
+                  [section.group]: isOpen,
                 }))
               }
             >
               <Text style={[s.subheader, s.my2]}>
-                {section.title} {isOpen ? "-" : "+"}
+                {section.group} {isOpen ? "-" : "+"}
               </Text>
             </Pressable>
 
             {isOpen ? (
               <DebugSection>
-                {section.items.length > 0 ? (
-                  section.items.map((item) => (
-                    <DebugAction
-                      key={item.label}
-                      label={item.label}
-                      detail={item.detail}
-                      onPress={() => item.href && router.push(item.href)}
-                    />
-                  ))
-                ) : (
-                  <Text style={[s.text]}>{section.note}</Text>
-                )}
+                {section.items.map((item) => (
+                  <DebugAction
+                    key={item.id}
+                    label={item.title}
+                    detail={item.description}
+                    onPress={() => router.push(item.href)}
+                  />
+                ))}
               </DebugSection>
             ) : null}
           </View>
