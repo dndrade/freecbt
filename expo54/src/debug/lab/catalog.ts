@@ -2,49 +2,137 @@ import type { Href } from "expo-router";
 
 export type LabExperimentStatus = "current" | "experimental" | "archived";
 
-export interface LabExperiment {
+export interface LabVariant {
   readonly id: string;
   readonly title: string;
   readonly description?: string;
   readonly href: Href;
-  readonly group: string;
   readonly status?: LabExperimentStatus;
 }
 
-// Adding another variant (e.g. a second onboarding flow) is two edits:
-// 1. its Expo Router route subtree under src/app/v2/debug/lab/**
-//    (e.g. lab/onboarding/version-2/** once a second flow actually exists —
-//    do not create that subtree speculatively; YAGNI until it's real)
-// 2. one entry here
-export const labCatalog = [
-  {
-    id: "onboarding-current",
-    title: "Current",
-    description: "Production-aligned onboarding prototype.",
-    href: "/v2/debug/lab/onboarding",
-    group: "Onboarding",
-    status: "current",
-  },
-] as const satisfies readonly LabExperiment[];
-
-export interface LabCatalogGroup {
-  readonly group: string;
-  readonly items: readonly LabExperiment[];
+export interface LabScenario {
+  readonly id: string;
+  readonly title: string;
+  readonly description?: string;
+  readonly href: Href;
+  readonly variants: readonly LabVariant[];
 }
 
-export function groupLabCatalog(
-  catalog: readonly LabExperiment[]
-): readonly LabCatalogGroup[] {
-  const order: string[] = [];
-  const byGroup = new Map<string, LabExperiment[]>();
+export interface LabFamily {
+  readonly id: string;
+  readonly title: string;
+  readonly description?: string;
+  readonly href: Href;
+  readonly scenarios?: readonly LabScenario[];
+}
 
-  for (const item of catalog) {
-    if (!byGroup.has(item.group)) {
-      byGroup.set(item.group, []);
-      order.push(item.group);
-    }
-    byGroup.get(item.group)!.push(item);
+// Adding another variant is two edits:
+// 1. its Expo Router route subtree under src/app/v2/debug/lab/**
+// 2. one entry in the matching scenario below
+export const labFamilies = [
+  {
+    id: "onboarding",
+    title: "Onboarding",
+    description: "Current onboarding prototype.",
+    href: "/v2/debug/lab/onboarding",
+  },
+  {
+    id: "settings",
+    title: "Settings",
+    description: "Current settings baselines and entry flows.",
+    href: "/v2/debug/lab/settings",
+    scenarios: [
+      {
+        id: "main-settings",
+        title: "Main Settings",
+        description: "Current settings home experience.",
+        href: "/v2/debug/lab/settings/main",
+        variants: [
+          {
+            id: "main-settings-current",
+            title: "Current",
+            description: "Production-like settings home.",
+            href: "/v2/debug/lab/settings/main/current",
+            status: "current",
+          },
+        ],
+      },
+      {
+        id: "pin-setup",
+        title: "PIN Setup",
+        description: "Current PIN setup flow.",
+        href: "/v2/debug/lab/settings/pin",
+        variants: [
+          {
+            id: "pin-setup-current",
+            title: "Current",
+            description: "Production-like PIN entry flow.",
+            href: "/v2/debug/lab/settings/pin/current",
+            status: "current",
+          },
+        ],
+      },
+      {
+        id: "backup-setup",
+        title: "Backup Setup",
+        description: "Current backup setup entry flow.",
+        href: "/v2/debug/lab/settings/backup",
+        variants: [
+          {
+            id: "backup-setup-current",
+            title: "Current",
+            description: "Production-like backup setup flow.",
+            href: "/v2/debug/lab/settings/backup/current",
+            status: "current",
+          },
+        ],
+      },
+      {
+        id: "export",
+        title: "Export",
+        description: "Current export experience.",
+        href: "/v2/debug/lab/settings/export",
+        variants: [
+          {
+            id: "export-current",
+            title: "Current",
+            description: "Production-like export experience.",
+            href: "/v2/debug/lab/settings/export/current",
+            status: "current",
+          },
+        ],
+      },
+    ],
+  },
+] as const satisfies readonly LabFamily[];
+
+function findById<T extends { readonly id: string }>(
+  items: readonly T[],
+  id: string
+): T {
+  const match = items.find((item) => item.id === id);
+  if (!match) {
+    throw new Error(`unknown lab item: ${id}`);
   }
+  return match;
+}
 
-  return order.map((group) => ({ group, items: byGroup.get(group)! }));
+export function getLabFamily(id: string): LabFamily {
+  return findById(labFamilies, id);
+}
+
+export function getLabScenario(familyId: string, scenarioId: string): LabScenario {
+  const family = getLabFamily(familyId);
+  if (!family.scenarios) {
+    throw new Error(`family has no scenarios: ${familyId}`);
+  }
+  return findById(family.scenarios, scenarioId);
+}
+
+export function getLabVariant(
+  familyId: string,
+  scenarioId: string,
+  variantId: string
+): LabVariant {
+  return findById(getLabScenario(familyId, scenarioId).variants, variantId);
 }

@@ -13,19 +13,22 @@ describe("lab index", () => {
     jest.clearAllMocks();
   });
 
-  it("groups experiments by family and shows no empty speculative sections", () => {
+  it("shows the families without variant-level clutter", () => {
     render(<LabIndex />);
 
     expect(screen.getByText(/Onboarding/)).toBeTruthy();
-    expect(screen.queryByText(/Foundations/)).toBeNull();
-    expect(screen.queryByText(/Components/)).toBeNull();
-    expect(screen.queryByText(/Experiments -/)).toBeNull();
+    expect(screen.getByText(/Settings/)).toBeTruthy();
+    expect(screen.queryByText(/^Current$/)).toBeNull();
   });
 
-  it("navigates into the selected variant", () => {
+  it("navigates into the selected family", () => {
     render(<LabIndex />);
 
-    fireEvent.press(screen.getByRole("button", { name: "Current" }));
+    fireEvent.press(screen.getByRole("button", { name: "Settings" }));
+
+    expect(mockPush).toHaveBeenCalledWith("/v2/debug/lab/settings");
+
+    fireEvent.press(screen.getByRole("button", { name: "Onboarding" }));
 
     expect(mockPush).toHaveBeenCalledWith("/v2/debug/lab/onboarding");
   });
