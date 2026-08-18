@@ -1,13 +1,14 @@
 import AsyncStorage from "@react-native-async-storage/async-storage/jest/async-storage-mock";
 import { Archive, DistortionData, Model, Thought } from "@/src/model";
 import { Storage } from "@/src";
+import { resetAsyncStorage } from "@/tests/support/async-storage";
 
 const A = Archive.createParsers(DistortionData);
 
 function freshStorage() {
   // the official jest mock keeps a single module-level Map, so clear it
   // between tests instead of trusting isolation across files/tests
-  AsyncStorage.clear();
+  resetAsyncStorage();
   return Storage.thoughts(DistortionData, AsyncStorage);
 }
 

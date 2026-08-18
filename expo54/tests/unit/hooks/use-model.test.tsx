@@ -8,6 +8,7 @@ import { Action, DistortionData, Model, Settings, Thought } from "@/src/model";
 import { ModelProvider, useModel } from "@/src/hooks/use-model";
 import { Storage } from "@/src";
 import { THOUGHT_SAVE_OUTBOX_KEY } from "@/src/platform/storage/thought-save-outbox";
+import { resetAsyncStorage } from "@/tests/support/async-storage";
 
 function sampleSpec(overrides: Partial<Thought.Spec> = {}): Thought.Spec {
   return {
@@ -18,7 +19,7 @@ function sampleSpec(overrides: Partial<Thought.Spec> = {}): Thought.Spec {
 }
 
 afterEach(async () => {
-  await AsyncStorage.clear();
+  await resetAsyncStorage();
 });
 
 test("use-model basics", async () => {
@@ -46,7 +47,7 @@ test("use-model basics", async () => {
 });
 
 test("use-model hydrates the durable draft and unresolved outbox without writing", async () => {
-  await AsyncStorage.clear();
+  await resetAsyncStorage();
   const draft = {
     spec: sampleSpec({ automaticThought: "restored draft" }),
     sourceRevision: 4,

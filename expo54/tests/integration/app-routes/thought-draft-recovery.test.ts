@@ -12,6 +12,7 @@ import { HOME_THOUGHT_DRAFT_KEY } from "@/src/platform/storage/home-thought-draf
 import Home from "@/src/app/v2/(public)/(tabs)/index";
 import { HeroUINativeProvider } from "heroui-native/provider";
 import { AppState, type AppStateStatus } from "react-native";
+import { resetAsyncStorage } from "@/tests/support/async-storage";
 
 jest.mock("@/src/i18n/use-i18n", () => ({
   ...jest.requireActual("@/src/i18n/use-i18n"),
@@ -103,7 +104,7 @@ describe("Home draft lifecycle", () => {
   let setItem: jest.SpyInstance;
 
   beforeEach(async () => {
-    await AsyncStorage.clear();
+    await resetAsyncStorage();
     setItem = jest.spyOn(AsyncStorage, "setItem");
     setItem.mockClear();
   });
@@ -313,7 +314,7 @@ describe("Home draft lifecycle", () => {
 });
 
 test("Home displays restarted recovery records without labeling normal recovery as saved Thought cleanup", async () => {
-  await AsyncStorage.clear();
+  await resetAsyncStorage();
   const records = [
     record(1, "insertion-pending"),
     record(2, "pending"),

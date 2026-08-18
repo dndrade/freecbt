@@ -10,6 +10,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { act, fireEvent, render, waitFor } from "@testing-library/react-native";
 import { HeroUINativeProvider } from "heroui-native/provider";
 import React from "react";
+import { resetAsyncStorage } from "@/tests/support/async-storage";
 
 const push = jest.fn();
 const navigate = jest.fn();
@@ -77,7 +78,7 @@ async function settle() {
 const realSetItem = (AsyncStorage.setItem as jest.Mock).getMockImplementation()!;
 
 beforeEach(async () => {
-  await AsyncStorage.clear();
+  await resetAsyncStorage();
   toastShow.mockClear();
   push.mockClear();
   navigate.mockClear();

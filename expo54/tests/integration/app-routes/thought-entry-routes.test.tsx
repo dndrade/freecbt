@@ -12,6 +12,7 @@ import { act, fireEvent, render, waitFor } from "@testing-library/react-native";
 import { HeroUINativeProvider } from "heroui-native/provider";
 import React from "react";
 import { BackHandler, Keyboard } from "react-native";
+import { resetAsyncStorage } from "@/tests/support/async-storage";
 
 const push = jest.fn();
 const navigate = jest.fn();
@@ -97,7 +98,7 @@ function captureKeyboard() {
 }
 
 beforeEach(async () => {
-  await AsyncStorage.clear();
+  await resetAsyncStorage();
   push.mockClear();
   navigate.mockClear();
   setOptions.mockClear();
