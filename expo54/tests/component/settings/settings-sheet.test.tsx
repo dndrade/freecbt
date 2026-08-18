@@ -1,8 +1,8 @@
-import { act, render, renderHook, screen } from "@testing-library/react-native";
+import { act, renderHook, screen } from "@testing-library/react-native";
 import { useRouter } from "expo-router";
-import { HeroUINativeProvider } from "heroui-native/provider";
 import React from "react";
 import { readSrcFile } from "@/tests/support/route-manifest";
+import { renderWithProviders } from "@/tests/support/render";
 import { SettingsSheet, useDismissThenNavigate, useResetOnDismiss } from "@/src/features/settings/ui/settings-sheet";
 
 jest.mock("expo-router", () => ({
@@ -45,12 +45,10 @@ describe("useResetOnDismiss", () => {
 
 describe("SettingsSheet", () => {
   it("renders one compact title/close header with an accessible Close action", () => {
-    render(
-      <HeroUINativeProvider>
-        <SettingsSheet isOpen onOpenChange={jest.fn()} title="Settings">
-          <React.Fragment />
-        </SettingsSheet>
-      </HeroUINativeProvider>
+    renderWithProviders(
+      <SettingsSheet isOpen onOpenChange={jest.fn()} title="Settings">
+        <React.Fragment />
+      </SettingsSheet>
     );
 
     const title = screen.getByText("Settings");

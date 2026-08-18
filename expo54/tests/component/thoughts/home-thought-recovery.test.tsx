@@ -3,10 +3,10 @@ import type {
   HomeThoughtDraftRecord,
   ThoughtSaveOutboxRecord,
 } from "@/src/model/thought-save";
-import { act, fireEvent, render, screen } from "@testing-library/react-native";
-import { HeroUINativeProvider } from "heroui-native/provider";
+import { act, fireEvent, screen } from "@testing-library/react-native";
 import React from "react";
 import { HomeThoughtRecovery } from "@/src/features/thoughts/home-thought-recovery";
+import { renderWithProviders } from "@/tests/support/render";
 
 // Captures the callback passed to expo-router's useFocusEffect so tests can
 // simulate a later Home visit without a real navigation container.
@@ -74,14 +74,16 @@ function makeOutboxRecord(
 
 function Harness(props: { model: Model.Ready; dispatch: Action.Dispatch }) {
   return (
-    <HeroUINativeProvider>
-      <HomeThoughtRecovery
-        model={props.model}
-        dispatch={props.dispatch}
-        translate={translate}
-      />
-    </HeroUINativeProvider>
+    <HomeThoughtRecovery
+      model={props.model}
+      dispatch={props.dispatch}
+      translate={translate}
+    />
   );
+}
+
+function render(ui: React.ReactElement) {
+  return renderWithProviders(ui);
 }
 
 beforeEach(() => {

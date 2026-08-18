@@ -1,8 +1,8 @@
-import { fireEvent, render, screen, within } from "@testing-library/react-native";
-import { HeroUINativeProvider } from "heroui-native/provider";
+import { fireEvent, screen, within } from "@testing-library/react-native";
 import React from "react";
 import { Pressable, Text, View } from "react-native";
 import { SettingsPanel, type SettingsPanelItem } from "@/src/features/settings/ui/settings-panel";
+import { renderWithProviders } from "@/tests/support/render";
 
 jest.mock("@/src/features/settings/ui/settings-sheet", () => {
   return {
@@ -61,10 +61,8 @@ describe("SettingsPanel", () => {
   });
 
   it("renders the shared sheet title and mixed row types", () => {
-    render(
-      <HeroUINativeProvider>
-        <SettingsPanel isOpen onOpenChange={jest.fn()} title="General" items={items} />
-      </HeroUINativeProvider>
+    renderWithProviders(
+      <SettingsPanel isOpen onOpenChange={jest.fn()} title="General" items={items} />
     );
 
     expect(screen.getByText("General")).toBeTruthy();
@@ -74,10 +72,8 @@ describe("SettingsPanel", () => {
   });
 
   it("forwards toggle and value row presses", () => {
-    render(
-      <HeroUINativeProvider>
-        <SettingsPanel isOpen onOpenChange={jest.fn()} title="General" items={items} />
-      </HeroUINativeProvider>
+    renderWithProviders(
+      <SettingsPanel isOpen onOpenChange={jest.fn()} title="General" items={items} />
     );
 
     fireEvent.press(screen.getByRole("switch", { name: "Reminders" }));
@@ -98,10 +94,8 @@ describe("SettingsPanel", () => {
       onPress,
     } as unknown as SettingsPanelItem;
 
-    render(
-      <HeroUINativeProvider>
-        <SettingsPanel isOpen onOpenChange={jest.fn()} title="General" items={[item]} />
-      </HeroUINativeProvider>
+    renderWithProviders(
+      <SettingsPanel isOpen onOpenChange={jest.fn()} title="General" items={[item]} />
     );
 
     fireEvent.press(screen.getByRole("button", { name: "App Lock" }));
@@ -111,10 +105,8 @@ describe("SettingsPanel", () => {
   it("forwards sheet closure", () => {
     const onClosed = jest.fn();
 
-    render(
-      <HeroUINativeProvider>
-        <SettingsPanel isOpen onOpenChange={jest.fn()} title="General" items={items} onClosed={onClosed} />
-      </HeroUINativeProvider>
+    renderWithProviders(
+      <SettingsPanel isOpen onOpenChange={jest.fn()} title="General" items={items} onClosed={onClosed} />
     );
 
     fireEvent.press(screen.getByTestId("sheet-close"));
@@ -122,16 +114,14 @@ describe("SettingsPanel", () => {
   });
 
   it("renders optional footer content inside the sheet after the card", () => {
-    render(
-      <HeroUINativeProvider>
-        <SettingsPanel
-          isOpen
-          onOpenChange={jest.fn()}
-          title="General"
-          items={items}
-          footer={<Text>Panel footer</Text>}
-        />
-      </HeroUINativeProvider>
+    renderWithProviders(
+      <SettingsPanel
+        isOpen
+        onOpenChange={jest.fn()}
+        title="General"
+        items={items}
+        footer={<Text>Panel footer</Text>}
+      />
     );
 
     expect(within(screen.getByTestId("settings-sheet")).getByText("Panel footer")).toBeTruthy();

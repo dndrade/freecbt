@@ -1,7 +1,7 @@
-import { fireEvent, render, screen } from "@testing-library/react-native";
-import { HeroUINativeProvider } from "heroui-native/provider";
+import { fireEvent, screen } from "@testing-library/react-native";
 import React from "react";
 import { ScreenHeader } from "@/src/components/layout/screen-header";
+import { renderWithProviders } from "@/tests/support/render";
 
 const mockBack = jest.fn();
 
@@ -11,22 +11,14 @@ jest.mock("expo-router", () => ({
 
 describe("ScreenHeader", () => {
   it("does not expose a back button for the root Settings destination", () => {
-    render(
-      <HeroUINativeProvider>
-        <ScreenHeader title="Settings" showBack={false} />
-      </HeroUINativeProvider>
-    );
+    renderWithProviders(<ScreenHeader title="Settings" showBack={false} />);
 
     expect(screen.getByText("Settings")).toBeTruthy();
     expect(screen.queryByRole("button", { name: "Back" })).toBeNull();
   });
 
   it("exposes an accessible back button when enabled", () => {
-    render(
-      <HeroUINativeProvider>
-        <ScreenHeader title="Settings" />
-      </HeroUINativeProvider>
-    );
+    renderWithProviders(<ScreenHeader title="Settings" />);
 
     fireEvent.press(screen.getByRole("button", { name: "Back" }));
 

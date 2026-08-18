@@ -2,9 +2,9 @@ import { act, render } from "@testing-library/react-native";
 import React, { useEffect, useReducer } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { ListGroup } from "heroui-native";
-import { HeroUINativeProvider } from "heroui-native/provider";
 import { Screen } from "@/src/components/layout/screen";
 import { SettingsCard } from "@/src/features/settings/ui/settings-card";
+import { renderWithProviders } from "@/tests/support/render";
 
 let theme: "light" | "dark" = "light";
 const listeners = new Set<() => void>();
@@ -60,10 +60,8 @@ describe("theme surfaces", () => {
   });
 
   it("updates the mounted SettingsCard surface when the theme changes", () => {
-    const { UNSAFE_getByType } = render(
-      <HeroUINativeProvider>
-        <SettingsCard>content</SettingsCard>
-      </HeroUINativeProvider>
+    const { UNSAFE_getByType } = renderWithProviders(
+      <SettingsCard>content</SettingsCard>
     );
     const card = () => UNSAFE_getByType(ListGroup);
 

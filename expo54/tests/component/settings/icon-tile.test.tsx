@@ -1,8 +1,8 @@
-import { render, screen } from "@testing-library/react-native";
-import { HeroUINativeProvider } from "heroui-native/provider";
+import { screen } from "@testing-library/react-native";
 import React from "react";
 import { Text } from "react-native";
 import { IconTile } from "@/src/features/settings/ui/icon-tile";
+import { renderWithProviders } from "@/tests/support/render";
 
 const useThemeColor = jest.fn((name: string) => {
   const values: Record<string, string> = {
@@ -28,12 +28,10 @@ describe("IconTile", () => {
   });
 
   it("defaults to the accent tone", () => {
-    render(
-      <HeroUINativeProvider>
-        <IconTile>
-          {(iconColor) => <Text testID="probe">{iconColor}</Text>}
-        </IconTile>
-      </HeroUINativeProvider>
+    renderWithProviders(
+      <IconTile>
+        {(iconColor) => <Text testID="probe">{iconColor}</Text>}
+      </IconTile>
     );
 
     expect(screen.getByTestId("probe").props.children).toBe("#ffffff");
@@ -42,12 +40,10 @@ describe("IconTile", () => {
   });
 
   it("uses semantic warning tones when requested", () => {
-    render(
-      <HeroUINativeProvider>
-        <IconTile tone="warning">
-          {(iconColor) => <Text testID="probe">{iconColor}</Text>}
-        </IconTile>
-      </HeroUINativeProvider>
+    renderWithProviders(
+      <IconTile tone="warning">
+        {(iconColor) => <Text testID="probe">{iconColor}</Text>}
+      </IconTile>
     );
 
     expect(screen.getByTestId("probe").props.children).toBe("#331900");

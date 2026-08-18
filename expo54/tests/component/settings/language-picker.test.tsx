@@ -1,8 +1,8 @@
-import { fireEvent, render, screen } from "@testing-library/react-native";
-import { HeroUINativeProvider } from "heroui-native/provider";
+import { fireEvent, screen } from "@testing-library/react-native";
 import React from "react";
 import { Action } from "@/src/model";
 import { LanguagePicker } from "@/src/features/settings/ui/language-picker";
+import { renderWithProviders } from "@/tests/support/render";
 
 function baseModel() {
   return {
@@ -26,11 +26,7 @@ describe("LanguagePicker", () => {
   beforeEach(() => jest.clearAllMocks());
 
   it("shows locale choices and returns to General", () => {
-    render(
-      <HeroUINativeProvider>
-        <LanguagePicker isOpen {...props} />
-      </HeroUINativeProvider>
-    );
+    renderWithProviders(<LanguagePicker isOpen {...props} />);
 
     expect(screen.getByText("settings.locale.default")).toBeTruthy();
     fireEvent.press(screen.getByLabelText("settings.general.header"));
@@ -42,11 +38,7 @@ describe("LanguagePicker", () => {
     props.dispatch.mockImplementation(() => calls.push("dispatch"));
     props.onBack.mockImplementation(() => calls.push("back"));
 
-    render(
-      <HeroUINativeProvider>
-        <LanguagePicker isOpen {...props} />
-      </HeroUINativeProvider>
-    );
+    renderWithProviders(<LanguagePicker isOpen {...props} />);
 
     fireEvent.press(screen.getByText("settings.locale.list.en"));
     expect(props.dispatch).toHaveBeenCalledWith(Action.setLocale("en"));

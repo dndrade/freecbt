@@ -1,8 +1,8 @@
-import { fireEvent, render, screen } from "@testing-library/react-native";
-import { HeroUINativeProvider } from "heroui-native/provider";
+import { fireEvent, screen } from "@testing-library/react-native";
 import React from "react";
 import { Text } from "react-native";
 import { SettingsRow } from "@/src/features/settings/ui/settings-row";
+import { renderWithProviders } from "@/tests/support/render";
 
 jest.mock("@expo/vector-icons", () => ({
   Feather: ({ name }: { name: string }) => <Text>{name}</Text>,
@@ -13,9 +13,7 @@ jest.mock("@/src/features/settings/ui/icon-tile", () => ({
     children("icon-color"),
 }));
 
-function renderRow(node: React.ReactElement) {
-  return render(<HeroUINativeProvider>{node}</HeroUINativeProvider>);
-}
+const renderRow = renderWithProviders;
 
 describe("SettingsRow", () => {
   it("fires onSelectedChange when a toggle row's switch flips", () => {

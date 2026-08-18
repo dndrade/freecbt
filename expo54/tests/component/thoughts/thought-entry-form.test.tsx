@@ -1,8 +1,8 @@
 import { DistortionData, Thought } from "@/src/model";
-import { fireEvent, render, screen } from "@testing-library/react-native";
-import { HeroUINativeProvider } from "heroui-native/provider";
+import { fireEvent, screen } from "@testing-library/react-native";
 import React from "react";
 import { ThoughtEntryForm, type ThoughtEntryFormProps } from "@/src/features/thoughts/thought-entry-form";
+import { renderWithProviders } from "@/tests/support/render";
 
 const translate = ((key: string, values?: Record<string, unknown>) =>
   values ? `${key}:${JSON.stringify(values)}` : key) as ThoughtEntryFormProps["translate"];
@@ -15,20 +15,22 @@ function Harness(
     props.initial ?? Thought.emptySpec()
   );
   return (
-    <HeroUINativeProvider>
-      <ThoughtEntryForm
-        route="home"
-        translate={translate}
-        distortions={DistortionData.list}
-        {...props}
-        value={value}
-        onChange={(next) => {
-          setValue(next);
-          props.onChange?.(next);
-        }}
-      />
-    </HeroUINativeProvider>
+    <ThoughtEntryForm
+      route="home"
+      translate={translate}
+      distortions={DistortionData.list}
+      {...props}
+      value={value}
+      onChange={(next) => {
+        setValue(next);
+        props.onChange?.(next);
+      }}
+    />
   );
+}
+
+function render(ui: React.ReactElement) {
+  return renderWithProviders(ui);
 }
 
 function next() {
