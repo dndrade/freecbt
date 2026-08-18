@@ -1,0 +1,9 @@
+# .maestro/flows/onboarding/skip.yaml
+appId: org.erosson.freecbt.dev
+---
+- runFlow:
+      file: ../../shared/start.yaml
+
+- assertVisible: "Pular"
+
+- tapOn: "Pular"
