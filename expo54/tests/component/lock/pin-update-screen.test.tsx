@@ -6,8 +6,8 @@ import { PinUpdateScreen } from "@/src/features/lock/pin-update-screen";
 const mockDispatch = jest.fn();
 
 jest.mock("@/src/components", () => {
-  const React = require("react");
-  const { Text, View } = require("react-native");
+  const React = jest.requireActual("react");
+  const { Text, View } = jest.requireActual("react-native");
 
   return {
     Screen: ({ children }: { children: React.ReactNode }) => <View>{children}</View>,
@@ -17,8 +17,8 @@ jest.mock("@/src/components", () => {
 });
 
 jest.mock("@/src/features/lock/ui/pin-input", () => {
-  const React = require("react");
-  const { Pressable, Text, TextInput, View } = require("react-native");
+  const React = jest.requireActual("react");
+  const { Pressable, Text, TextInput, View } = jest.requireActual("react-native");
 
   return {
     PinInput: ({
@@ -41,8 +41,8 @@ jest.mock("@/src/features/lock/ui/pin-input", () => {
 });
 
 jest.mock("expo-router", () => {
-  const React = require("react");
-  const { Text } = require("react-native");
+  const React = jest.requireActual("react");
+  const { Text } = jest.requireActual("react-native");
 
   return {
     Redirect: ({ href }: { href: string }) => (

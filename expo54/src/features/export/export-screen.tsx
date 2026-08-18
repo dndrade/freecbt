@@ -1,5 +1,5 @@
 import { Screen, ScreenHeader } from "@/src/components";
-import { LoadModel, ModelLoadedProps } from "@/src/hooks/use-model";
+import { ModelLoadedProps } from "@/src/hooks/use-model";
 import { Archive, Model } from "@/src/model";
 import { DownloadOrShareLink } from "@/src/platform/sharing/download-or-share";
 import { toCSV, toMarkdown } from "./export-format";

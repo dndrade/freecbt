@@ -21,6 +21,9 @@ jest.mock("expo-router", () => ({
   useRouter: () => router,
   useNavigation: () => navigation,
   useFocusEffect: (effect: () => void | (() => void)) => {
+    // effect is the caller-supplied callback itself, standing in for the real
+    // useFocusEffect API shape; there are no deps to list here.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     React.useEffect(effect, []);
   },
 }));
