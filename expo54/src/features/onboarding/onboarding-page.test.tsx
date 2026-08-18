@@ -1,6 +1,6 @@
 import { render, screen } from "@testing-library/react-native";
 import React from "react";
-import { Text, View } from "react-native";
+import { ScrollView, Text, View } from "react-native";
 import { onboardingSteps } from "./onboarding-content";
 import { OnboardingPage } from "./onboarding-page";
 
@@ -33,5 +33,13 @@ describe("onboarding content", () => {
     render(<OnboardingPage step={guideStep} variation={<GuideVariation />} />);
 
     expect(screen.getByRole("header", { name: guideStep.titleKey })).toBeTruthy();
+  });
+
+  it("keeps page controls tappable while the body scrolls", () => {
+    const view = render(<OnboardingPage step={guideStep} variation={<GuideVariation />} />);
+
+    expect(view.UNSAFE_getByType(ScrollView).props.keyboardShouldPersistTaps).toBe(
+      "handled"
+    );
   });
 });

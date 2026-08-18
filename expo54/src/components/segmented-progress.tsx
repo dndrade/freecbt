@@ -5,12 +5,14 @@ type SegmentedProgressProps = {
     currentIndex: number;
     count: number;
     accessibilityLabel?: string;
+    accessibilityValueText?: string;
 };
 
 export function SegmentedProgress({
     currentIndex,
     count,
     accessibilityLabel,
+    accessibilityValueText,
 }: SegmentedProgressProps) {
     return (
         <View
@@ -21,7 +23,7 @@ export function SegmentedProgress({
                 min: 1,
                 max: count,
                 now: currentIndex + 1,
-                text: `Step ${currentIndex + 1} of ${count}`,
+                text: accessibilityValueText ?? `Step ${currentIndex + 1} of ${count}`,
             }}
             className="flex-row gap-1"
         >

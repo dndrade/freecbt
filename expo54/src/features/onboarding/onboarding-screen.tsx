@@ -6,7 +6,15 @@ import { Action } from "@/src/model";
 import { Link, useRouter } from "expo-router";
 import { Button, Typography, useThemeColor } from "heroui-native";
 import React from "react";
-import { I18nManager, Keyboard, LayoutChangeEvent, Pressable, View } from "react-native";
+import {
+  AccessibilityInfo,
+  I18nManager,
+  Keyboard,
+  LayoutChangeEvent,
+  Platform,
+  Pressable,
+  View,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Carousel, { ICarouselInstance } from "react-native-reanimated-carousel";
 import { onboardingSteps, type OnboardingStep } from "./onboarding-content";
@@ -22,6 +30,7 @@ export function OnboardingScreen(props: OnboardingScreenProps) {
   const ref = React.useRef<ICarouselInstance>(null);
   const completionRequested = React.useRef(false);
   const transitionPending = React.useRef(false);
+  const announcedIndex = React.useRef(0);
   const [activeIndex, setActiveIndex] = React.useState(0);
   const [pagerSize, setPagerSize] = React.useState<{ width: number; height: number }>();
   const router = useRouter();
@@ -33,6 +42,7 @@ export function OnboardingScreen(props: OnboardingScreenProps) {
     props.model.onboardingCompletion.status === "failure";
   const slides = reminders.isSupported() ? onboardingSteps : stepsWithoutReminders;
   const isFinal = activeIndex === slides.length - 1;
+  const showFailure = isFinal && hasFailed;
 
   React.useEffect(() => {
     if (completionRequested.current && props.model.onboardingCompletion === "idle") {
@@ -77,7 +87,7 @@ export function OnboardingScreen(props: OnboardingScreenProps) {
           {activeIndex > 0 ? (
             <Pressable
               accessibilityRole="button"
-              accessibilityLabel="Previous"
+              accessibilityLabel={props.translate("onboarding_screen.previous")}
               className="h-11 w-11 items-center justify-center rounded-full border border-border bg-surface-secondary"
               style={{ width: 44, height: 44 }}
               onPress={() => onPressStep(-1)}
@@ -89,12 +99,12 @@ export function OnboardingScreen(props: OnboardingScreenProps) {
           )}
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel="Skip"
+            accessibilityLabel={props.translate("onboarding_screen.skip")}
             className="h-11 w-11 items-center justify-center rounded-full border border-border bg-surface-secondary"
             style={{ width: 44, height: 44 }}
             onPress={props.onSkip}
           >
-            <Typography type="body-sm">Skip</Typography>
+            <Typography type="body-sm">{props.translate("onboarding_screen.skip")}</Typography>
           </Pressable>
         </View>
 
@@ -111,12 +121,17 @@ export function OnboardingScreen(props: OnboardingScreenProps) {
                 const isActive = index === activeIndex;
                 return (
                   <View
+                    testID={`onboarding-page-${item.id}`}
                     accessibilityElementsHidden={!isActive}
+                    aria-hidden={!isActive}
                     importantForAccessibility={
                       isActive ? "auto" : "no-hide-descendants"
                     }
                     focusable={isActive ? undefined : false}
                     tabIndex={isActive ? undefined : -1}
+                    {...(Platform.OS === "web" && !isActive
+                      ? ({ inert: true } as unknown as React.ComponentProps<typeof View>)
+                      : {})}
                     style={{ width: "100%", flex: 1 }}
                   >
                     <OnboardingItem
@@ -135,6 +150,12 @@ export function OnboardingScreen(props: OnboardingScreenProps) {
               onSnapToItem={(index) => {
                 transitionPending.current = false;
                 setActiveIndex(index);
+                if (announcedIndex.current !== index) {
+                  announcedIndex.current = index;
+                  AccessibilityInfo.announceForAccessibility(
+                    props.translate(slides[index].titleKey)
+                  );
+                }
                 Keyboard.dismiss();
               }}
               onConfigurePanGesture={(gesture) => {
@@ -150,23 +171,43 @@ export function OnboardingScreen(props: OnboardingScreenProps) {
             variant="segmented"
             currentIndex={activeIndex}
             count={slides.length}
-            accessibilityLabel="Onboarding progress"
+            accessibilityLabel={props.translate("onboarding_screen.progress")}
+            accessibilityValueText={props.translate("onboarding_screen.progress_step", {
+              step: activeIndex + 1,
+              count: slides.length,
+            })}
           />
         </View>
 
         <View className="items-center gap-3 px-4 pb-4">
-          {hasFailed ? (
-            <Typography type="body-sm" className="text-danger">
-              Unable to save. Try again.
+          <View
+            testID="onboarding-failure-region"
+            accessibilityElementsHidden={!showFailure}
+            importantForAccessibility={showFailure ? "auto" : "no-hide-descendants"}
+          >
+            <Typography
+              type="body-sm"
+              className="text-danger"
+              style={{ opacity: showFailure ? 1 : 0 }}
+            >
+              {props.translate("onboarding_screen.save_failed")}
             </Typography>
-          ) : null}
+          </View>
           <View className="h-12 w-40 items-center">
             <FlowAction
               state={isFinal ? "final" : "next"}
               onPress={isFinal ? onPressGetStarted : () => onPressStep(1)}
               isDisabled={isFinal && isSaving}
-              accessibilityLabel={isFinal ? (isSaving ? "Saving…" : "Get started") : "Next"}
-              finalLabel={isSaving ? "Saving…" : "Get started"}
+              accessibilityLabel={
+                isFinal
+                  ? props.translate(
+                      isSaving ? "onboarding_screen.saving" : "onboarding_screen.get_started"
+                    )
+                  : props.translate("onboarding_screen.next")
+              }
+              finalLabel={props.translate(
+                isSaving ? "onboarding_screen.saving" : "onboarding_screen.get_started"
+              )}
             />
           </View>
         </View>

@@ -1,6 +1,14 @@
 import React from "react";
 import { act, fireEvent, render } from "@testing-library/react-native";
-import { Image, ScrollView, Text, TouchableOpacity, View } from "react-native";
+import {
+  AccessibilityInfo,
+  Image,
+  Platform,
+  ScrollView,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import OnboardingIntro from "@/src/app/v2/(public)/help/intro";
 import { OnboardingScreen } from "@/src/features/onboarding/onboarding-screen";
 
@@ -10,6 +18,21 @@ const mockScrollTo = jest.fn();
 const mockHomeV2 = jest.fn(() => "/v2");
 const mockThoughtCreateV2 = jest.fn(() => "/v2/thoughts/create");
 const mockOnSkip = jest.fn();
+const mockFlowCopy: Record<string, string> = {
+  "onboarding_screen.previous": "Previous",
+  "onboarding_screen.skip": "Skip",
+  "onboarding_screen.next": "Next",
+  "onboarding_screen.progress": "Onboarding progress",
+  "onboarding_screen.progress_step": "Step %{step} of %{count}",
+  "onboarding_screen.saving": "Saving…",
+  "onboarding_screen.save_failed": "Unable to save. Try again.",
+  "onboarding_screen.get_started": "Get started",
+};
+const mockTranslate = (key: string, values?: Record<string, unknown>) =>
+  Object.entries(values ?? {}).reduce(
+    (copy, [name, value]) => copy.replace(`%{${name}}`, String(value)),
+    mockFlowCopy[key] ?? key
+  );
 const mockReminders = {
   isSupported: () => remindersSupported,
   enable: jest.fn(),
@@ -17,6 +40,8 @@ const mockReminders = {
 };
 let remindersSupported = true;
 let currentIndex = 0;
+let renderAllSlides = false;
+let onSnapToItem: ((index: number) => void) | undefined;
 
 jest.mock("expo-router", () => ({
   useRouter: () => ({ push: mockPush }),
@@ -48,7 +73,7 @@ jest.mock("@/src/hooks/use-model", () => ({
       model: { onboardingCompletion: "idle" },
       dispatch: mockDispatch,
       style: mockStyle,
-      translate: (key: string) => key,
+      translate: mockTranslate,
     }),
 }));
 
@@ -65,14 +90,20 @@ jest.mock("@/src/components", () => ({
     count,
     currentIndex,
     accessibilityLabel,
+    accessibilityValueText,
   }: {
     count: number;
     currentIndex: number;
     accessibilityLabel?: string;
+    accessibilityValueText?: string;
   }) =>
     React.createElement(
       View,
-      { accessibilityRole: "progressbar", accessibilityLabel },
+      {
+        accessibilityRole: "progressbar",
+        accessibilityLabel,
+        accessibilityValue: { text: accessibilityValueText },
+      },
       ...Array.from({ length: count }, (_, index) =>
         React.createElement(View, {
           key: index,
@@ -135,6 +166,7 @@ jest.mock("heroui-native", () => ({
     children: React.ReactNode;
     type?: string;
     accessibilityRole?: "header";
+    style?: object;
   }) => {
     const role =
       props.accessibilityRole ??
@@ -144,6 +176,7 @@ jest.mock("heroui-native", () => ({
       Text,
       {
         accessibilityRole: role,
+        style: props.style,
       },
       props.children
     )
@@ -171,12 +204,11 @@ jest.mock("react-native-reanimated-carousel", () => {
         props.onSnapToItem?.(currentIndex);
       },
     }));
-    const item = props.data[currentIndex];
-    return React.createElement(
-      View,
-      null,
-      props.renderItem({ item, index: currentIndex })
-    );
+    onSnapToItem = props.onSnapToItem;
+    const renderedItems = renderAllSlides
+      ? props.data.map((item, index) => props.renderItem({ item, index }))
+      : [props.renderItem({ item: props.data[currentIndex], index: currentIndex })];
+    return React.createElement(View, null, ...renderedItems);
   });
   return {
     __esModule: true,
@@ -193,21 +225,23 @@ const mockStyle = new Proxy(
 );
 
 function intro(
-  completion: "idle" | "saving" | { status: "failure"; error: Error } = "idle"
+  completion: "idle" | "saving" | { status: "failure"; error: Error } = "idle",
+  translate: (key: string, values?: Record<string, unknown>) => string = mockTranslate
 ) {
   return React.createElement(OnboardingScreen, {
     model: { onboardingCompletion: completion } as never,
     dispatch: mockDispatch,
     style: mockStyle as never,
-    translate: ((key: string) => key) as never,
+    translate: translate as never,
     onSkip: mockOnSkip,
   } as never);
 }
 
 function renderIntro(
-  completion: "idle" | "saving" | { status: "failure"; error: Error } = "idle"
+  completion: "idle" | "saving" | { status: "failure"; error: Error } = "idle",
+  translate?: (key: string, values?: Record<string, unknown>) => string
 ) {
-  const view = render(intro(completion));
+  const view = render(intro(completion, translate));
   fireEvent(view.getByTestId("onboarding-pager-viewport"), "layout", {
     nativeEvent: { layout: { width: 400, height: 600 } },
   });
@@ -218,6 +252,8 @@ describe("onboarding navigation", () => {
   beforeEach(() => {
     remindersSupported = true;
     currentIndex = 0;
+    renderAllSlides = false;
+    onSnapToItem = undefined;
     jest.clearAllMocks();
   });
 
@@ -259,6 +295,80 @@ describe("onboarding navigation", () => {
     fireEvent.press(previous);
     expect(mockScrollTo).toHaveBeenCalledWith(1);
     expect(mockScrollTo).toHaveBeenCalledWith(-1);
+  });
+
+  it("makes inactive web carousel pages inert", () => {
+    const originalPlatform = Platform.OS;
+    Platform.OS = "web";
+    renderAllSlides = true;
+
+    try {
+      const view = renderIntro();
+      const page = (id: string) => {
+        const wrapper = view
+          .UNSAFE_getAllByType(View)
+          .find((candidate) => candidate.props.testID === `onboarding-page-${id}`);
+        if (!wrapper) throw new Error(`missing onboarding page: ${id}`);
+        return wrapper;
+      };
+
+      expect(page("record").props.inert).toBeUndefined();
+      expect(page("challenge").props.inert).toBe(true);
+      expect(page("reminders").props.inert).toBe(true);
+    } finally {
+      Platform.OS = originalPlatform;
+    }
+  });
+
+  it("announces each newly settled heading once", () => {
+    const announce = jest
+      .spyOn(AccessibilityInfo, "announceForAccessibility")
+      .mockImplementation(jest.fn());
+    const view = renderIntro("idle", (key) => `translated:${key}`);
+
+    fireEvent.press(view.getByRole("button", { name: "translated:onboarding_screen.next" }));
+    act(() => onSnapToItem?.(1));
+    fireEvent(view.getByTestId("onboarding-pager-viewport"), "layout", {
+      nativeEvent: { layout: { width: 500, height: 600 } },
+    });
+
+    expect(announce).toHaveBeenCalledTimes(1);
+    expect(announce).toHaveBeenCalledWith(
+      "translated:onboarding_screen.block1.header"
+    );
+    announce.mockRestore();
+  });
+
+  it("uses translated flow chrome and progress copy", () => {
+    const copy = {
+      "onboarding_screen.previous": "Before",
+      "onboarding_screen.skip": "Leave",
+      "onboarding_screen.next": "Forward",
+      "onboarding_screen.progress": "Setup progress",
+      "onboarding_screen.progress_step": "Page 1 of 3",
+      "onboarding_screen.saving": "Writing",
+      "onboarding_screen.save_failed": "Could not write. Retry.",
+      "onboarding_screen.get_started": "Begin",
+    } as const;
+    const translate = (key: string) => copy[key as keyof typeof copy] ?? key;
+    remindersSupported = false;
+    const view = renderIntro("idle", translate);
+
+    expect(view.getByRole("button", { name: "Leave" })).toBeTruthy();
+    expect(view.getByRole("button", { name: "Forward" })).toBeTruthy();
+    expect(view.getByLabelText("Setup progress").props.accessibilityValue).toEqual({
+      text: "Page 1 of 3",
+    });
+
+    fireEvent.press(view.getByRole("button", { name: "Forward" }));
+    expect(view.getByRole("button", { name: "Before" })).toBeTruthy();
+    fireEvent.press(view.getByRole("button", { name: "Forward" }));
+    expect(view.getByRole("button", { name: "Begin" })).toBeTruthy();
+
+    view.rerender(intro("saving", translate));
+    expect(view.getByRole("button", { name: "Writing" })).toBeTruthy();
+    view.rerender(intro({ status: "failure", error: new Error("failed") }, translate));
+    expect(view.getByText("Could not write. Retry.")).toBeTruthy();
   });
 
   it("keeps Get started as the final onboarding action", () => {
@@ -395,6 +505,32 @@ describe("onboarding navigation", () => {
     expect(mockHomeV2).toHaveBeenCalledTimes(1);
     expect(mockPush).toHaveBeenCalledWith("/v2");
     expect(mockThoughtCreateV2).not.toHaveBeenCalled();
+  });
+
+  it("shows completion failures only on the final page without changing failure chrome height", () => {
+    remindersSupported = false;
+    const view = renderIntro({ status: "failure", error: new Error("failed") });
+    const failureRegion = () =>
+      view.UNSAFE_getByProps({ testID: "onboarding-failure-region" });
+    const failureText = () => {
+      const text = view
+        .UNSAFE_getAllByType(Text)
+        .find((candidate) => candidate.props.children === "Unable to save. Try again.");
+      if (!text) throw new Error("missing failure text");
+      return text;
+    };
+
+    expect(failureRegion().props.accessibilityElementsHidden).toBe(true);
+    expect(failureText().props.style).toEqual({ opacity: 0 });
+
+    fireEvent.press(view.getByRole("button", { name: "Next" }));
+    fireEvent.press(view.getByRole("button", { name: "Next" }));
+    expect(failureRegion().props.accessibilityElementsHidden).toBe(false);
+    expect(failureText().props.style).toEqual({ opacity: 1 });
+
+    fireEvent.press(view.getByRole("button", { name: "Previous" }));
+    expect(failureRegion().props.accessibilityElementsHidden).toBe(true);
+    expect(failureText().props.style).toEqual({ opacity: 0 });
   });
 
   it("waits for the supported completion result before routing home", () => {

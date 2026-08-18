@@ -1,6 +1,7 @@
 import { fireEvent, render, screen } from "@testing-library/react-native";
 import { HeroUINativeProvider } from "heroui-native/provider";
 import React from "react";
+import Animated from "react-native-reanimated";
 import { FlowAction } from "./flow-action";
 
 jest.mock("react-native-reanimated", () => ({
@@ -53,5 +54,28 @@ describe("FlowAction", () => {
     );
     fireEvent.press(screen.getByRole("button", { name: "Get started" }));
     expect(onPress).not.toHaveBeenCalled();
+  });
+
+  it("translates the arrow and final content as it morphs", () => {
+    render(
+      <HeroUINativeProvider
+        config={{ toast: false, devInfo: { stylingPrinciples: false } }}
+      >
+        <FlowAction
+          state="final"
+          onPress={jest.fn()}
+          accessibilityLabel="Get started"
+          finalLabel="Get started"
+        />
+      </HeroUINativeProvider>
+    );
+
+    const [, arrow, finalContent] = screen.UNSAFE_getAllByType(Animated.View);
+    expect(arrow.props.style).toEqual(
+      expect.objectContaining({ transform: expect.any(Array) })
+    );
+    expect(finalContent.props.style).toEqual(
+      expect.objectContaining({ transform: expect.any(Array) })
+    );
   });
 });

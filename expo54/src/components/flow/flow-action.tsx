@@ -41,8 +41,15 @@ export function FlowAction({
     borderRadius: 24 - 12 * progress.value,
     backgroundColor: accent,
   }));
-  const arrowStyle = useAnimatedStyle(() => ({ opacity: 1 - progress.value }));
-  const finalStyle = useAnimatedStyle(() => ({ opacity: progress.value }));
+  const direction = I18nManager.isRTL ? -1 : 1;
+  const arrowStyle = useAnimatedStyle(() => ({
+    opacity: 1 - progress.value,
+    transform: [{ translateX: 8 * direction * progress.value }],
+  }));
+  const finalStyle = useAnimatedStyle(() => ({
+    opacity: progress.value,
+    transform: [{ translateX: 8 * direction * (progress.value - 1) }],
+  }));
 
   return (
     <PressableFeedback

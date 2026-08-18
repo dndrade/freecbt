@@ -1,5 +1,13 @@
 {
   "onboarding_screen": {
+    "previous": "上一步",
+    "skip": "跳过",
+    "next": "下一步",
+    "progress": "设置进度",
+    "progress_step": "第 %{step} 步，共 %{count} 步",
+    "saving": "正在保存…",
+    "save_failed": "无法保存。请重试。",
+    "get_started": "开始",
     "auto_thought_ex": "我错过了乔治邀请我的聚会，他一定恨我了。",
     "challenge_ex": "乔治知道我不会每次在他错过我的什么事都恨他，我应该至少对我自己像我对待别人一样。",
     "alt_thought_ex": "是我错过了乔治的聚会，我可以去道歉，而且他也可能会原谅我的。",

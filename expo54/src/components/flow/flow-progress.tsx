@@ -5,6 +5,7 @@ export type FlowProgressProps = {
   currentIndex: number;
   count: number;
   accessibilityLabel: string;
+  accessibilityValueText: string;
 };
 
 export function FlowProgress(props: FlowProgressProps) {

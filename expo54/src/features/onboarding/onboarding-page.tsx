@@ -18,6 +18,7 @@ export function OnboardingPage({ step, variation, translate }: OnboardingPagePro
     <ScrollView
       className="flex-1"
       contentContainerClassName="grow justify-center px-2 pb-6"
+      keyboardShouldPersistTaps="handled"
       showsVerticalScrollIndicator={false}
       style={{ flex: 1 }}
     >

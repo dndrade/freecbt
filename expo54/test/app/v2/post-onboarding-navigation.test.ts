@@ -9,6 +9,21 @@ import { OnboardingScreen } from "@/src/features/onboarding/onboarding-screen";
 const mockPush = jest.fn();
 const mockDispatch = jest.fn();
 const mockOnSkip = jest.fn();
+const mockFlowCopy: Record<string, string> = {
+  "onboarding_screen.previous": "Previous",
+  "onboarding_screen.skip": "Skip",
+  "onboarding_screen.next": "Next",
+  "onboarding_screen.progress": "Onboarding progress",
+  "onboarding_screen.progress_step": "Step %{step} of %{count}",
+  "onboarding_screen.saving": "Saving…",
+  "onboarding_screen.save_failed": "Unable to save. Try again.",
+  "onboarding_screen.get_started": "Get started",
+};
+const mockTranslate = (key: string, values?: Record<string, unknown>) =>
+  Object.entries(values ?? {}).reduce(
+    (copy, [name, value]) => copy.replace(`%{${name}}`, String(value)),
+    mockFlowCopy[key] ?? key
+  );
 const mockReminders = {
   isSupported: () => true,
   enable: jest.fn(),
@@ -145,7 +160,7 @@ function intro(completion: "idle" | "saving" | { status: "failure"; error: Error
     model: { onboardingCompletion: completion } as never,
     dispatch: mockDispatch,
     style: mockStyle as never,
-    translate: ((key: string) => key) as never,
+    translate: mockTranslate as never,
     onSkip: mockOnSkip,
   } as never);
 }

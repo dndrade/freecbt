@@ -10,6 +10,7 @@ describe("FlowProgress", () => {
         currentIndex={1}
         count={3}
         accessibilityLabel="Onboarding progress"
+        accessibilityValueText="Step 2 of 3"
       />
     );
 
