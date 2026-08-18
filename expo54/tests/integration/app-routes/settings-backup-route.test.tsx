@@ -1,10 +1,9 @@
-import fs from "node:fs";
-import path from "node:path";
 import React from "react";
 import { render } from "@testing-library/react-native";
 import BackupRoute from "@/src/app/v2/(public)/settings/data/backup/index";
 import { BackupSettingsScreen } from "@/src/features/backup/backup-settings-screen";
 import BackupLabCurrent from "@/src/app/v2/debug/lab/settings/backup/current";
+import { readSrcFile } from "@/tests/support/route-manifest";
 
 let lastReady: React.ComponentType<any> | null = null;
 const mockLoadModel = jest.fn(
@@ -38,19 +37,11 @@ describe("backup route wiring", () => {
   });
 
   it("keeps both route files free of direct route-to-route coupling", () => {
-    const publicRoute = fs.readFileSync(
-      path.join(
-        __dirname,
-        "../../../src/app/v2/(public)/settings/data/backup/index.tsx"
-      ),
-      "utf8"
+    const publicRoute = readSrcFile(
+      "app/v2/(public)/settings/data/backup/index.tsx"
     );
-    const labRoute = fs.readFileSync(
-      path.join(
-        __dirname,
-        "../../../src/app/v2/debug/lab/settings/backup/current.tsx"
-      ),
-      "utf8"
+    const labRoute = readSrcFile(
+      "app/v2/debug/lab/settings/backup/current.tsx"
     );
 
     expect(publicRoute).not.toContain("settings/data/backup/index");

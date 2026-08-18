@@ -1,6 +1,5 @@
-import fs from "node:fs";
-import path from "node:path";
 import { createRoutesManifest } from "expo-router/build/routes-manifest";
+import { readSrcFile } from "@/tests/support/route-manifest";
 
 describe("production route namespace", () => {
   it("keeps tab and full-screen routes under the right route groups", () => {
@@ -106,13 +105,7 @@ describe("production route namespace", () => {
       ])
     );
 
-    const tabsLayout = fs.readFileSync(
-      path.join(
-        __dirname,
-        "../../../src/app/v2/(public)/(tabs)/_layout.tsx"
-      ),
-      "utf8"
-    );
+    const tabsLayout = readSrcFile("app/v2/(public)/(tabs)/_layout.tsx");
     // Tab screens are rendered from TAB_CONFIG rather than declared inline;
     // verify the layout maps over it instead of matching literal JSX.
     expect(tabsLayout).toContain("TAB_CONFIG.map((tab) =>");
@@ -125,10 +118,7 @@ describe("production route namespace", () => {
     expect(tabsLayout).toContain("tabBarInactiveTintColor: muted");
     expect(tabsLayout).not.toMatch(/accessibilityState/);
 
-    const tabsConfig = fs.readFileSync(
-      path.join(__dirname, "../../../src/constants/tabs-config.ts"),
-      "utf8"
-    );
+    const tabsConfig = readSrcFile("constants/tabs-config.ts");
     expect(
       Array.from(tabsConfig.matchAll(/name:\s*"([^"]+)"/g), ([, name]) => name)
     ).toEqual(["thoughts/index", "index", "settings/index"]);
@@ -139,10 +129,7 @@ describe("production route namespace", () => {
     expect(tabsConfig).toContain('icon: "home"');
     expect(tabsConfig).toContain('icon: "settings"');
 
-    const publicLayout = fs.readFileSync(
-      path.join(__dirname, "../../../src/app/v2/(public)/_layout.tsx"),
-      "utf8"
-    );
+    const publicLayout = readSrcFile("app/v2/(public)/_layout.tsx");
     expect(publicLayout).not.toMatch(/name="settings(?:\/|"|$)/);
     expect(publicLayout).not.toMatch(/name="settings\/lock"/);
     expect(publicLayout).not.toMatch(/name="settings\/data\/backup"/);

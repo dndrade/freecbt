@@ -1,5 +1,4 @@
-import fs from "node:fs";
-import path from "node:path";
+import { readSrcFile } from "@/tests/support/route-manifest";
 import React from "react";
 import { act, fireEvent, render } from "@testing-library/react-native";
 import { Text, TouchableOpacity, View } from "react-native";
@@ -195,10 +194,7 @@ describe("post-onboarding navigation", () => {
   });
 
   it("keeps the approved completion target at /v2", () => {
-    const routes = fs.readFileSync(
-      path.join(__dirname, "../../../src/routes.ts"),
-      "utf8"
-    );
+    const routes = readSrcFile("routes.ts");
 
     expect(routes).toMatch(
       /export function homeV2\(\): Href\s*\{\s*return "\/v2";/
@@ -206,10 +202,7 @@ describe("post-onboarding navigation", () => {
   });
 
   it("uses the intro pathname as active onboarding state", () => {
-    const gateway = fs.readFileSync(
-      path.join(__dirname, "../../../src/view/gateways/onboarding-gateway.tsx"),
-      "utf8"
-    );
+    const gateway = readSrcFile("view/gateways/onboarding-gateway.tsx");
 
     expect(gateway).toMatch(/usePathname/);
     expect(gateway).toMatch(/pathname === "\/v2\/help\/intro"/);
@@ -219,10 +212,7 @@ describe("post-onboarding navigation", () => {
   });
 
   it("routes to onboarding without a completion query marker", () => {
-    const routes = fs.readFileSync(
-      path.join(__dirname, "../../../src/routes.ts"),
-      "utf8"
-    );
+    const routes = readSrcFile("routes.ts");
 
     expect(routes).toMatch(
       /export function introV2\(\): Href\s*\{\s*return "\/v2\/help\/intro";/
