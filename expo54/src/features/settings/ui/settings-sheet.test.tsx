@@ -53,7 +53,10 @@ describe("SettingsSheet", () => {
       </HeroUINativeProvider>
     );
 
-    expect(screen.getByText("Settings")).toBeTruthy();
+    const title = screen.getByText("Settings");
+    expect(title.props.nativeID).toMatch(/_label$/);
+    expect(title.props.accessibilityRole).toBe("header");
+    expect(title.props.dynamicTypeRamp).toBe("title3");
     expect(screen.getByLabelText("Close")).toBeTruthy();
     expect(screen.getAllByText("Settings")).toHaveLength(1);
     expect(screen.queryByText("Close")).toBeNull();
@@ -62,23 +65,17 @@ describe("SettingsSheet", () => {
   it("uses one viewport-centered header band with a trailing 44px close region", () => {
     const source = readFileSync(__filename.replace(/\.test\.tsx$/, ".tsx"), "utf8");
 
-    expect(source).toMatch(/<View className="flex-row items-center">\s*<View className="min-w-11" \/>\s*<View className="flex-1 items-center">\s*<BottomSheet\.Title className="text-foreground">/s);
-    expect(source).toMatch(/<View className="min-w-11" \/>[\s\S]*<BottomSheet\.Close[\s\S]*className="min-h-11 min-w-11 items-center justify-center"/);
+    expect(source).toContain('<View className="px-4 pt-3">');
+    expect(source).toContain('<BottomSheet.Title');
+    expect(source).toContain('className="h-11 w-11 items-center justify-center"');
     expect(source.match(/<BottomSheet\.Close/g)).toHaveLength(1);
   });
 
-  it("keeps every settings sheet on the shared header", () => {
-    const settings = [
-      "general-sheet.tsx",
-      "data-sheet.tsx",
-      "wellbeing-sheet.tsx",
-      "support-sheet.tsx",
-      "about-sheet.tsx",
-      "appearance-picker.tsx",
-      "journal-picker.tsx",
-    ];
+  it("keeps active settings containers on the shared header", () => {
+    const panelShell = readFileSync(`${__dirname}/settings-panel.tsx`, "utf8");
+    expect(panelShell).toMatch(/<SettingsSheet/);
 
-    for (const name of settings) {
+    for (const name of ["appearance-picker.tsx", "journal-picker.tsx"]) {
       expect(readFileSync(`${__dirname}/${name}`, "utf8")).toMatch(/<SettingsSheet/);
     }
   });

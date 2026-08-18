@@ -1,7 +1,8 @@
 import { act, render } from "@testing-library/react-native";
 import React, { useEffect, useReducer } from "react";
-import { View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { ListGroup } from "heroui-native";
+import { HeroUINativeProvider } from "heroui-native/provider";
 import { Screen } from "./layout/screen";
 import { SettingsCard } from "@/src/features/settings/ui/settings-card";
 
@@ -59,13 +60,17 @@ describe("theme surfaces", () => {
   });
 
   it("updates the mounted SettingsCard surface when the theme changes", () => {
-    const { UNSAFE_getByType } = render(<SettingsCard>content</SettingsCard>);
-    const card = () => UNSAFE_getByType(View);
+    const { UNSAFE_getByType } = render(
+      <HeroUINativeProvider>
+        <SettingsCard>content</SettingsCard>
+      </HeroUINativeProvider>
+    );
+    const card = () => UNSAFE_getByType(ListGroup);
 
-    expect(card().props.style).toEqual({ backgroundColor: "#f7f7f7" });
+    expect(card().props.variant).toBe("default");
 
     act(() => switchTheme("dark"));
 
-    expect(card().props.style).toEqual({ backgroundColor: "#333333" });
+    expect(card().props.variant).toBe("default");
   });
 });

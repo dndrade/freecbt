@@ -1,49 +1,54 @@
 import { fireEvent, render, screen } from "@testing-library/react-native";
 import { HeroUINativeProvider } from "heroui-native/provider";
 import React from "react";
+import { Text } from "react-native";
 import { SettingsRow } from "./settings-row";
+
+jest.mock("@expo/vector-icons", () => ({
+  Feather: ({ name }: { name: string }) => <Text>{name}</Text>,
+}));
+
+jest.mock("./icon-tile", () => ({
+  IconTile: ({ children }: { children: (iconColor: string) => React.ReactNode }) =>
+    children("icon-color"),
+}));
+
+function renderRow(node: React.ReactElement) {
+  return render(<HeroUINativeProvider>{node}</HeroUINativeProvider>);
+}
 
 describe("SettingsRow", () => {
   it("fires onSelectedChange when a toggle row's switch flips", () => {
     const onSelectedChange = jest.fn();
-    render(
-      <HeroUINativeProvider>
-        <SettingsRow
-          type="toggle"
-          iconName="bell"
-          iconColor="pink"
-          label="Notifications"
-          isSelected={false}
-          onSelectedChange={onSelectedChange}
-        />
-      </HeroUINativeProvider>
+    renderRow(
+      <SettingsRow
+        type="toggle"
+        iconName="bell"
+        label="Notifications"
+        isSelected={false}
+        onSelectedChange={onSelectedChange}
+      />
     );
-    fireEvent(screen.getByRole("switch"), "onSelectedChange", true);
+    fireEvent.press(screen.getByRole("switch", { name: "Notifications" }));
     expect(onSelectedChange).toHaveBeenCalledWith(true);
+    expect(screen.getAllByRole("switch")).toHaveLength(1);
   });
 
   it("fires onPress when a nav row is pressed", () => {
     const onPress = jest.fn();
-    render(
-      <SettingsRow
-        type="nav"
-        iconName="lock"
-        iconColor="purple"
-        label="App Lock"
-        onPress={onPress}
-      />
+    renderRow(
+      <SettingsRow type="nav" iconName="lock" label="App Lock" onPress={onPress} />
     );
-    fireEvent.press(screen.getByText("App Lock"));
+    fireEvent.press(screen.getByRole("button", { name: "App Lock" }));
     expect(onPress).toHaveBeenCalledTimes(1);
   });
 
   it("keeps a labeled row and its description in one pressable", () => {
     const onPress = jest.fn();
-    render(
+    renderRow(
       <SettingsRow
         type="nav"
         iconName="database"
-        iconColor="yellow"
         label="Data"
         description="Backup, restore, export"
         onPress={onPress}
@@ -59,11 +64,10 @@ describe("SettingsRow", () => {
 
   it("renders a value row label and trailing value and handles its press", () => {
     const onPress = jest.fn();
-    render(
+    renderRow(
       <SettingsRow
         type="value"
         iconName="globe"
-        iconColor="yellow"
         label="Language"
         value="English"
         onPress={onPress}
@@ -71,17 +75,16 @@ describe("SettingsRow", () => {
     );
     expect(screen.getByText("Language")).toBeTruthy();
     expect(screen.getByText("English")).toBeTruthy();
-    fireEvent.press(screen.getByText("Language"));
+    fireEvent.press(screen.getByRole("button", { name: "Language, English" }));
     expect(onPress).toHaveBeenCalledTimes(1);
   });
 
   it("keeps a descriptive row as one full-row action", () => {
     const onPress = jest.fn();
-    render(
+    renderRow(
       <SettingsRow
         type="collapsed"
         iconName="database"
-        iconColor="yellow"
         description="Backup, restore, export"
         onPress={onPress}
       />

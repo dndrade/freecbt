@@ -17,18 +17,23 @@ export function SettingsSheet(props: {
       <BottomSheet.Portal>
         <BottomSheet.Overlay />
         <BottomSheet.Content onClose={onClosed}>
-          <View className="px-4">
-            <View className="flex-row items-center">
-              <View className="min-w-11" />
+          <View className="px-4 pt-3">
+            <View className="flex-row items-center gap-2">
+              <View className="w-11" />
               <View className="flex-1 items-center">
-                <BottomSheet.Title className="text-foreground">{title}</BottomSheet.Title>
+                <BottomSheet.Title
+                  dynamicTypeRamp="title3"
+                  className="text-xl font-semibold tracking-tight text-foreground"
+                >
+                  {title}
+                </BottomSheet.Title>
               </View>
               <BottomSheet.Close
                 accessibilityLabel="Close"
-                className="min-h-11 min-w-11 items-center justify-center"
+                className="h-11 w-11 items-center justify-center"
               />
             </View>
-            {children}
+            <View className="pt-3">{children}</View>
           </View>
         </BottomSheet.Content>
       </BottomSheet.Portal>
