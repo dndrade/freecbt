@@ -2,7 +2,7 @@ import { fireEvent, render, screen } from "@testing-library/react-native";
 import { HeroUINativeProvider } from "heroui-native/provider";
 import React from "react";
 import Animated from "react-native-reanimated";
-import { FlowAction } from "./flow-action";
+import { FlowAction } from "@/src/components/flow/flow-action";
 
 jest.mock("react-native-reanimated", () => ({
   ...jest.requireActual("react-native-reanimated/mock"),

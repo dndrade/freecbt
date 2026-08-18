@@ -2,7 +2,7 @@ import { DistortionData, Thought } from "@/src/model";
 import { fireEvent, render, screen } from "@testing-library/react-native";
 import { HeroUINativeProvider } from "heroui-native/provider";
 import React from "react";
-import { ThoughtEntryForm, type ThoughtEntryFormProps } from "./thought-entry-form";
+import { ThoughtEntryForm, type ThoughtEntryFormProps } from "@/src/features/thoughts/thought-entry-form";
 
 const translate = ((key: string, values?: Record<string, unknown>) =>
   values ? `${key}:${JSON.stringify(values)}` : key) as ThoughtEntryFormProps["translate"];

@@ -1,6 +1,6 @@
 import { render, screen } from "@testing-library/react-native";
 import React from "react";
-import { SegmentedProgress } from "./segmented-progress";
+import { SegmentedProgress } from "@/src/components/segmented-progress";
 
 describe("SegmentedProgress", () => {
     it("renders one segment per step", () => {

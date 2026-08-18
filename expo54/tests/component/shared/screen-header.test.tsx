@@ -1,7 +1,7 @@
 import { fireEvent, render, screen } from "@testing-library/react-native";
 import { HeroUINativeProvider } from "heroui-native/provider";
 import React from "react";
-import { ScreenHeader } from "./screen-header";
+import { ScreenHeader } from "@/src/components/layout/screen-header";
 
 const mockBack = jest.fn();
 

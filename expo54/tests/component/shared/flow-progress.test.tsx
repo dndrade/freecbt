@@ -1,6 +1,6 @@
 import { render, screen } from "@testing-library/react-native";
 import React from "react";
-import { FlowProgress } from "./flow-progress";
+import { FlowProgress } from "@/src/components/flow/flow-progress";
 
 describe("FlowProgress", () => {
   it("delegates the segmented semantic contract", () => {

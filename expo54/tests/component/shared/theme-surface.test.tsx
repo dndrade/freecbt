@@ -3,7 +3,7 @@ import React, { useEffect, useReducer } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { ListGroup } from "heroui-native";
 import { HeroUINativeProvider } from "heroui-native/provider";
-import { Screen } from "./layout/screen";
+import { Screen } from "@/src/components/layout/screen";
 import { SettingsCard } from "@/src/features/settings/ui/settings-card";
 
 let theme: "light" | "dark" = "light";

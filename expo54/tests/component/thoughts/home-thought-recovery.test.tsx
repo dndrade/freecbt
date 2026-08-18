@@ -6,7 +6,7 @@ import type {
 import { act, fireEvent, render, screen } from "@testing-library/react-native";
 import { HeroUINativeProvider } from "heroui-native/provider";
 import React from "react";
-import { HomeThoughtRecovery } from "./home-thought-recovery";
+import { HomeThoughtRecovery } from "@/src/features/thoughts/home-thought-recovery";
 
 // Captures the callback passed to expo-router's useFocusEffect so tests can
 // simulate a later Home visit without a real navigation container.

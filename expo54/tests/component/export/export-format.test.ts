@@ -2,8 +2,8 @@ import { render } from "@testing-library/react-native";
 import React from "react";
 import { View } from "react-native";
 import { DistortionData, Model, Settings, Thought } from "@/src/model";
-import { ExportScreen } from "./export-screen";
-import { toCSV, toMarkdown } from "./export-format";
+import { ExportScreen } from "@/src/features/export/export-screen";
+import { toCSV, toMarkdown } from "@/src/features/export/export-format";
 
 const mockLinks: Array<{ name: string; body: () => string }> = [];
 
