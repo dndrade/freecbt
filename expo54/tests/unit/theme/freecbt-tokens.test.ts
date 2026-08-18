@@ -1,5 +1,4 @@
-import path from "node:path";
-import fs from "node:fs";
+import { readSrcFile } from "@/tests/support/route-manifest";
 
 /**
  * Assert against the raw @theme declarations rather than compiling through
@@ -20,8 +19,7 @@ import fs from "node:fs";
  * native compiler's side effects.
  */
 function readThemeWithoutComments(): string {
-  const cssPath = path.join(__dirname, "freecbt.css");
-  const css = fs.readFileSync(cssPath, "utf8");
+  const css = readSrcFile("theme/freecbt.css");
   return css.replace(/\/\*[\s\S]*?\*\//g, "");
 }
 

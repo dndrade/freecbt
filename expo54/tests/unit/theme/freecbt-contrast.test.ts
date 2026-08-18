@@ -1,5 +1,4 @@
-import fs from "node:fs";
-import path from "node:path";
+import { readSrcFile } from "@/tests/support/route-manifest";
 
 function luminance(hex: string) {
   const channels = hex
@@ -18,7 +17,7 @@ function contrast(foreground: string, background: string) {
 
 describe("semantic theme contrast", () => {
   it("keeps state foregrounds readable on their semantic surfaces", () => {
-    const css = fs.readFileSync(path.join(__dirname, "freecbt.css"), "utf8");
+    const css = readSrcFile("theme/freecbt.css");
     for (const role of ["success", "warning", "danger", "disabled"]) {
       const surfaces = [...css.matchAll(new RegExp(`--${role}: (#[0-9a-f]+);`, "g"))].map(([, value]) => value);
       const foregrounds = [...css.matchAll(new RegExp(`--${role}-foreground: (#[0-9a-f]+);`, "g"))].map(([, value]) => value);
@@ -31,7 +30,7 @@ describe("semantic theme contrast", () => {
   });
 
   it("uses the strengthened light muted token", () => {
-    const css = fs.readFileSync(path.join(__dirname, "freecbt.css"), "utf8");
+    const css = readSrcFile("theme/freecbt.css");
     expect(css).toContain("--muted: #5f636f;");
   });
 });
