@@ -3,16 +3,16 @@ import { Action } from "@/src/model";
 import { useSafeWindowDimensions } from "@/src/hooks/use-safe-area";
 import { Reminders, useReminders } from "@/src/features/reminders/use-reminders";
 import { Screen, Section, SegmentedProgress } from "@/src/components";
-import * as ImagePath from "@/src/assets/image-path";
 import { Link, useRouter } from "expo-router";
 import { Button, Typography } from "heroui-native";
 import React from "react";
-import { Image, Keyboard, Pressable, ScrollView, View } from "react-native";
+import { Keyboard, Pressable, View } from "react-native";
 import Carousel, { CarouselRenderItem, ICarouselInstance } from "react-native-reanimated-carousel";
 import { ModelLoadedProps } from "@/src/hooks/use-model";
+import { onboardingSteps, type OnboardingStep } from "./onboarding-content";
+import { OnboardingPage } from "./onboarding-page";
 
-const slideNames = ["record", "challenge", "change", "reminders"] as const;
-type SlideName = (typeof slideNames)[number];
+const stepsWithoutReminders = onboardingSteps.filter((step) => step.id !== "reminders");
 
 export function OnboardingScreen(props: ModelLoadedProps) {
   const ref = React.useRef<ICarouselInstance>(null);
@@ -45,7 +45,7 @@ export function OnboardingScreen(props: ModelLoadedProps) {
     });
   };
 
-  const slides = reminders.isSupported() ? slideNames : slideNames.slice(0, -1);
+  const slides = reminders.isSupported() ? onboardingSteps : stepsWithoutReminders;
   const w = useSafeWindowDimensions();
   const width = Math.min(w.width - 32, 768);
 
@@ -126,7 +126,7 @@ function IntroItem(
     hasFailed: boolean;
     onPressGetStarted: () => void;
   }
-): CarouselRenderItem<SlideName> {
+): CarouselRenderItem<OnboardingStep> {
   const { reminders, dispatch, translate: t, isSaving, hasFailed, onPressGetStarted } = props;
 
   async function onPressYes() {
@@ -152,102 +152,54 @@ function IntroItem(
     );
   }
 
-  function slideContent(children: React.ReactNode) {
-    return (
-      <ScrollView
-        className="flex-1"
-        contentContainerClassName="grow justify-center px-2 pb-6"
-        showsVerticalScrollIndicator={false}
-        style={{ flex: 1 }}
-      >
-        <Section className="items-center gap-4">{children}</Section>
-      </ScrollView>
-    );
-  }
-
   return function IntroItem({ item }) {
-    switch (item) {
-      case "record": {
-        return slideContent(
-          <>
-            <Image
-              source={ImagePath.looker}
-              resizeMode="contain"
-              accessibilityRole="image"
-              className="h-40 w-40"
-            />
-            <Typography type="h1" accessibilityRole="header" className="text-center">
-              {t("onboarding_screen.readme")}
-            </Typography>
-            <Link
-              asChild
-              href="https://freecbt.erosson.org/explanation/?ref=quirk"
-              accessibilityLabel={t("onboarding_screen.header")}
-            >
-              <Button variant="secondary">{t("onboarding_screen.header")}</Button>
-            </Link>
-          </>
+    switch (item.presentation) {
+      case "guide":
+        return (
+          <OnboardingPage
+            step={item}
+            translate={t}
+            variation={
+              <Link
+                asChild
+                href="https://freecbt.erosson.org/explanation/?ref=quirk"
+                accessibilityLabel={t("onboarding_screen.header")}
+              >
+                <Button variant="secondary">{t("onboarding_screen.header")}</Button>
+              </Link>
+            }
+          />
         );
-      }
-      case "challenge": {
-        return slideContent(
-          <>
-            <Image
-              source={ImagePath.eater}
-              resizeMode="contain"
-              accessibilityRole="image"
-              className="h-40 w-40"
-            />
-            <Typography type="h1" accessibilityRole="header" className="text-center">
-              {t("onboarding_screen.block1.header")}
-            </Typography>
-            <Typography type="body" color="muted" className="text-center">
-              {t("onboarding_screen.block1.body")}
-            </Typography>
-          </>
+      case "informational":
+        return (
+          <OnboardingPage
+            step={item}
+            translate={t}
+            variation={
+              item.id === "change" && !reminders.isSupported()
+                ? renderGetStarted()
+                : null
+            }
+          />
         );
-      }
-      case "change": {
-        return slideContent(
-          <>
-            <Image
-              source={ImagePath.logo}
-              resizeMode="contain"
-              accessibilityRole="image"
-              className="h-40 w-40"
-            />
-            <Typography type="h1" accessibilityRole="header" className="text-center">
-              {t("onboarding_screen.block2.header")}
-            </Typography>
-            <Typography type="body" color="muted" className="text-center">
-              {t("onboarding_screen.block2.body")}
-            </Typography>
-            {reminders.isSupported() ? null : renderGetStarted()}
-          </>
+      case "reminders":
+        return (
+          <OnboardingPage
+            step={item}
+            translate={t}
+            variation={
+              <>
+                <Button onPress={onPressYes}>{t("onboarding_screen.reminders.button.yes")}</Button>
+                <Button variant="secondary" onPress={onPressNo}>
+                  {t("onboarding_screen.reminders.button.no")}
+                </Button>
+                {renderGetStarted()}
+              </>
+            }
+          />
         );
-      }
-      case "reminders": {
-        return slideContent(
-          <>
-            <Image
-              source={ImagePath.notifications}
-              resizeMode="contain"
-              accessibilityRole="image"
-              className="h-48 w-64"
-            />
-            <Typography type="h1" accessibilityRole="header" className="text-center">
-              {t("onboarding_screen.reminders.header")}
-            </Typography>
-            <Button onPress={onPressYes}>{t("onboarding_screen.reminders.button.yes")}</Button>
-            <Button variant="secondary" onPress={onPressNo}>
-              {t("onboarding_screen.reminders.button.no")}
-            </Button>
-            {renderGetStarted()}
-          </>
-        );
-      }
       default:
-        throw new Error(`unknown slide: ${item satisfies never}`);
+        throw new Error(`unknown presentation: ${item.presentation satisfies never}`);
     }
   };
 }
