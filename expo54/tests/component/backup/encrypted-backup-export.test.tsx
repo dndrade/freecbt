@@ -10,7 +10,7 @@ import { ActivityIndicator } from "react-native";
 import { createSecureBackup } from "@/src/platform/backup/secure-backup-runtime";
 import { useStyle } from "@/src/hooks/use-style";
 import { Model } from "@/src/model";
-import { EncryptedBackupExport } from "./encrypted-backup-export";
+import { EncryptedBackupExport } from "@/src/features/backup/encrypted-backup-export";
 
 jest.mock("@/src/platform/backup/secure-backup-runtime", () => ({
     createSecureBackup: jest.fn(),

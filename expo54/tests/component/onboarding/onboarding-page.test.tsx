@@ -1,8 +1,8 @@
 import { render, screen } from "@testing-library/react-native";
 import React from "react";
 import { ScrollView, Text, View } from "react-native";
-import { onboardingSteps } from "./onboarding-content";
-import { OnboardingPage } from "./onboarding-page";
+import { onboardingSteps } from "@/src/features/onboarding/onboarding-content";
+import { OnboardingPage } from "@/src/features/onboarding/onboarding-page";
 
 jest.mock("heroui-native", () => ({
   cn: (...values: unknown[]) => values.filter(Boolean).join(" "),

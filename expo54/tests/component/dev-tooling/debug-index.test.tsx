@@ -1,6 +1,6 @@
 import React from "react";
 import { render } from "@testing-library/react-native";
-import DebugIndex from "../app/v2/debug/index";
+import DebugIndex from "@/src/app/v2/debug/index";
 
 const RedirectMock = jest.fn((_props: { href: string }) => null);
 

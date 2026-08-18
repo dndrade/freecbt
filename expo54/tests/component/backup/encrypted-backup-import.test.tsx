@@ -12,7 +12,7 @@ import { createSecureBackup } from "@/src/platform/backup/secure-backup-runtime"
 import { useStyle } from "@/src/hooks/use-style";
 import { Action } from "@/src/model";
 import * as DocumentPicker from "expo-document-picker";
-import { EncryptedBackupImport } from "./encrypted-backup-import";
+import { EncryptedBackupImport } from "@/src/features/backup/encrypted-backup-import";
 
 jest.mock("expo-document-picker", () => ({
     getDocumentAsync: jest.fn(),

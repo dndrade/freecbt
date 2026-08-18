@@ -1,8 +1,8 @@
 import React from "react";
 import { render, screen } from "@testing-library/react-native";
 import { Text, View } from "react-native";
-import { BackupSettingsScreen } from "./backup-settings-screen";
-import { backupFlags } from "./backup-flags";
+import { BackupSettingsScreen } from "@/src/features/backup/backup-settings-screen";
+import { backupFlags } from "@/src/features/backup/backup-flags";
 
 const backupFlagsMock = backupFlags as { encryptedBackup: boolean };
 
@@ -13,23 +13,23 @@ jest.mock("@/src/components", () => ({
     React.createElement(Text, null, title),
 }));
 
-jest.mock("./backup-flags", () => ({
+jest.mock("@/src/features/backup/backup-flags", () => ({
   backupFlags: { encryptedBackup: false },
 }));
 
-jest.mock("./encrypted-backup-export", () => ({
+jest.mock("@/src/features/backup/encrypted-backup-export", () => ({
   EncryptedBackupExport: () => React.createElement(Text, null, "encrypted-export"),
 }));
 
-jest.mock("./encrypted-backup-import", () => ({
+jest.mock("@/src/features/backup/encrypted-backup-import", () => ({
   EncryptedBackupImport: () => React.createElement(Text, null, "encrypted-import"),
 }));
 
-jest.mock("./legacy-backup-export", () => ({
+jest.mock("@/src/features/backup/legacy-backup-export", () => ({
   LegacyBackupExport: () => React.createElement(Text, null, "legacy-export"),
 }));
 
-jest.mock("./legacy-backup-import", () => ({
+jest.mock("@/src/features/backup/legacy-backup-import", () => ({
   LegacyBackupImport: () => React.createElement(Text, null, "legacy-import"),
 }));
 

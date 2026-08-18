@@ -11,8 +11,8 @@ import {
   completionIdle,
   slidesWithReminders,
   slidesWithoutReminders,
-} from "./fixtures";
-import { OnboardingFlowPrototype, useOnboardingFlow } from "./onboarding-flow";
+} from "@/src/debug/ui-lab/onboarding/fixtures";
+import { OnboardingFlowPrototype, useOnboardingFlow } from "@/src/debug/ui-lab/onboarding/onboarding-flow";
 
 jest.mock("@/src/components", () => ({
   Screen: (props: { children: React.ReactNode }) =>

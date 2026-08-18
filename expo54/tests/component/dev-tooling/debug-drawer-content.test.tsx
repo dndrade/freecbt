@@ -1,6 +1,6 @@
 import React from "react";
 import { fireEvent, render, screen } from "@testing-library/react-native";
-import { DebugDrawerContent } from "./debug-drawer-content";
+import { DebugDrawerContent } from "@/src/debug/ui/debug-drawer-content";
 
 const mockNavigate = jest.fn();
 const mockCloseDrawer = jest.fn();
