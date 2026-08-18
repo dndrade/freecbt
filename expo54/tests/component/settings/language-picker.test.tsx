@@ -2,7 +2,7 @@ import { fireEvent, render, screen } from "@testing-library/react-native";
 import { HeroUINativeProvider } from "heroui-native/provider";
 import React from "react";
 import { Action } from "@/src/model";
-import { LanguagePicker } from "./language-picker";
+import { LanguagePicker } from "@/src/features/settings/ui/language-picker";
 
 function baseModel() {
   return {

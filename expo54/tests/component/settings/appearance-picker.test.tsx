@@ -1,29 +1,29 @@
 import { fireEvent, render, screen } from "@testing-library/react-native";
 import { HeroUINativeProvider } from "heroui-native/provider";
 import React from "react";
-import { JournalPicker } from "./journal-picker";
+import { AppearancePicker } from "@/src/features/settings/ui/appearance-picker";
 
 const translate = ((key: string) => key) as any;
 
-describe("JournalPicker", () => {
-  it("dispatches setHistoryLabel and closes when a label is chosen", () => {
+describe("AppearancePicker", () => {
+  it("dispatches setTheme and closes when a theme is chosen", () => {
     const dispatch = jest.fn();
     const onOpenChange = jest.fn();
     render(
       <HeroUINativeProvider>
-        <JournalPicker
+        <AppearancePicker
           isOpen
           onOpenChange={onOpenChange}
-          model={{ settings: { historyLabels: "alternative-thought" } } as any}
+          model={{ settings: { theme: null } } as any}
           dispatch={dispatch}
           translate={translate}
         />
       </HeroUINativeProvider>
     );
 
-    fireEvent.press(screen.getByText("settings.history.button.automatic"));
+    fireEvent.press(screen.getByText("settings.theme.dark"));
 
-    expect(dispatch).toHaveBeenCalledTimes(1);
+    expect(dispatch).toHaveBeenCalledWith({ action: "set-theme", value: "dark" });
     expect(onOpenChange).toHaveBeenCalledWith(false);
   });
 });

@@ -1,9 +1,10 @@
 import { fireEvent, render, screen, within } from "@testing-library/react-native";
 import { useRouter } from "expo-router";
 import { existsSync } from "fs";
+import path from "node:path";
 import React from "react";
 import { Pressable, Text, View } from "react-native";
-import { SettingsScreen } from "./settings-screen";
+import { SettingsScreen } from "@/src/features/settings/settings-screen";
 
 const translate = ((key: string) => key) as any;
 const model = { settings: {} } as any;
@@ -51,11 +52,11 @@ jest.mock("heroui-native", () => ({
   Typography: ({ children }: { children: React.ReactNode }) => <Text>{children}</Text>,
 }));
 
-jest.mock("./ui/settings-card", () => ({
+jest.mock("@/src/features/settings/ui/settings-card", () => ({
   SettingsCard: ({ children }: { children: React.ReactNode }) => <View>{children}</View>,
 }));
 
-jest.mock("./ui/settings-row", () => ({
+jest.mock("@/src/features/settings/ui/settings-row", () => ({
   SettingsRow: ({
     label,
     description,
@@ -72,9 +73,9 @@ jest.mock("./ui/settings-row", () => ({
   ),
 }));
 
-jest.mock("./ui/appearance-picker", () => ({ AppearancePicker: mockPanel("appearance") }));
-jest.mock("./ui/journal-picker", () => ({ JournalPicker: mockPanel("journal") }));
-jest.mock("./ui/language-picker", () => ({
+jest.mock("@/src/features/settings/ui/appearance-picker", () => ({ AppearancePicker: mockPanel("appearance") }));
+jest.mock("@/src/features/settings/ui/journal-picker", () => ({ JournalPicker: mockPanel("journal") }));
+jest.mock("@/src/features/settings/ui/language-picker", () => ({
   LanguagePicker: ({
     isOpen,
     onOpenChange,
@@ -96,7 +97,7 @@ jest.mock("./ui/language-picker", () => ({
       </View>
     ) : null,
 }));
-jest.mock("./ui/settings-panel", () => ({
+jest.mock("@/src/features/settings/ui/settings-panel", () => ({
   SettingsPanel: ({
     title,
     isOpen,
@@ -170,7 +171,11 @@ describe("SettingsScreen", () => {
 
   it("does not retain obsolete category sheet boundaries", () => {
     for (const name of ["general-sheet.tsx", "wellbeing-sheet.tsx", "about-sheet.tsx"]) {
-      expect(existsSync(`${__dirname}/ui/${name}`)).toBe(false);
+      expect(
+        existsSync(
+          path.join(__dirname, "../../../src/features/settings/ui", name)
+        )
+      ).toBe(false);
     }
   });
 

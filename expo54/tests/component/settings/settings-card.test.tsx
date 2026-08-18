@@ -2,7 +2,7 @@ import { render, screen } from "@testing-library/react-native";
 import { HeroUINativeProvider } from "heroui-native/provider";
 import React from "react";
 import { Text } from "react-native";
-import { SettingsCard } from "./settings-card";
+import { SettingsCard } from "@/src/features/settings/ui/settings-card";
 
 describe("SettingsCard", () => {
   it("renders grouped children", () => {

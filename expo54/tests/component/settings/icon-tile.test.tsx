@@ -2,7 +2,7 @@ import { render, screen } from "@testing-library/react-native";
 import { HeroUINativeProvider } from "heroui-native/provider";
 import React from "react";
 import { Text } from "react-native";
-import { IconTile } from "./icon-tile";
+import { IconTile } from "@/src/features/settings/ui/icon-tile";
 
 const useThemeColor = jest.fn((name: string) => {
   const values: Record<string, string> = {

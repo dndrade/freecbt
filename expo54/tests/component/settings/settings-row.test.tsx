@@ -2,13 +2,13 @@ import { fireEvent, render, screen } from "@testing-library/react-native";
 import { HeroUINativeProvider } from "heroui-native/provider";
 import React from "react";
 import { Text } from "react-native";
-import { SettingsRow } from "./settings-row";
+import { SettingsRow } from "@/src/features/settings/ui/settings-row";
 
 jest.mock("@expo/vector-icons", () => ({
   Feather: ({ name }: { name: string }) => <Text>{name}</Text>,
 }));
 
-jest.mock("./icon-tile", () => ({
+jest.mock("@/src/features/settings/ui/icon-tile", () => ({
   IconTile: ({ children }: { children: (iconColor: string) => React.ReactNode }) =>
     children("icon-color"),
 }));

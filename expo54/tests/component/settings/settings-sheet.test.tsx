@@ -2,8 +2,8 @@ import { act, render, renderHook, screen } from "@testing-library/react-native";
 import { useRouter } from "expo-router";
 import { HeroUINativeProvider } from "heroui-native/provider";
 import React from "react";
-import { readFileSync } from "node:fs";
-import { SettingsSheet, useDismissThenNavigate, useResetOnDismiss } from "./settings-sheet";
+import { readSrcFile } from "@/tests/support/route-manifest";
+import { SettingsSheet, useDismissThenNavigate, useResetOnDismiss } from "@/src/features/settings/ui/settings-sheet";
 
 jest.mock("expo-router", () => ({
   useRouter: jest.fn(),
@@ -63,7 +63,7 @@ describe("SettingsSheet", () => {
   });
 
   it("uses one viewport-centered header band with a trailing 44px close region", () => {
-    const source = readFileSync(__filename.replace(/\.test\.tsx$/, ".tsx"), "utf8");
+    const source = readSrcFile("features/settings/ui/settings-sheet.tsx");
 
     expect(source).toContain('<View className="px-4 pt-3">');
     expect(source).toContain('<BottomSheet.Title');
@@ -72,11 +72,11 @@ describe("SettingsSheet", () => {
   });
 
   it("keeps active settings containers on the shared header", () => {
-    const panelShell = readFileSync(`${__dirname}/settings-panel.tsx`, "utf8");
+    const panelShell = readSrcFile("features/settings/ui/settings-panel.tsx");
     expect(panelShell).toMatch(/<SettingsSheet/);
 
     for (const name of ["appearance-picker.tsx", "journal-picker.tsx"]) {
-      expect(readFileSync(`${__dirname}/${name}`, "utf8")).toMatch(/<SettingsSheet/);
+      expect(readSrcFile(`features/settings/ui/${name}`)).toMatch(/<SettingsSheet/);
     }
   });
 });

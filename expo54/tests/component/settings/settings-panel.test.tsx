@@ -2,9 +2,9 @@ import { fireEvent, render, screen, within } from "@testing-library/react-native
 import { HeroUINativeProvider } from "heroui-native/provider";
 import React from "react";
 import { Pressable, Text, View } from "react-native";
-import { SettingsPanel, type SettingsPanelItem } from "./settings-panel";
+import { SettingsPanel, type SettingsPanelItem } from "@/src/features/settings/ui/settings-panel";
 
-jest.mock("./settings-sheet", () => {
+jest.mock("@/src/features/settings/ui/settings-sheet", () => {
   return {
     SettingsSheet: ({
       isOpen,
