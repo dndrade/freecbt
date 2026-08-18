@@ -4,7 +4,7 @@ import {
   isCanonicalBase64,
   utf8DecodeStrict,
   utf8Encode,
-} from "./archive-codec";
+} from "@/src/model/archive/archive-codec";
 
 describe("base64", () => {
   test("round-trips arbitrary bytes", () => {

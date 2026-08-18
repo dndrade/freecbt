@@ -1,10 +1,10 @@
 // expo54/src/model/archive/archive-size-limits.test.ts
-import { Archive, DistortionData, Thought } from "..";
+import { Archive, DistortionData, Thought } from "@/src/model";
 import {
   MAX_DECODED_TEXT_CHARS,
   MAX_ENCODED_PAYLOAD_CHARS,
   MAX_THOUGHT_COUNT,
-} from "./archive-size-limits";
+} from "@/src/model/archive/archive-size-limits";
 
 import { constants as bufferConstants } from "buffer";
 

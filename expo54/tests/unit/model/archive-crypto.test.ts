@@ -5,16 +5,16 @@ import {
     encryptJson,
     keyFingerprint,
     RecoveryKeyFingerprintMismatchError,
-} from "./archive-crypto";
+} from "@/src/model/archive/archive-crypto";
 import {
     EncryptedHeaderV3,
     validateHeaderV3,
-} from "./archive-format";
+} from "@/src/model/archive/archive-format";
 import {
     decodeBase64Strict,
     encodeBase64,
     utf8Encode,
-} from "./archive-codec";
+} from "@/src/model/archive/archive-codec";
 
 // ============================================================================
 // Shared fixtures, constants, and helper utilities

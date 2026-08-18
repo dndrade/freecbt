@@ -1,4 +1,4 @@
-import { Distortion, DistortionData } from ".";
+import { Distortion, DistortionData } from "@/src/model";
 
 export const D = Distortion.createParsers(DistortionData);
 

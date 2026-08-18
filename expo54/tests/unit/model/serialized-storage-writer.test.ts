@@ -1,7 +1,7 @@
 import {
   createLatestWinsStorageWriter,
   createOrderedStorageWriter,
-} from "./serialized-storage-writer";
+} from "@/src/platform/storage/serialized-storage-writer";
 
 function deferred<T = void>() {
   let resolve!: (value: T | PromiseLike<T>) => void;

@@ -1,12 +1,12 @@
 import {
   ArchiveDecryptError,
   decryptHeader,
-} from "./archive-crypto";
+} from "@/src/model/archive/archive-crypto";
 import {
   EncryptedHeaderV3,
   validateHeaderV3,
-} from "./archive-format";
-import { encodeBase64 } from "./archive-codec";
+} from "@/src/model/archive/archive-format";
+import { encodeBase64 } from "@/src/model/archive/archive-codec";
 
 // ============================================================================
 // Deterministic known-answer / regression fixture

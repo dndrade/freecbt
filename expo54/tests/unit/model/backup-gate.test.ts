@@ -1,6 +1,6 @@
 import AsyncStorage from "@react-native-async-storage/async-storage/jest/async-storage-mock";
-import { Archive, DistortionData, Model, Thought } from "..";
-import { Storage } from "../..";
+import { Archive, DistortionData, Model, Thought } from "@/src/model";
+import { Storage } from "@/src";
 
 const A = Archive.createParsers(DistortionData);
 

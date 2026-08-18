@@ -1,8 +1,8 @@
-import { Archive, DistortionData, Thought } from "..";
-import { PARAMS, CURRENT_PARAMS_VERSION } from "./archive-format";
-import * as CryptoModule from "./archive-crypto";
-import { RecoveryKeyFingerprintMismatchError } from "./archive-crypto";
-import { MAX_ENCODED_PAYLOAD_CHARS } from "./archive-size-limits";
+import { Archive, DistortionData, Thought } from "@/src/model";
+import { PARAMS, CURRENT_PARAMS_VERSION } from "@/src/model/archive/archive-format";
+import * as CryptoModule from "@/src/model/archive/archive-crypto";
+import { RecoveryKeyFingerprintMismatchError } from "@/src/model/archive/archive-crypto";
+import { MAX_ENCODED_PAYLOAD_CHARS } from "@/src/model/archive/archive-size-limits";
 
 
 const QuickCrypto = jest.requireMock(

@@ -1,5 +1,5 @@
-import { Storage } from "../..";
-import { DistortionData, Thought } from "../../model";
+import { Storage } from "@/src";
+import { DistortionData, Thought } from "@/src/model";
 import { AsyncStorageStatic } from "@react-native-async-storage/async-storage";
 
 function fakeAsyncStorage(initial: Record<string, string> = {}) {

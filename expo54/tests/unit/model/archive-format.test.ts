@@ -3,8 +3,8 @@ import {
   EncryptedHeaderV3,
   PARAMS,
   validateHeaderV3,
-} from "./archive-format";
-import { encodeBase64 } from "./archive-codec";
+} from "@/src/model/archive/archive-format";
+import { encodeBase64 } from "@/src/model/archive/archive-codec";
 
 function validHeader(overrides: Partial<EncryptedHeaderV3> = {}): unknown {
   return {

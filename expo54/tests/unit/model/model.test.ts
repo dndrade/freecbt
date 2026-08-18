@@ -1,8 +1,8 @@
-import { Action, Cmd, DistortionData, Model, Settings, Thought } from ".";
+import { Action, Cmd, DistortionData, Model, Settings, Thought } from "@/src/model";
 import type {
   HomeThoughtDraftRecord,
   ThoughtSaveOutboxRecord,
-} from "./thought-save";
+} from "@/src/model/thought-save";
 
 const emptyReady: Model.Ready = {
   status: "ready",

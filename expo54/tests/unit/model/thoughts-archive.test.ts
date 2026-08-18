@@ -1,4 +1,4 @@
-import { Archive, DistortionData, Thought } from "..";
+import { Archive, DistortionData, Thought } from "@/src/model";
 
 export const A = Archive.createParsers(DistortionData);
 

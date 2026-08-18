@@ -1,4 +1,4 @@
-import { Settings } from ".";
+import { Settings } from "@/src/model";
 
 const empty: Settings.Json = {
   [Settings.pincodeKey]: null,
