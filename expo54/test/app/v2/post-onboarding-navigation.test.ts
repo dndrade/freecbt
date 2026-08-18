@@ -8,6 +8,7 @@ import { OnboardingScreen } from "@/src/features/onboarding/onboarding-screen";
 
 const mockPush = jest.fn();
 const mockDispatch = jest.fn();
+const mockOnSkip = jest.fn();
 const mockReminders = {
   isSupported: () => true,
   enable: jest.fn(),
@@ -15,7 +16,6 @@ const mockReminders = {
 };
 let mockPathname = "/v2";
 let mockExistingUser = false;
-let mockWindowHeight = 800;
 
 jest.mock("expo-router", () => ({
   usePathname: () => mockPathname,
@@ -35,9 +35,25 @@ jest.mock("@/src", () => ({
 }));
 
 jest.mock("@/src/components", () => ({
-  Screen: (props: { children: React.ReactNode }) => React.createElement(View, null, props.children),
   Section: (props: { children: React.ReactNode }) => React.createElement(View, null, props.children),
-  SegmentedProgress: () => React.createElement(View),
+  FlowProgress: () => React.createElement(View),
+  FlowAction: (props: {
+    state: "next" | "final";
+    onPress: () => void;
+    isDisabled?: boolean;
+    accessibilityLabel: string;
+    finalLabel: string;
+  }) =>
+    React.createElement(
+      TouchableOpacity,
+      {
+        accessibilityLabel: props.accessibilityLabel,
+        accessibilityRole: "button",
+        disabled: props.isDisabled,
+        onPress: props.onPress,
+      },
+      props.state === "final" ? props.finalLabel : "Next"
+    ),
 }));
 
 jest.mock("@/src/assets/image-path", () => ({
@@ -51,11 +67,8 @@ jest.mock("@/src/features/reminders/use-reminders", () => ({
   useReminders: () => mockReminders,
 }));
 
-jest.mock("@/src/hooks/use-safe-area", () => ({
-  useSafeWindowDimensions: () => ({ width: 400, height: mockWindowHeight }),
-}));
-
 jest.mock("heroui-native", () => ({
+  useThemeColor: () => "#fff",
   Button: (props: {
     children: React.ReactNode;
     onPress?: () => void;
@@ -103,8 +116,12 @@ jest.mock("react-native-reanimated-carousel", () => {
   function Carousel(props: {
     data: readonly string[];
     renderItem: (props: { item: string; index: number }) => React.ReactNode;
+    onSnapToItem?: (index: number) => void;
   }) {
     const item = props.data[props.data.length - 1];
+    React.useEffect(() => {
+      props.onSnapToItem?.(props.data.length - 1);
+    }, [props]);
     return React.createElement(
       View,
       null,
@@ -129,7 +146,18 @@ function intro(completion: "idle" | "saving" | { status: "failure"; error: Error
     dispatch: mockDispatch,
     style: mockStyle as never,
     translate: ((key: string) => key) as never,
+    onSkip: mockOnSkip,
+  } as never);
+}
+
+function renderIntro(
+  completion: "idle" | "saving" | { status: "failure"; error: Error }
+) {
+  const view = render(intro(completion));
+  fireEvent(view.getByTestId("onboarding-pager-viewport"), "layout", {
+    nativeEvent: { layout: { width: 400, height: 600 } },
   });
+  return view;
 }
 
 function Child() {
@@ -148,7 +176,6 @@ describe("post-onboarding navigation", () => {
   beforeEach(() => {
     mockPathname = "/v2";
     mockExistingUser = false;
-    mockWindowHeight = 800;
     jest.clearAllMocks();
   });
 
@@ -188,45 +215,8 @@ describe("post-onboarding navigation", () => {
     expect(routes).not.toMatch(/onboarded/);
   });
 
-  it("uses one explicit completion action for every onboarding exit", () => {
-    const intro = fs.readFileSync(
-      path.join(__dirname, "../../../src/features/onboarding/onboarding-screen.tsx"),
-      "utf8"
-    );
-
-    expect(intro).not.toMatch(/thoughtCreateV2/);
-    expect(intro.match(/Action\.beginOnboardingCompletion\(\)/g)).toHaveLength(1);
-    expect(intro).toMatch(/Routes\.homeV2\(\)/);
-    expect(intro).toMatch(/onPressGetStarted/);
-    expect(intro.match(/renderGetStarted\(\)/g)).toHaveLength(3);
-    expect(intro).toMatch(/Saving…/);
-    expect(intro).toMatch(/Unable to save\. Try again\./);
-    expect(intro).toMatch(/isDisabled=\{isSaving\}/);
-  });
-
-  it("keeps unsupported Change as the final content step", () => {
-    const intro = fs.readFileSync(
-      path.join(__dirname, "../../../src/features/onboarding/onboarding-screen.tsx"),
-      "utf8"
-    );
-
-    expect(intro).toMatch(/reminders\.isSupported\(\) \? null : renderGetStarted\(\)/);
-    expect(intro).toMatch(/case "reminders"[\s\S]*?renderGetStarted\(\)/);
-  });
-
-  it("keeps the route file as a thin LoadModel shell", () => {
-    const route = fs.readFileSync(
-      path.join(__dirname, "../../../src/app/v2/(public)/help/intro.tsx"),
-      "utf8"
-    );
-
-    expect(route).toMatch(/LoadModel ready=\{OnboardingScreen\}/);
-    expect(route).not.toMatch(/Action\.beginOnboardingCompletion\(\)/);
-    expect(route).not.toMatch(/renderGetStarted\(\)/);
-  });
-
   it("keeps reminder choices persistence-only before completion", () => {
-    const view = render(intro("idle"));
+    const view = renderIntro("idle");
 
     fireEvent.press(view.getByRole("button", { name: "onboarding_screen.reminders.button.yes" }));
     expect(mockReminders.enable).toHaveBeenCalledWith(mockDispatch, expect.any(Function));
@@ -244,7 +234,7 @@ describe("post-onboarding navigation", () => {
   });
 
   it("completes only after saving succeeds and keeps failure retryable", () => {
-    const view = render(intro("idle"));
+    const view = renderIntro("idle");
 
     fireEvent.press(view.getByRole("button", { name: "Get started" }));
     expect(mockDispatch).toHaveBeenCalledTimes(1);
@@ -295,7 +285,8 @@ describe("post-onboarding navigation", () => {
     expect(mockDispatch).not.toHaveBeenCalled();
   });
 
-  it("renders children for a completed user", () => {
+  it("renders Home children for an existing-user model without redirect", () => {
+    mockPathname = "/v2";
     mockExistingUser = true;
 
     const view = render(gateway());

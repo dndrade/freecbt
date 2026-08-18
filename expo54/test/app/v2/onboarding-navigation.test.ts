@@ -1,6 +1,7 @@
 import React from "react";
 import { act, fireEvent, render } from "@testing-library/react-native";
 import { Image, ScrollView, Text, TouchableOpacity, View } from "react-native";
+import OnboardingIntro from "@/src/app/v2/(public)/help/intro";
 import { OnboardingScreen } from "@/src/features/onboarding/onboarding-screen";
 
 const mockDispatch = jest.fn();
@@ -8,6 +9,7 @@ const mockPush = jest.fn();
 const mockScrollTo = jest.fn();
 const mockHomeV2 = jest.fn(() => "/v2");
 const mockThoughtCreateV2 = jest.fn(() => "/v2/thoughts/create");
+const mockOnSkip = jest.fn();
 const mockReminders = {
   isSupported: () => remindersSupported,
   enable: jest.fn(),
@@ -15,7 +17,6 @@ const mockReminders = {
 };
 let remindersSupported = true;
 let currentIndex = 0;
-let mockWindowHeight = 800;
 
 jest.mock("expo-router", () => ({
   useRouter: () => ({ push: mockPush }),
@@ -41,6 +42,16 @@ jest.mock("expo-router", () => ({
   },
 }));
 
+jest.mock("@/src/hooks/use-model", () => ({
+  LoadModel: (props: { ready: React.ComponentType<any> }) =>
+    React.createElement(props.ready, {
+      model: { onboardingCompletion: "idle" },
+      dispatch: mockDispatch,
+      style: mockStyle,
+      translate: (key: string) => key,
+    }),
+}));
+
 jest.mock("@/src", () => ({
   Routes: {
     homeV2: () => mockHomeV2(),
@@ -49,9 +60,8 @@ jest.mock("@/src", () => ({
 }));
 
 jest.mock("@/src/components", () => ({
-  Screen: (props: { children: React.ReactNode }) => React.createElement(View, null, props.children),
   Section: (props: { children: React.ReactNode }) => React.createElement(View, null, props.children),
-  SegmentedProgress: ({
+  FlowProgress: ({
     count,
     currentIndex,
     accessibilityLabel,
@@ -71,6 +81,23 @@ jest.mock("@/src/components", () => ({
       ),
       React.createElement(Text, null, `Step ${currentIndex + 1} of ${count}`)
     ),
+  FlowAction: (props: {
+    state: "next" | "final";
+    onPress: () => void;
+    isDisabled?: boolean;
+    accessibilityLabel: string;
+    finalLabel: string;
+  }) =>
+    React.createElement(
+      TouchableOpacity,
+      {
+        accessibilityLabel: props.accessibilityLabel,
+        accessibilityRole: "button",
+        disabled: props.isDisabled,
+        onPress: props.onPress,
+      },
+      React.createElement(Text, null, props.state === "final" ? props.finalLabel : "Next")
+    ),
 }));
 
 jest.mock("@/src/assets/image-path", () => ({
@@ -84,11 +111,8 @@ jest.mock("@/src/features/reminders/use-reminders", () => ({
   useReminders: () => mockReminders,
 }));
 
-jest.mock("@/src/hooks/use-safe-area", () => ({
-  useSafeWindowDimensions: () => ({ width: 400, height: mockWindowHeight }),
-}));
-
 jest.mock("heroui-native", () => ({
+  useThemeColor: () => "#fff",
   Button: (props: {
     children: React.ReactNode;
     onPress?: () => void;
@@ -163,7 +187,7 @@ jest.mock("react-native-reanimated-carousel", () => {
   };
 });
 
-const style = new Proxy(
+const mockStyle = new Proxy(
   { container: {}, errorText: {}, button: {}, buttonText: {} } as Record<string, object>,
   { get: (target, key: string) => target[key] ?? {} }
 );
@@ -174,33 +198,58 @@ function intro(
   return React.createElement(OnboardingScreen, {
     model: { onboardingCompletion: completion } as never,
     dispatch: mockDispatch,
-    style: style as never,
+    style: mockStyle as never,
     translate: ((key: string) => key) as never,
+    onSkip: mockOnSkip,
+  } as never);
+}
+
+function renderIntro(
+  completion: "idle" | "saving" | { status: "failure"; error: Error } = "idle"
+) {
+  const view = render(intro(completion));
+  fireEvent(view.getByTestId("onboarding-pager-viewport"), "layout", {
+    nativeEvent: { layout: { width: 400, height: 600 } },
   });
+  return view;
 }
 
 describe("onboarding navigation", () => {
   beforeEach(() => {
     remindersSupported = true;
     currentIndex = 0;
-    mockWindowHeight = 800;
     jest.clearAllMocks();
   });
 
   it("uses segmented progress with the actual active slide count and no pagination dots", () => {
     remindersSupported = false;
-    const view = render(intro());
+    const view = renderIntro();
 
     expect(view.getAllByTestId("segmented-progress-segment")).toHaveLength(3);
     expect(view.queryByTestId("legacy-pagination-basic")).toBeNull();
   });
 
-  it("shows accessible 44 by 44 step controls around the active slide", () => {
-    const view = render(intro());
+  it("marks the user existing before Skip navigates Home", () => {
+    const view = render(React.createElement(OnboardingIntro));
+
+    fireEvent.press(view.getByRole("button", { name: "Skip" }));
+
+    expect(mockDispatch).toHaveBeenCalledWith({ action: "set-existing-user" });
+    expect(mockPush).toHaveBeenCalledWith("/v2");
+    expect(mockDispatch.mock.invocationCallOrder[0]).toBeLessThan(
+      mockPush.mock.invocationCallOrder[0]
+    );
+  });
+
+  it("keeps accessible Back and Skip controls around the active slide", () => {
+    const view = renderIntro();
 
     expect(view.queryByRole("button", { name: "Previous" })).toBeNull();
+    expect(view.getByRole("button", { name: "Skip" })).toHaveStyle({
+      width: 44,
+      height: 44,
+    });
     const next = view.getByRole("button", { name: "Next" });
-    expect(next).toHaveStyle({ width: 44, height: 44 });
 
     fireEvent.press(next);
 
@@ -214,7 +263,7 @@ describe("onboarding navigation", () => {
 
   it("keeps Get started as the final onboarding action", () => {
     remindersSupported = false;
-    const view = render(intro());
+    const view = renderIntro();
 
     fireEvent.press(view.getByRole("button", { name: "Next" }));
     fireEvent.press(view.getByRole("button", { name: "Next" }));
@@ -225,7 +274,7 @@ describe("onboarding navigation", () => {
   });
 
   it("renders accessible onboarding hierarchy with a labeled help link", () => {
-    const view = render(intro());
+    const view = renderIntro();
 
     expect(view.getByLabelText("Onboarding progress")).toBeTruthy();
     expect(view.getByRole("header", { name: "onboarding_screen.readme" })).toBeTruthy();
@@ -239,9 +288,8 @@ describe("onboarding navigation", () => {
   });
 
   it("keeps each slide in a scroll container for tight heights", () => {
-    mockWindowHeight = 320;
     remindersSupported = false;
-    const view = render(intro());
+    const view = renderIntro();
 
     fireEvent.press(view.getByRole("button", { name: "Next" }));
     fireEvent.press(view.getByRole("button", { name: "Next" }));
@@ -252,7 +300,7 @@ describe("onboarding navigation", () => {
   });
 
   it("keeps supported reminder choices persistence-only before completion", () => {
-    const view = render(intro());
+    const view = renderIntro();
 
     fireEvent.press(view.getByRole("button", { name: "Next" }));
     fireEvent.press(view.getByRole("button", { name: "Next" }));
@@ -291,7 +339,7 @@ describe("onboarding navigation", () => {
   });
 
   it("uses Get started as the single completion affordance on supported and unsupported flows", () => {
-    const supportedView = render(intro());
+    const supportedView = renderIntro();
     fireEvent.press(supportedView.getByRole("button", { name: "Next" }));
     fireEvent.press(supportedView.getByRole("button", { name: "Next" }));
     fireEvent.press(supportedView.getByRole("button", { name: "Next" }));
@@ -301,7 +349,7 @@ describe("onboarding navigation", () => {
 
     remindersSupported = false;
     currentIndex = 0;
-    const unsupportedView = render(intro());
+    const unsupportedView = renderIntro();
     fireEvent.press(unsupportedView.getByRole("button", { name: "Next" }));
     fireEvent.press(unsupportedView.getByRole("button", { name: "Next" }));
 
@@ -314,7 +362,7 @@ describe("onboarding navigation", () => {
 
   it("waits for the completion result before routing home and keeps failures retryable", () => {
     remindersSupported = false;
-    const view = render(intro("idle"));
+    const view = renderIntro("idle");
 
     fireEvent.press(view.getByRole("button", { name: "Next" }));
     fireEvent.press(view.getByRole("button", { name: "Next" }));
@@ -350,7 +398,7 @@ describe("onboarding navigation", () => {
   });
 
   it("waits for the supported completion result before routing home", () => {
-    const view = render(intro("idle"));
+    const view = renderIntro("idle");
 
     fireEvent.press(view.getByRole("button", { name: "Next" }));
     fireEvent.press(view.getByRole("button", { name: "Next" }));
