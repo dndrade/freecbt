@@ -1,7 +1,6 @@
 import React from "react";
-import fs from "node:fs";
-import path from "node:path";
 import { fireEvent, render, screen } from "@testing-library/react-native";
+import { readSrcFile } from "@/tests/support/route-manifest";
 import SettingsLabIndex from "@/src/app/v2/debug/lab/settings/index";
 import MainSettingsCurrent from "@/src/app/v2/debug/lab/settings/main/current";
 import PinSetupCurrent from "@/src/app/v2/debug/lab/settings/pin/current";
@@ -73,23 +72,16 @@ describe("settings lab navigation", () => {
       expect(mockLoadModel).toHaveBeenCalled();
       expect(lastReady).toBe(ready);
 
-      const currentRoute = path.join(
-        __dirname,
-        `../../../../../src/app/v2/debug/lab/settings/${fileSuffix}`
+      const currentRoute = readSrcFile(
+        `app/v2/debug/lab/settings/${fileSuffix}`
       );
-      expect(fs.readFileSync(currentRoute, "utf8")).not.toMatch(
-        /settings\/data\/backup/
-      );
+      expect(currentRoute).not.toMatch(/settings\/data\/backup/);
     }
   );
 
   it("keeps the lab backup current route pointed at the feature layer", () => {
-    const route = fs.readFileSync(
-      path.join(
-        __dirname,
-        "../../../../../src/app/v2/debug/lab/settings/backup/current.tsx"
-      ),
-      "utf8"
+    const route = readSrcFile(
+      "app/v2/debug/lab/settings/backup/current.tsx"
     );
 
     expect(route).toContain("BackupSettingsScreen");
