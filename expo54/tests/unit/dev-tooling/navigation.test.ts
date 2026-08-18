@@ -1,4 +1,4 @@
-import { debugNavItems } from "./navigation";
+import { debugNavItems } from "@/src/debug/navigation";
 
 describe("debugNavItems", () => {
   it("exposes only the four top-level debug destinations", () => {

@@ -3,7 +3,7 @@
  */
 import { renderHook } from "@testing-library/react";
 import React, { act } from "react";
-import { createElmArch, createPureElmArch, useElmArch } from "./use-elm-arch";
+import { createElmArch, createPureElmArch, useElmArch } from "@/src/hooks/use-elm-arch";
 
 test("use-pure-elm-arch", () => {
   const Ctx = createPureElmArch<Model, Action>();

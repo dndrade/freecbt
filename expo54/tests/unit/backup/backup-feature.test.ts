@@ -1,4 +1,4 @@
-import { isEncryptedBackupEnabled } from "./backup-feature";
+import { isEncryptedBackupEnabled } from "@/src/features/backup/backup-feature";
 
 describe("isEncryptedBackupEnabled", () => {
     test("is disabled when encrypted backup is not enabled", () => {

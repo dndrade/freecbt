@@ -10,7 +10,7 @@ import {
     ensureDefaultBackupDirectory,
     getDefaultBackupDirectoryUri,
     pruneOldBackups,
-} from "./backup-file-system";
+} from "@/src/platform/backup/backup-file-system";
 import {
     directoryCreate,
     directoryList,
@@ -18,10 +18,10 @@ import {
     fileText,
     fileWrite,
     fileDelete,
-} from "../../testing/mocks/expo-file-system"
+} from "@/tests/support/mocks/expo-file-system"
 
 jest.mock("expo-file-system", () =>
-    jest.requireActual("../../testing/mocks/expo-file-system")
+    jest.requireActual("@/tests/support/mocks/expo-file-system")
 );
 
 

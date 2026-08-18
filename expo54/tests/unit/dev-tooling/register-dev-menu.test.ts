@@ -1,4 +1,4 @@
-import { registerDevMenu } from "./register-dev-menu";
+import { registerDevMenu } from "@/src/debug/register-dev-menu";
 
 jest.mock("expo-dev-client", () => ({
   registerDevMenuItems: jest.fn(),

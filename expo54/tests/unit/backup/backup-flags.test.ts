@@ -1,4 +1,4 @@
-import { backupFlags } from "./backup-flags";
+import { backupFlags } from "@/src/features/backup/backup-flags";
 
 describe("backupFlags", () => {
     test("defaults to legacy backup", () => {

@@ -2,9 +2,9 @@
  * @jest-environment jsdom
  */
 import { act, renderHook } from "@testing-library/react";
-import { Action, DistortionData, Model, Settings, Thought } from "../../model";
-import type { ThoughtSaveOutboxRecord } from "../../model/thought-save";
-import { useHomeThoughtDraft } from "./use-home-thought-draft";
+import { Action, DistortionData, Model, Settings, Thought } from "@/src/model";
+import type { ThoughtSaveOutboxRecord } from "@/src/model/thought-save";
+import { useHomeThoughtDraft } from "@/src/features/thoughts/use-home-thought-draft";
 
 const emptyReady: Model.Ready = {
   status: "ready",

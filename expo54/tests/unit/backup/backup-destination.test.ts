@@ -6,9 +6,9 @@ import {
     createBackupFilename,
     resolveBackupDestination,
     writeBackupFile,
-} from "./backup-destination"
+} from "@/src/platform/backup/backup-destination"
 
-import { fakeBackupFileSystem } from "@/src/testing/mocks/backup-file-system";
+import { fakeBackupFileSystem } from "@/tests/support/mocks/backup-file-system";
 
 describe("createBackupFilename", () => {
     test("creates a deterministic timestamped filename", () => {

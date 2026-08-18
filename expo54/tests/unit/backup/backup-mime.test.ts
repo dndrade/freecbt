@@ -2,7 +2,7 @@ import {
   BACKUP_EXPORT_FILENAME,
   BACKUP_EXPORT_MIME_TYPE,
   BACKUP_IMPORT_MIME_TYPES,
-} from "./backup-mime";
+} from "@/src/platform/sharing/backup-mime";
 
 test("export mime type is not text/plain", () => {
   // Android's built-in share-sheet "Save" target rejects text/plain

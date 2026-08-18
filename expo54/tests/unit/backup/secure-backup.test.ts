@@ -1,13 +1,13 @@
 import * as LZ from "lz-string";
 import { Archive, DistortionData, Thought } from "@/src/model";
 import type { SecureBackupRecoveryKey } from "@/src/platform/storage/storage";
-import { fakeBackupFileSystem } from "@/src/testing/mocks/backup-file-system";
+import { fakeBackupFileSystem } from "@/tests/support/mocks/backup-file-system";
 import {
     InvalidBackupArchiveError,
     MissingRecoveryKeyError,
     secureBackup,
     type SecureBackupDestination,
-} from "./secure-backup";
+} from "@/src/platform/backup/secure-backup";
 
 const RECOVERY_KEY = repeatedByteRecoveryKey(0xa1);
 

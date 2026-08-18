@@ -3,23 +3,23 @@ import { DistortionData } from "@/src/model";
 import {
     createExpoBackupFileSystem,
     ensureDefaultBackupDirectory,
-} from "./backup-file-system";
-import { secureBackup } from "./secure-backup";
-import { createSecureBackup } from "./secure-backup-runtime";
-import { secureBackupRecoveryKey } from "../storage/storage";
+} from "@/src/platform/backup/backup-file-system";
+import { secureBackup } from "@/src/platform/backup/secure-backup";
+import { createSecureBackup } from "@/src/platform/backup/secure-backup-runtime";
+import { secureBackupRecoveryKey } from "@/src/platform/storage/storage";
 
 jest.mock("expo-secure-store", () => ({}));
 
-jest.mock("./backup-file-system", () => ({
+jest.mock("@/src/platform/backup/backup-file-system", () => ({
     createExpoBackupFileSystem: jest.fn(),
     ensureDefaultBackupDirectory: jest.fn(),
 }));
 
-jest.mock("./secure-backup", () => ({
+jest.mock("@/src/platform/backup/secure-backup", () => ({
     secureBackup: jest.fn(),
 }));
 
-jest.mock("../storage/storage", () => ({
+jest.mock("@/src/platform/storage/storage", () => ({
     secureBackupRecoveryKey: jest.fn(),
 }));
 

@@ -3,7 +3,7 @@ import {
   getLabScenario,
   getLabVariant,
   labFamilies,
-} from "./catalog";
+} from "@/src/debug/lab/catalog";
 
 describe("labFamilies", () => {
   it("exposes onboarding and settings families in order", () => {
