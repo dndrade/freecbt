@@ -1,6 +1,5 @@
 import { fireEvent, render, screen } from "@testing-library/react-native";
 import React from "react";
-import { Text, TextInput, View, Pressable } from "react-native";
 import { Action } from "@/src/model";
 import { PinUpdateScreen } from "@/src/features/lock/pin-update-screen";
 
@@ -8,7 +7,7 @@ const mockDispatch = jest.fn();
 
 jest.mock("@/src/components", () => {
   const React = require("react");
-  const { Pressable, Text, TextInput, View } = require("react-native");
+  const { Text, View } = require("react-native");
 
   return {
     Screen: ({ children }: { children: React.ReactNode }) => <View>{children}</View>,

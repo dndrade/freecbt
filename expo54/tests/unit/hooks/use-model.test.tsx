@@ -4,10 +4,9 @@
 import { act, renderHook, waitFor } from "@testing-library/react";
 import React from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { Action, Model, Settings, Thought } from "@/src/model";
+import { Action, DistortionData, Model, Settings, Thought } from "@/src/model";
 import { ModelProvider, useModel } from "@/src/hooks/use-model";
 import { Storage } from "@/src";
-import { DistortionData } from "@/src/model";
 import { THOUGHT_SAVE_OUTBOX_KEY } from "@/src/platform/storage/thought-save-outbox";
 
 function sampleSpec(overrides: Partial<Thought.Spec> = {}): Thought.Spec {

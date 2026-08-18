@@ -26,7 +26,7 @@ function fakeAsyncStorage(initial: Record<string, string> = {}) {
 
 function fakeAsyncStorageWithBlockedSet(initial: Record<string, string> = {}) {
   const store = new Map(Object.entries(initial));
-  const gates: Array<Promise<void>> = [];
+  const gates: Promise<void>[] = [];
   return {
     storage: {
       getItem: async (k: string) => store.get(k) ?? null,
