@@ -1,9 +1,9 @@
 /** @type {import("jest").Config} **/
 export default {
   preset: "jest-expo",
-  setupFiles: ["./src/testing/jest-setup.ts"],
+  setupFiles: ["./tests/support/jest-setup.ts"],
   testMatch: [
-    '<rootDir>/{src,test}/**/*.{spec,test}.{js,jsx,ts,tsx}',
+    '<rootDir>/tests/**/*.{spec,test}.{js,jsx,ts,tsx}',
   ],
   transform: {
     // Third-party .ts/.tsx under node_modules (e.g. heroui-native, uniwind,
