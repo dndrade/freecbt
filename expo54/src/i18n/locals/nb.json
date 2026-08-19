@@ -1,13 +1,5 @@
 {
   "onboarding_screen": {
-    "previous": "Forrige",
-    "skip": "Hopp over",
-    "next": "Neste",
-    "progress": "Oppsettfremdrift",
-    "progress_step": "Trinn %{step} av %{count}",
-    "saving": "Lagrer…",
-    "save_failed": "Kunne ikke lagre. Prøv igjen.",
-    "get_started": "Kom i gang",
     "readme": "Les dette først.",
     "header": "The FreeCBT Guide",
     "block1": {

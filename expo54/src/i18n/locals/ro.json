@@ -1,13 +1,5 @@
 {
   "onboarding_screen": {
-    "previous": "Anterior",
-    "skip": "Omite",
-    "next": "Următorul",
-    "progress": "Progresul configurării",
-    "progress_step": "Pasul %{step} din %{count}",
-    "saving": "Se salvează…",
-    "save_failed": "Nu s-a putut salva. Încearcă din nou.",
-    "get_started": "Începe",
     "auto_thought_ex": "Am ratat petrecerea lui George. Sigur mă urăște.",
     "challenge_ex": "George știe că nu pot veni de fiecare dată, iar eu nu l-aș urî dacă ar rata o petrecere de-a mea.\n\nAr trebui să mă tratez cel puțin la fel de bine cum îi tratez pe ceilalți.",
     "alt_thought_ex": "E adevărat că am ratat petrecerea lui George. Pot să îmi cer scuze și probabil mă va ierta.",

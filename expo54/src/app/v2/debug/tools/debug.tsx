@@ -1,6 +1,6 @@
 import { LoadModel, ModelLoadedProps } from "@/src/hooks/use-model";
 import { Action, DistortionData, Thought } from "@/src/model";
-import { KVTable } from "@/src/debug/kv-table";
+import { KVTable } from "@/src/components/kv-table";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import Constants from "expo-constants";
 import * as ExpoUpdates from "expo-updates";

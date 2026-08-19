@@ -1,13 +1,5 @@
 {
     "onboarding_screen": {
-        "previous": "Anterior",
-        "skip": "Saltar",
-        "next": "Seguinte",
-        "progress": "Progresso da configuração",
-        "progress_step": "Passo %{step} de %{count}",
-        "saving": "A guardar…",
-        "save_failed": "Não foi possível guardar. Tenta novamente.",
-        "get_started": "Começar",
         "readme": "Primeiro, deves ler isto.",
         "header": "O Guia FreeCBT",
         "block1": {

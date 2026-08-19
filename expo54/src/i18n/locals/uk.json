@@ -1,13 +1,5 @@
 {
   "onboarding_screen": {
-    "previous": "Назад",
-    "skip": "Пропустити",
-    "next": "Далі",
-    "progress": "Перебіг налаштування",
-    "progress_step": "Крок %{step} з %{count}",
-    "saving": "Збереження…",
-    "save_failed": "Не вдалося зберегти. Спробуйте ще раз.",
-    "get_started": "Почати",
     "readme": "Для початку вам слід прочитати це.",
     "header": "Посібник з FreeCBT",
     "block1": {
