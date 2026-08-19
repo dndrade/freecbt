@@ -1,5 +1,13 @@
 {
   "onboarding_screen": {
+    "previous": "Назад",
+    "skip": "Пропустить",
+    "next": "Далее",
+    "progress": "Ход настройки",
+    "progress_step": "Шаг %{step} из %{count}",
+    "saving": "Сохранение…",
+    "save_failed": "Не удалось сохранить. Попробуйте ещё раз.",
+    "get_started": "Начать",
     "readme": "В первую очередь, прочитайте это.",
     "header": "Руководство по FreeCBT",
     "block1": {

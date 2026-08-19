@@ -1,0 +1,58 @@
+import { localeTags, type LocaleTag, type TranslateFn } from "@/src/i18n/use-i18n";
+import { Action, Model } from "@/src/model";
+import { Feather } from "@expo/vector-icons";
+import { PressableFeedback, RadioGroup, Typography, useThemeColor } from "heroui-native";
+import React from "react";
+import { View } from "react-native";
+import { SettingsSheet } from "./settings-sheet";
+
+export function LanguagePicker(props: {
+  isOpen: boolean;
+  onOpenChange: (open: boolean) => void;
+  model: Model.Ready;
+  dispatch: (a: Action.Action) => void;
+  translate: TranslateFn;
+  onBack: () => void;
+}) {
+  const { isOpen, onOpenChange, model, dispatch, translate: t, onBack } = props;
+  const accent = useThemeColor("accent");
+  const localeOptions: readonly { value: LocaleTag | ""; label: string }[] = [
+    { value: "", label: t("settings.locale.default") },
+    ...localeTags
+      .filter((locale) => !locale.startsWith("_"))
+      .map((locale) => ({ value: locale, label: t(`settings.locale.list.${locale}`) })),
+  ];
+
+  return (
+    <SettingsSheet isOpen={isOpen} onOpenChange={onOpenChange} title={t("settings.general.language.label")}>
+      <View className="mt-2 gap-3">
+        <PressableFeedback
+          onPress={onBack}
+          accessibilityRole="button"
+          accessibilityLabel={t("settings.general.header")}
+          className="flex-row items-center gap-1 px-2 py-2"
+        >
+          <Feather name="chevron-left" size={16} color={accent} />
+          <Typography type="body">{t("settings.general.header")}</Typography>
+        </PressableFeedback>
+        <RadioGroup
+          className="gap-2"
+          value={model.settings.locale ?? ""}
+          onValueChange={(v) => {
+            dispatch(Action.setLocale(v === "" ? null : (v as LocaleTag)));
+            onBack();
+          }}
+        >
+          {localeOptions.map((o) => (
+            <RadioGroup.Item key={o.value} value={o.value}>
+              {o.label}
+            </RadioGroup.Item>
+          ))}
+        </RadioGroup>
+        <Typography type="body-sm" color="muted" className="px-2">
+          {t("settings.locale.contribute")}
+        </Typography>
+      </View>
+    </SettingsSheet>
+  );
+}
