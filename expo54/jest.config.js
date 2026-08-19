@@ -30,7 +30,10 @@ export default {
   transform: {
     "/node_modules/.+\\.tsx?$": [
       "babel-jest",
-      { presets: ["babel-preset-expo"] },
+      {
+        presets: ["babel-preset-expo"],
+        caller: { name: "metro", platform: "ios" },
+      },
     ],
 
     "^.+\\.tsx?$": [
