@@ -3,13 +3,15 @@ import { Screen, ScreenHeader } from "@/src/components";
 import { ModelLoadedProps } from "@/src/hooks/use-model";
 import { Action, Model, Thought } from "@/src/model";
 import { Feather } from "@expo/vector-icons";
-import { Link } from "expo-router";
+import { Link, useLocalSearchParams } from "expo-router";
 import { Typography } from "heroui-native";
 import React from "react";
 import { SectionList, TouchableOpacity, View } from "react-native";
 
 export function ThoughtListScreen(props: ModelLoadedProps) {
   const { model, dispatch, translate: t } = props;
+  const { idOrKey } = useLocalSearchParams<{ idOrKey?: string }>();
+  const selectedId = selectedThoughtId(idOrKey);
   const list = Model.thoughtsByDate(model);
   const today = new Date().toDateString();
   const sections = list.map(([date, thoughts]) => ({
@@ -33,7 +35,13 @@ export function ThoughtListScreen(props: ModelLoadedProps) {
             </Typography.Heading>
           )}
           renderItem={({ item }) => (
-            <ThoughtRow model={model} dispatch={dispatch} translate={t} thought={item} />
+            <ThoughtRow
+              model={model}
+              dispatch={dispatch}
+              translate={t}
+              thought={item}
+              selected={selectedId === item.uuid}
+            />
           )}
         />
       )}
@@ -41,12 +49,18 @@ export function ThoughtListScreen(props: ModelLoadedProps) {
   );
 }
 
+function selectedThoughtId(idOrKey: string | undefined) {
+  const parsed = Thought.Thought.shape.uuid.safeParse(idOrKey);
+  return parsed.success ? parsed.data : null;
+}
+
 function ThoughtRow(
   props: Pick<ModelLoadedProps, "model" | "dispatch" | "translate"> & {
     thought: Thought.Thought;
+    selected: boolean;
   }
 ) {
-  const { model, thought, dispatch, translate: t } = props;
+  const { model, thought, dispatch, translate: t, selected } = props;
   const onDelete = () => dispatch(Action.deleteThought(thought.uuid));
   const label = Thought.label(thought, model);
   const emojis = Thought.emojis(thought);
@@ -57,6 +71,7 @@ function ThoughtRow(
         <TouchableOpacity
           accessibilityRole="button"
           accessibilityLabel={emojis ? `${label} ${emojis}` : label}
+          accessibilityState={{ selected }}
           className="flex-1 flex-col gap-1 rounded-lg border border-border bg-surface-secondary p-3 shadow-sm"
         >
           <Typography type="body" selectable>
