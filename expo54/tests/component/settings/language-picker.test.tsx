@@ -1,7 +1,7 @@
 import { fireEvent, screen } from "@testing-library/react-native";
 import React from "react";
 import { Action } from "@/src/model";
-import { LanguagePicker } from "@/src/features/settings/ui/language-picker";
+import { LanguagePickerContent } from "@/src/features/settings/ui/language-picker";
 import { renderWithProviders } from "@/tests/support/render";
 
 function baseModel() {
@@ -14,9 +14,8 @@ function baseModel() {
 
 const translate = ((key: string) => key) as any;
 
-describe("LanguagePicker", () => {
+describe("LanguagePickerContent", () => {
   const props = {
-    onOpenChange: jest.fn(),
     model: baseModel(),
     dispatch: jest.fn(),
     translate,
@@ -26,7 +25,7 @@ describe("LanguagePicker", () => {
   beforeEach(() => jest.clearAllMocks());
 
   it("shows locale choices and returns to General", () => {
-    renderWithProviders(<LanguagePicker isOpen {...props} />);
+    renderWithProviders(<LanguagePickerContent {...props} />);
 
     expect(screen.getByText("settings.locale.default")).toBeTruthy();
     fireEvent.press(screen.getByLabelText("settings.general.header"));
@@ -38,7 +37,7 @@ describe("LanguagePicker", () => {
     props.dispatch.mockImplementation(() => calls.push("dispatch"));
     props.onBack.mockImplementation(() => calls.push("back"));
 
-    renderWithProviders(<LanguagePicker isOpen {...props} />);
+    renderWithProviders(<LanguagePickerContent {...props} />);
 
     fireEvent.press(screen.getByText("settings.locale.list.en"));
     expect(props.dispatch).toHaveBeenCalledWith(Action.setLocale("en"));

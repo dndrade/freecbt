@@ -76,27 +76,68 @@ jest.mock("@/src/features/settings/ui/settings-row", () => ({
 jest.mock("@/src/features/settings/ui/appearance-picker", () => ({ AppearancePicker: mockPanel("appearance") }));
 jest.mock("@/src/features/settings/ui/journal-picker", () => ({ JournalPicker: mockPanel("journal") }));
 jest.mock("@/src/features/settings/ui/language-picker", () => ({
-  LanguagePicker: ({
-    isOpen,
-    onOpenChange,
-    onBack,
-  }: {
-    isOpen: boolean;
-    onOpenChange: (open: boolean) => void;
-    onBack: () => void;
-  }) =>
-    isOpen ? (
-      <View>
-        <Text>settings.locale.contribute</Text>
-        <Pressable accessibilityLabel="settings.general.header" onPress={onBack}>
-          <Text>back</Text>
-        </Pressable>
-        <Pressable testID="language-close" onPress={() => onOpenChange(false)}>
-          <Text>close</Text>
-        </Pressable>
-      </View>
-    ) : null,
+  LanguagePickerContent: ({ onBack }: { onBack: () => void }) => (
+    <View>
+      <Text>settings.locale.contribute</Text>
+      <Pressable accessibilityLabel="settings.general.header" onPress={onBack}>
+        <Text>back</Text>
+      </Pressable>
+    </View>
+  ),
 }));
+const generalSheetMountCount = { current: 0 };
+
+jest.mock("@/src/features/settings/ui/settings-sheet", () => {
+  // jest.mock factories can't reference out-of-scope imports (only `mock`-prefixed
+  // bindings), so React must be required here rather than using the top-level import.
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const ReactActual = require("react");
+  const actual = jest.requireActual("@/src/features/settings/ui/settings-sheet");
+
+  return {
+    ...actual,
+    SettingsSheet: ({
+      title,
+      isOpen,
+      onOpenChange,
+      onClosed,
+      children,
+    }: {
+      title: string;
+      isOpen: boolean;
+      onOpenChange: (open: boolean) => void;
+      onClosed?: () => void;
+      children: React.ReactNode;
+    }) => {
+      // Tracks mounts of the general/language sheet specifically, so a
+      // regression that swaps the underlying sheet component instead of
+      // reusing it (see: fix/settings-language-picker-sheet-swap) shows up
+      // as a mount count > 1 instead of silently passing.
+      ReactActual.useEffect(() => {
+        if (title === "settings.general.header" || title === "settings.general.language.label") {
+          generalSheetMountCount.current += 1;
+        }
+      }, []);
+
+      return (
+        <View>
+          {isOpen ? (
+            <View testID={`${title}-sheet`}>
+              <Text testID={`${title}-panel`}>{title}</Text>
+              {children}
+              <Pressable testID={`${title}-close`} onPress={() => onOpenChange(false)}>
+                <Text>close</Text>
+              </Pressable>
+            </View>
+          ) : null}
+          <Pressable testID={`${title}-closed`} onPress={onClosed}>
+            <Text>closed</Text>
+          </Pressable>
+        </View>
+      );
+    },
+  };
+});
 jest.mock("@/src/features/settings/ui/settings-panel", () => ({
   SettingsPanel: ({
     title,
@@ -152,6 +193,7 @@ function renderScreen(translateFn = translate) {
 describe("SettingsScreen", () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    generalSheetMountCount.current = 0;
     (useRouter as jest.Mock).mockReturnValue({ push: jest.fn() });
   });
 
@@ -214,11 +256,24 @@ describe("SettingsScreen", () => {
     fireEvent.press(screen.getByText("settings.general.language.label"));
     expect(screen.getByText("settings.locale.contribute")).toBeTruthy();
 
-    fireEvent.press(screen.getByTestId("language-close"));
+    fireEvent.press(screen.getByTestId("settings.general.language.label-close"));
     fireEvent.press(screen.getByText("settings.hub.general.label"));
 
     expect(screen.getByTestId("settings.general.header-panel")).toBeTruthy();
     expect(screen.queryByText("settings.locale.contribute")).toBeNull();
+  });
+
+  it("hosts one persistent sheet across the general/language switch instead of remounting it", () => {
+    renderScreen();
+
+    fireEvent.press(screen.getByText("settings.hub.general.label"));
+    expect(generalSheetMountCount.current).toBe(1);
+
+    fireEvent.press(screen.getByText("settings.general.language.label"));
+    expect(generalSheetMountCount.current).toBe(1);
+
+    fireEvent.press(screen.getByLabelText("settings.general.header"));
+    expect(generalSheetMountCount.current).toBe(1);
   });
 
   it("returns from LanguagePicker to General root without dismissing", () => {
