@@ -234,6 +234,9 @@
     "privacy": "Privacy Policy",
     "terms": "Terms of Service"
   },
+  "cbt_view": {
+    "header": "Thought"
+  },
   "cbt_form": {
     "header": "FreeCBT",
     "edit": "Edit",
@@ -326,6 +329,7 @@
     "new_thought_button": "new thought",
     "settings_button": "settings",
     "delete_thought_button": "delete thought",
+    "thought_field_not_set": "Not set",
     "close_button": "close"
   },
   "reminder_notification": {
