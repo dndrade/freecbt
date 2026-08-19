@@ -7,7 +7,7 @@ import { Typography } from "heroui-native";
 import React, { useState } from "react";
 import { AppearancePicker } from "./ui/appearance-picker";
 import { JournalPicker } from "./ui/journal-picker";
-import { LanguagePicker } from "./ui/language-picker";
+import { LanguagePickerContent } from "./ui/language-picker";
 import { SettingsPanel } from "./ui/settings-panel";
 import {
   buildAboutPanelItems,
@@ -18,7 +18,7 @@ import {
 } from "./settings-panels";
 import { SettingsCard } from "./ui/settings-card";
 import { SettingsRow } from "./ui/settings-row";
-import { useDismissThenNavigate, useResetOnDismiss } from "./ui/settings-sheet";
+import { SettingsSheet, useDismissThenNavigate, useResetOnDismiss } from "./ui/settings-sheet";
 
 type OpenPanel = "general" | "appearance" | "journal" | "data" | "wellbeing" | "support" | "about" | null;
 type GeneralView = "root" | "language";
@@ -100,29 +100,37 @@ export function SettingsScreen(props: ModelLoadedProps) {
         />
       </SettingsCard>
 
-      {generalView === "root" ? (
-        <SettingsPanel
-          {...panel("general")}
-          onClosed={onClosed}
-          title={t("settings.general.header")}
-          items={buildGeneralRootItems({
-            model,
-            reminders,
-            dispatch,
-            translate: t,
-            dismissThenNavigate,
-            onOpenLanguage: () => setGeneralView("language"),
-          })}
-        />
-      ) : (
-        <LanguagePicker
-          {...panel("general")}
-          model={model}
-          dispatch={dispatch}
-          translate={t}
-          onBack={() => setGeneralView("root")}
-        />
-      )}
+      <SettingsSheet
+        {...panel("general")}
+        onClosed={onClosed}
+        title={
+          generalView === "root" ? t("settings.general.header") : t("settings.general.language.label")
+        }
+      >
+        {generalView === "root" ? (
+          <SettingsCard className="mt-2">
+            {buildGeneralRootItems({
+              model,
+              reminders,
+              dispatch,
+              translate: t,
+              dismissThenNavigate,
+              onOpenLanguage: () => setGeneralView("language"),
+            }).map(({ id, ...row }) => (
+              <React.Fragment key={id}>
+                <SettingsRow {...row} />
+              </React.Fragment>
+            ))}
+          </SettingsCard>
+        ) : (
+          <LanguagePickerContent
+            model={model}
+            dispatch={dispatch}
+            translate={t}
+            onBack={() => setGeneralView("root")}
+          />
+        )}
+      </SettingsSheet>
       <AppearancePicker {...panel("appearance")} model={model} dispatch={dispatch} translate={t} />
       <JournalPicker {...panel("journal")} model={model} dispatch={dispatch} translate={t} />
       <SettingsPanel
