@@ -1,6 +1,6 @@
 import { Routes } from "@/src";
 import { LoadModel, ModelLoadedProps } from "@/src/hooks/use-model";
-import { ImagePath } from "@/src/components";
+import * as ImagePath from "@/src/assets/image-path";
 import { Link } from "expo-router";
 import React from "react";
 import { Image, ScrollView, Text, TouchableOpacity, View } from "react-native";

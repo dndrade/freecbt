@@ -1,11 +1,11 @@
-import { cn, Switch, useThemeColor } from "heroui-native";
+import { cn, ListGroup, PressableFeedback, Switch, Typography } from "heroui-native";
 import { Feather } from "@expo/vector-icons";
-import { Pressable, Text, View } from "react-native";
-import { IconTile, type IconTileColor } from "./icon-tile";
+import { View } from "react-native";
+import { IconTile, type IconTileTone } from "./icon-tile";
 
 interface BaseRowProps {
   iconName: React.ComponentProps<typeof Feather>["name"];
-  iconColor: IconTileColor;
+  tone?: IconTileTone;
   label?: string;
   description?: string;
   className?: string;
@@ -42,67 +42,86 @@ export type SettingsRowProps =
   | CollapsedRowProps;
 
 export function SettingsRow(props: SettingsRowProps) {
-  const { iconName, iconColor, label, description, className } = props;
-  const chevronColor = useThemeColor("muted");
+  const { iconName, tone = "accent", label, description, className } = props;
+  const accessibilityLabel =
+    props.type === "value"
+      ? [label, props.value].filter(Boolean).join(", ")
+      : label ?? description ?? "Settings row";
 
-  // border-between-rows comes from the parent SettingsCard's `divide-y`,
-  // not from this component — it has no concept of its own position in the list
-  const content = (
-    <View className={cn("flex-row items-center gap-3 px-[14px] py-[13px]", className)}>
-      <IconTile color={iconColor}>
-        {(color) => <Feather name={iconName} size={17} color={color} />}
-      </IconTile>
+  const row = (
+    <ListGroup.Item className={cn(className)}>
+      <View className="flex-row items-center gap-3">
+        <ListGroup.ItemPrefix>
+          <IconTile tone={tone}>
+            {(color) => <Feather name={iconName} size={17} color={color} />}
+          </IconTile>
+        </ListGroup.ItemPrefix>
 
-      <View className="flex-1">
-        {props.type === "collapsed" ? (
-          <Text className="text-muted text-[13px]" numberOfLines={1}>
-            {description}
-          </Text>
+        <ListGroup.ItemContent className="flex-1 gap-1">
+          {props.type === "collapsed" ? (
+            <Typography type="body-sm" color="muted" numberOfLines={1}>
+              {description}
+            </Typography>
+          ) : (
+            <>
+              {label ? (
+                <ListGroup.ItemTitle>{label}</ListGroup.ItemTitle>
+              ) : null}
+              {description ? (
+                <ListGroup.ItemDescription>{description}</ListGroup.ItemDescription>
+              ) : null}
+            </>
+          )}
+        </ListGroup.ItemContent>
+
+        {props.type === "toggle" ? (
+          <Switch
+            isSelected={props.isSelected}
+            onSelectedChange={props.onSelectedChange}
+            pointerEvents="none"
+            accessibilityElementsHidden
+            importantForAccessibility="no-hide-descendants"
+          >
+            <Switch.Thumb />
+          </Switch>
+        ) : props.type === "value" ? (
+          <View className="flex-row items-center gap-1">
+            <Typography type="body-sm" color="muted">
+              {props.value}
+            </Typography>
+            <ListGroup.ItemSuffix />
+          </View>
         ) : (
-          <>
-            {label && <Text className="text-foreground text-[15px]">{label}</Text>}
-            {description && (
-              <Text className="text-muted text-[13px] mt-[1px]">{description}</Text>
-            )}
-          </>
+          <ListGroup.ItemSuffix />
         )}
       </View>
-
-      {props.type === "toggle" && (
-        <Switch
-          isSelected={props.isSelected}
-          onSelectedChange={props.onSelectedChange}
-          accessibilityLabel={label}
-        >
-          <Switch.Thumb />
-        </Switch>
-      )}
-
-      {props.type === "value" && (
-        <View className="flex-row items-center gap-[5px]">
-          <Text className="text-muted text-[14px]">{props.value}</Text>
-          <Feather name="chevron-right" size={14} color={chevronColor} />
-        </View>
-      )}
-
-      {(props.type === "nav" || props.type === "collapsed") && (
-        <Feather name="chevron-right" size={14} color={chevronColor} />
-      )}
-    </View>
+    </ListGroup.Item>
   );
 
   if (props.type === "toggle") {
-    return content;
+    return (
+      <PressableFeedback
+        asChild
+        accessibilityRole="switch"
+        accessibilityLabel={accessibilityLabel}
+        accessibilityState={{ checked: props.isSelected }}
+        onPress={() => props.onSelectedChange(!props.isSelected)}
+        className="px-4 py-3"
+      >
+        {row}
+      </PressableFeedback>
+    );
   }
 
   return (
-    <Pressable
-      onPress={props.onPress}
+    <PressableFeedback
+      asChild
       accessibilityRole="button"
-      accessibilityLabel={label ?? description}
-      style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
+      accessibilityLabel={accessibilityLabel}
+      onPress={props.onPress}
+      className="px-4 py-3"
     >
-      {content}
-    </Pressable>
+      {row}
+    </PressableFeedback>
   );
 }

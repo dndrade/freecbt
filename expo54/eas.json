@@ -7,6 +7,21 @@
     "base": {
       "node": "22.16.0"
     },
+
+    "e2e-test": {
+      "extends": "base",
+      "withoutCredentials": true,
+      "env": {
+        "APP_VARIANT": "development"
+      },
+      "android": {
+        "buildType": "apk"
+      },
+      "ios": {
+        "simulator": true
+      }
+    },
+
     "BROKEN-apk": {
       "extends": "base",
       "android": {

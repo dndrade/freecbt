@@ -9,5 +9,8 @@
     },
     "devDependencies": {
         "run-pty": "^5.0.0"
+    },
+    "resolutions": {
+        "baseline-browser-mapping": "^2.11.15"
     }
 }

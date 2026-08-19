@@ -1,5 +1,13 @@
 {
   "onboarding_screen": {
+    "previous": "Vorige",
+    "skip": "Overslaan",
+    "next": "Volgende",
+    "progress": "Voortgang van instelling",
+    "progress_step": "Stap %{step} van %{count}",
+    "saving": "Opslaan…",
+    "save_failed": "Opslaan mislukt. Probeer opnieuw.",
+    "get_started": "Aan de slag",
     "auto_thought_ex": "Ik heb George's feestje gemist, hij zal me wel haten.",
     "challenge_ex": "George weet dat ik het niet elke keer kan halen, ik zou hem niet haten als hij iets van mij miste.\n\nIk zou mezelf minstens zo goed moeten behandelen als ik anderen behandel.",
     "alt_thought_ex": "Het klopt dat ik George's feestje gemist heb, ik kan me verontschuldigen, en hij zal het me waarschijnlijk vergeven.",

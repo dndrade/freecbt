@@ -1,0 +1,50 @@
+import { createRoutesManifest } from "expo-router/build/routes-manifest";
+
+describe("debug lab route namespace", () => {
+  it("keeps the settings family and current routes under /v2/debug/lab", () => {
+    const manifest = createRoutesManifest(
+      [
+        "./debug/_layout.tsx",
+        "./debug/index.tsx",
+        "./debug/lab/_layout.tsx",
+        "./debug/lab/index.tsx",
+        "./debug/lab/onboarding/index.tsx",
+        "./debug/lab/settings/_layout.tsx",
+        "./debug/lab/settings/index.tsx",
+        "./debug/lab/settings/main/index.tsx",
+        "./debug/lab/settings/main/current.tsx",
+        "./debug/lab/settings/pin/index.tsx",
+        "./debug/lab/settings/pin/current.tsx",
+        "./debug/lab/settings/backup/index.tsx",
+        "./debug/lab/settings/backup/current.tsx",
+        "./debug/lab/settings/export/index.tsx",
+        "./debug/lab/settings/export/current.tsx",
+      ],
+      { internal_stripLoadRoute: true }
+    );
+
+    expect(manifest).not.toBeNull();
+
+    const routes = manifest!.htmlRoutes
+      .map(({ page }) => page.replace(/\/index$/, ""))
+      .map((page) => (page === "/debug" ? "/v2/debug" : `/v2${page}`));
+
+    expect(routes).toEqual(
+      expect.arrayContaining([
+        "/v2/debug",
+        "/v2/debug/lab",
+        "/v2/debug/lab/onboarding",
+        "/v2/debug/lab/settings",
+        "/v2/debug/lab/settings/main",
+        "/v2/debug/lab/settings/main/current",
+        "/v2/debug/lab/settings/pin",
+        "/v2/debug/lab/settings/pin/current",
+        "/v2/debug/lab/settings/backup",
+        "/v2/debug/lab/settings/backup/current",
+        "/v2/debug/lab/settings/export",
+        "/v2/debug/lab/settings/export/current",
+      ])
+    );
+    expect(routes.some((route) => route.includes("reminders"))).toBe(false);
+  });
+});

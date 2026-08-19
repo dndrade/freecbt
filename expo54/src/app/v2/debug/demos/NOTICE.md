@@ -7,7 +7,6 @@ This directory contains intentional reference and architecture-exploration demo 
 Files in this directory:
 - `counter/` — reference implementation
 - `hooks-init/` — hook initialization patterns
-- `notifications-usage.tsx` — notification architecture exploration
 - `promise.tsx` — async pattern exploration
 - `pure-elm-arch/` — Elm-style architecture reference
 

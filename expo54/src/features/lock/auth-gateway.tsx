@@ -1,9 +1,11 @@
-import { ImagePath, PinInput, Screen, Section } from "@/src/components";
+import { Screen, Section } from "@/src/components";
 import { LoadModel, ModelLoadedProps } from "@/src/hooks/use-model";
 import { Action } from "@/src/model";
 import { Button, Typography } from "heroui-native";
 import React, { useEffect, useState } from "react";
 import { AppState, Image } from "react-native";
+import * as ImagePath from "@/src/assets/image-path";
+import { PinInput } from "./ui/pin-input";
 
 export function AuthGateway(props: {
   children: React.ReactNode;

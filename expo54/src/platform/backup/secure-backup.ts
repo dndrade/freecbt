@@ -1,8 +1,4 @@
 import { Archive, Distortion } from "@/src/model";
-export {
-    RecoveryKeyFingerprintMismatchError,
-} from "@/src/model/archive/archive-crypto";
-
 import {
     type BackupFileSystem,
     type WrittenBackupFile,
@@ -10,9 +6,12 @@ import {
     resolveBackupDestination,
     writeBackupFile,
 } from "./backup-destination";
-
 import type { SecureBackupRecoveryKey } from "@/src/platform/storage/storage";
 import { pruneOldBackups } from "./backup-file-system";
+
+export {
+    RecoveryKeyFingerprintMismatchError,
+} from "@/src/model/archive/archive-crypto";
 
 export class MissingRecoveryKeyError extends Error {
     constructor() {
