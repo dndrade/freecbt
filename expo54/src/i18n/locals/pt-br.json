@@ -1,13 +1,5 @@
 {
   "onboarding_screen": {
-    "previous": "Anterior",
-    "skip": "Pular",
-    "next": "Próximo",
-    "progress": "Progresso da configuração",
-    "progress_step": "Etapa %{step} de %{count}",
-    "saving": "Salvando…",
-    "save_failed": "Não foi possível salvar. Tente novamente.",
-    "get_started": "Começar",
     "auto_thought_ex": "Me esqueci da festa do Jorge! Ele deve me odiar.",
     "challenge_ex": "O Jorge sabe que não consigo ir a todas as festas. Eu não o odiaria caso se esquecesse da minha. Tenho que me considerar tão bem quanto considero os outros.",
     "alt_thought_ex": "É verdade que me esqueci da festa do Jorge mas posso pedir desculpa e ele compreenderá.",

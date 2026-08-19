@@ -1,0 +1,25 @@
+import { useAppColors } from "@/src/components";
+import { Feather } from "@expo/vector-icons";
+import { Typography } from "heroui-native";
+import { useRouter } from "expo-router";
+import { Pressable, View } from "react-native";
+
+export function SettingsHeader(props: { title: string; showBack?: boolean }) {
+  const router = useRouter();
+  const colors = useAppColors();
+  return (
+    <View className="flex-row items-center justify-center px-2 py-2 relative">
+      {props.showBack !== false && (
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Back"
+          onPress={() => router.back()}
+          className="absolute left-1 flex-row items-center gap-1 p-3"
+        >
+          <Feather name="chevron-left" size={20} color={colors.accent} />
+        </Pressable>
+      )}
+      <Typography type="h4">{props.title}</Typography>
+    </View>
+  );
+}

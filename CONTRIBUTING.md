@@ -24,12 +24,6 @@ freecbt at erosson.org
 
 * Run the code on your phone, in the Expo client: https://docs.expo.io/get-started/create-a-new-app/#opening-the-app-on-your-phonetablet
 
-### End-to-end testing
-
-`expo54/.maestro/` is the canonical app end-to-end workspace, using [Maestro](https://maestro.mobile.dev/). `shared/` holds reusable setup flows (e.g. the app-launch bootstrap); `flows/` holds executable product-behavior scenarios that `runFlow` the shared setup before asserting on real app behavior.
-
-Maestro currently runs from WSL against a physical Android device over the project's ADB relay. It does not run inside the devcontainer — the container remains the app/Metro development environment, and Maestro flows are executed separately from WSL.
-
 ## Versioning and Beta Testing
 
 FreeCBT follows a [continuous deployment](https://en.wikipedia.org/wiki/Continuous_delivery) model: everything committed to the `master` branch is shipped to production immediately and automatically. These releases are done using [`expo publish`](https://docs.expo.io/workflow/publishing/), and have no associated version number. For beta testing and unreleased code, we use *feature switches* to enable and disable new features.

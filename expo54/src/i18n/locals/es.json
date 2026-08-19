@@ -1,13 +1,5 @@
 {
   "onboarding_screen": {
-    "previous": "Anterior",
-    "skip": "Omitir",
-    "next": "Siguiente",
-    "progress": "Progreso de configuración",
-    "progress_step": "Paso %{step} de %{count}",
-    "saving": "Guardando…",
-    "save_failed": "No se pudo guardar. Inténtalo de nuevo.",
-    "get_started": "Empezar",
     "auto_thought_ex": "Me perdí la fiesta de Jorge, apuesto a que me odia.",
     "challenge_ex": "Jorge sabe que no siempre puedo acudir, yo no le odiaría si faltara a algún evento mío.\n\nDebería tratarme a mí mismo por lo menos tan bien como trato a los demás.",
     "alt_thought_ex": "Es verdad que falté a la fiesta de Jorge, puedo disculparme y seguramente me perdonará por ello.",

@@ -1,41 +1,42 @@
-import { cn, useThemeColor } from "heroui-native";
+import { cn } from "heroui-native";
+import { useCSSVariable } from "uniwind";
 import { View } from "react-native";
 
-export type IconTileTone = "accent" | "success" | "warning" | "danger";
+export type IconTileColor = "pink" | "purple" | "yellow";
 
-const backgroundRole = {
-  accent: "accent",
-  success: "success",
-  warning: "warning",
-  danger: "danger",
-} as const satisfies Record<IconTileTone, "accent" | "success" | "warning" | "danger">;
+export const backgroundClass: Record<IconTileColor, string> = {
+  pink: "bg-brand-pink",
+  purple: "bg-brand-purple",
+  yellow: "bg-brand-yellow",
+};
 
-const foregroundRole = {
-  accent: "accent-foreground",
-  success: "success-foreground",
-  warning: "warning-foreground",
-  danger: "danger-foreground",
-} as const satisfies Record<
-  IconTileTone,
-  "accent-foreground" | "success-foreground" | "warning-foreground" | "danger-foreground"
->;
+export const foregroundVariable: Record<IconTileColor, string> = {
+  pink: "--color-brand-pink-foreground",
+  purple: "--color-brand-purple-foreground",
+  yellow: "--color-brand-yellow-foreground",
+};
 
 export function IconTile(props: {
-  tone?: IconTileTone;
+  color: IconTileColor;
   children: (iconColor: string) => React.ReactNode;
   className?: string;
 }) {
-  const { tone = "accent", children, className } = props;
-  const backgroundColor = useThemeColor(backgroundRole[tone]);
-  const iconColor = useThemeColor(foregroundRole[tone]);
+  const { color, children, className } = props;
+  const resolved = useCSSVariable(foregroundVariable[color]);
+  const iconColor =
+    typeof resolved === "string"
+      ? resolved
+      : typeof resolved === "number"
+        ? String(resolved)
+        : "invalid";
 
   return (
     <View
       className={cn(
-        "h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg",
+        "w-[34px] h-[34px] rounded-[9px] items-center justify-center flex-shrink-0",
+        backgroundClass[color],
         className
       )}
-      style={{ backgroundColor }}
     >
       {children(iconColor)}
     </View>

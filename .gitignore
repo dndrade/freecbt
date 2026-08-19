@@ -17,14 +17,6 @@ app.apk
 *.log
 .env
 
-# Local agent and planning artifacts
-docs/
-.superpowers/
-.dev/
-.agents/
-.claude/
-.codex/
-
 .version.json
 .version.js
 .bundle

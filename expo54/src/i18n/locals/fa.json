@@ -1,13 +1,5 @@
 {
   "onboarding_screen": {
-    "previous": "قبلی",
-    "skip": "رد کردن",
-    "next": "بعدی",
-    "progress": "پیشرفت راه‌اندازی",
-    "progress_step": "گام %{step} از %{count}",
-    "saving": "در حال ذخیره…",
-    "save_failed": "ذخیره نشد. دوباره تلاش کنید.",
-    "get_started": "شروع کنید",
     "readme": "در ابتدا این قسمت‌را بخوانید.",
     "header": "راهنمای FreeCBT",
     "block1": {

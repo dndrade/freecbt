@@ -1,13 +1,5 @@
 {
   "onboarding_screen": {
-    "previous": "पिछला",
-    "skip": "छोड़ें",
-    "next": "अगला",
-    "progress": "सेटअप प्रगति",
-    "progress_step": "%{count} में से चरण %{step}",
-    "saving": "सहेजा जा रहा है…",
-    "save_failed": "सहेजा नहीं जा सका। फिर से कोशिश करें।",
-    "get_started": "शुरू करें",
     "readme": "सबसे पहले, आपको इसे पढ़ना चाहिए।",
     "header": "फ्रीसीबीटी गाइड",
     "block1": {
