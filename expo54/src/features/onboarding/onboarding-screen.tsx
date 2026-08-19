@@ -1,8 +1,9 @@
 import { Routes } from "@/src";
-import { FlowAction, FlowProgress } from "@/src/components";
+import { FlowAction, FlowProgress, Screen } from "@/src/components";
 import { Reminders, useReminders } from "@/src/features/reminders/use-reminders";
 import { ModelLoadedProps } from "@/src/hooks/use-model";
 import { Action } from "@/src/model";
+import { Feather } from "@expo/vector-icons";
 import { Link, useRouter } from "expo-router";
 import { Button, Typography, useThemeColor } from "heroui-native";
 import React from "react";
@@ -15,7 +16,6 @@ import {
   Pressable,
   View,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 import Carousel, { ICarouselInstance } from "react-native-reanimated-carousel";
 import { onboardingSteps, type OnboardingStep } from "./onboarding-content";
 import { OnboardingPage } from "./onboarding-page";
@@ -35,7 +35,7 @@ export function OnboardingScreen(props: OnboardingScreenProps) {
   const [pagerSize, setPagerSize] = React.useState<{ width: number; height: number }>();
   const router = useRouter();
   const reminders = useReminders();
-  const background = useThemeColor("background");
+  const accent = useThemeColor("accent");
   const isSaving = props.model.onboardingCompletion === "saving";
   const hasFailed =
     typeof props.model.onboardingCompletion === "object" &&
@@ -80,19 +80,68 @@ export function OnboardingScreen(props: OnboardingScreenProps) {
     );
   }
 
+  const footer = (
+    <View className="items-center gap-3">
+      <FlowProgress
+        variant="dots"
+        currentIndex={activeIndex}
+        count={slides.length}
+        accessibilityLabel={props.translate("onboarding_screen.progress")}
+        accessibilityValueText={props.translate("onboarding_screen.progress_step", {
+          step: activeIndex + 1,
+          count: slides.length,
+        })}
+      />
+      <View
+        testID="onboarding-failure-region"
+        accessibilityElementsHidden={!showFailure}
+        importantForAccessibility={showFailure ? "auto" : "no-hide-descendants"}
+      >
+        <Typography
+          type="body-sm"
+          className="text-danger"
+          style={{ opacity: showFailure ? 1 : 0 }}
+        >
+          {props.translate("onboarding_screen.save_failed")}
+        </Typography>
+      </View>
+      <View className="h-12 w-40 items-center">
+        <FlowAction
+          state={isFinal ? "final" : "next"}
+          onPress={isFinal ? onPressGetStarted : () => onPressStep(1)}
+          isDisabled={isFinal && isSaving}
+          accessibilityLabel={
+            isFinal
+              ? props.translate(
+                  isSaving ? "onboarding_screen.saving" : "onboarding_screen.get_started"
+                )
+              : props.translate("onboarding_screen.next")
+          }
+          finalLabel={props.translate(
+            isSaving ? "onboarding_screen.saving" : "onboarding_screen.get_started"
+          )}
+        />
+      </View>
+    </View>
+  );
+
   return (
-    <SafeAreaView className="flex-1" style={{ flex: 1, backgroundColor: background }}>
-      <View className="w-full max-w-3xl flex-1 self-center">
-        <View className="flex-row items-center justify-between px-4 py-2">
+    <Screen scroll={false} contentClassName="flex-1 gap-0 py-2" footer={footer}>
+      <View className="flex-1">
+        <View className="flex-row items-center justify-between py-2">
           {activeIndex > 0 ? (
             <Pressable
               accessibilityRole="button"
               accessibilityLabel={props.translate("onboarding_screen.previous")}
-              className="h-11 w-11 items-center justify-center rounded-full border border-border bg-surface-secondary"
+              className="items-center justify-center"
               style={{ width: 44, height: 44 }}
               onPress={() => onPressStep(-1)}
             >
-              <Typography type="h4">{I18nManager.isRTL ? "›" : "‹"}</Typography>
+              <Feather
+                name={I18nManager.isRTL ? "chevron-right" : "chevron-left"}
+                size={24}
+                color={accent}
+              />
             </Pressable>
           ) : (
             <View style={{ width: 44, height: 44 }} />
@@ -100,11 +149,13 @@ export function OnboardingScreen(props: OnboardingScreenProps) {
           <Pressable
             accessibilityRole="button"
             accessibilityLabel={props.translate("onboarding_screen.skip")}
-            className="h-11 w-11 items-center justify-center rounded-full border border-border bg-surface-secondary"
+            className="items-center justify-center"
             style={{ width: 44, height: 44 }}
             onPress={props.onSkip}
           >
-            <Typography type="body-sm">{props.translate("onboarding_screen.skip")}</Typography>
+            <Typography type="body-sm" style={{ color: accent }}>
+              {props.translate("onboarding_screen.skip")}
+            </Typography>
           </Pressable>
         </View>
 
@@ -165,54 +216,8 @@ export function OnboardingScreen(props: OnboardingScreenProps) {
             />
           ) : null}
         </View>
-
-        <View className="px-4 pb-3 pt-2">
-          <FlowProgress
-            variant="segmented"
-            currentIndex={activeIndex}
-            count={slides.length}
-            accessibilityLabel={props.translate("onboarding_screen.progress")}
-            accessibilityValueText={props.translate("onboarding_screen.progress_step", {
-              step: activeIndex + 1,
-              count: slides.length,
-            })}
-          />
-        </View>
-
-        <View className="items-center gap-3 px-4 pb-4">
-          <View
-            testID="onboarding-failure-region"
-            accessibilityElementsHidden={!showFailure}
-            importantForAccessibility={showFailure ? "auto" : "no-hide-descendants"}
-          >
-            <Typography
-              type="body-sm"
-              className="text-danger"
-              style={{ opacity: showFailure ? 1 : 0 }}
-            >
-              {props.translate("onboarding_screen.save_failed")}
-            </Typography>
-          </View>
-          <View className="h-12 w-40 items-center">
-            <FlowAction
-              state={isFinal ? "final" : "next"}
-              onPress={isFinal ? onPressGetStarted : () => onPressStep(1)}
-              isDisabled={isFinal && isSaving}
-              accessibilityLabel={
-                isFinal
-                  ? props.translate(
-                      isSaving ? "onboarding_screen.saving" : "onboarding_screen.get_started"
-                    )
-                  : props.translate("onboarding_screen.next")
-              }
-              finalLabel={props.translate(
-                isSaving ? "onboarding_screen.saving" : "onboarding_screen.get_started"
-              )}
-            />
-          </View>
-        </View>
       </View>
-    </SafeAreaView>
+    </Screen>
   );
 }
 
