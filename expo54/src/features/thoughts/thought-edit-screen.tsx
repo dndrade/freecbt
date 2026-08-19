@@ -1,4 +1,4 @@
-import { Screen } from "@/src/components";
+import { Screen, ScreenHeader } from "@/src/components";
 import { ThoughtEntryForm } from "./thought-entry-form";
 import { ModelLoadedProps } from "@/src/hooks/use-model";
 import { Action, Thought } from "@/src/model";
@@ -16,6 +16,7 @@ export function ThoughtEditScreen({ model, dispatch, translate: t }: ModelLoaded
   if (res.status === "error") return res.error;
   return (
     <Screen scroll={false} contentClassName="flex-1">
+      <ScreenHeader title={t("cbt_form.edit")} />
       <ThoughtEntryForm
         route="compatibility"
         translate={t}
