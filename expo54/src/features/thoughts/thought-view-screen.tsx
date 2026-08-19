@@ -1,16 +1,17 @@
 import { Routes } from "@/src";
+import { Screen } from "@/src/components";
 import { ModelLoadedProps } from "@/src/hooks/use-model";
 import { Distortion } from "@/src/model";
 import * as ImagePath from "@/src/assets/image-path";
 import { Link } from "expo-router";
+import { Typography } from "heroui-native";
 import React from "react";
-import { Image, Text, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { Image, View } from "react-native";
 import { useThoughtFromParams } from "./use-thought-from-route";
 
 export const SHRUG_EMOJI = "🤷‍";
 
-export function ThoughtViewScreen({ model, style: s, translate: t }: ModelLoadedProps) {
+export function ThoughtViewScreen({ model, translate: t }: ModelLoadedProps) {
   const res = useThoughtFromParams(model);
   if (res.status === "error") return res.error;
   const thought = res.value;
@@ -24,81 +25,70 @@ export function ThoughtViewScreen({ model, style: s, translate: t }: ModelLoaded
     slugs.has(d.slug)
   );
   return (
-    <SafeAreaView testID="view-thought-screen" style={[s.view]}>
-      <View style={[s.container, s.flexCol]}>
-        <Text style={[s.subheader, s.mt4]}>{t("auto_thought")}</Text>
-        <Link
-          style={[s.flex1, s.border, s.rounded]}
-          href={Routes.thoughtEditV2(thought.uuid, "automatic-thought")}
-        >
-          <View style={[s.flexRow]}>
+    <Screen scroll contentClassName="flex-1 gap-4">
+      <View testID="view-thought-screen" className="gap-1">
+        <Typography type="h4">{t("auto_thought")}</Typography>
+        <Link href={Routes.thoughtEditV2(thought.uuid, "automatic-thought")} asChild>
+          <View className="flex-row items-center rounded-lg border border-border bg-surface-secondary p-2">
             {thought.automaticThought ? (
               <>
-                <Image
-                  source={ImagePath.yellowBubble}
-                  style={[{ width: 24, height: 24 }, s.selfCenter, s.m2]}
-                />
-                <View style={[s.border, s.rounded, s.p2]}>
-                  <Text style={[s.text]}>{thought.automaticThought}</Text>
-                </View>
+                <Image source={ImagePath.yellowBubble} className="h-6 w-6 self-center mr-2" />
+                <Typography type="body" selectable className="flex-1">
+                  {thought.automaticThought}
+                </Typography>
               </>
             ) : (
-              <Text style={[s.text, s.m2]}>{SHRUG_EMOJI}</Text>
-            )}
-          </View>
-        </Link>
-        <Text style={[s.subheader, s.mt4]}>{t("cog_distortion")}</Text>
-        <Link
-          style={[s.flex1, s.border, s.rounded, s.p1]}
-          href={Routes.thoughtEditV2(thought.uuid, "distortions")}
-        >
-          <View style={[s.flexCol]}>
-            {distortions.length ? (
-              distortions.map((d) => (
-                <Text key={d.slug} style={[s.text, s.p1]}>
-                  {Distortion.emoji(d)} {t(d.labelKey)}
-                </Text>
-              ))
-            ) : (
-              <Text style={[s.text, s.m2]}>{SHRUG_EMOJI}</Text>
-            )}
-          </View>
-        </Link>
-        <Text style={[s.subheader, s.mt4]}>{t("challenge")}</Text>
-        <Link
-          style={[s.flex1, s.border, s.rounded]}
-          href={Routes.thoughtEditV2(thought.uuid, "challenge")}
-        >
-          <View style={[s.flexRow]}>
-            {thought.challenge ? (
-              <Text style={[s.text, s.m2]}>{thought.challenge}</Text>
-            ) : (
-              <Text style={[s.text, s.m2]}>{SHRUG_EMOJI}</Text>
-            )}
-          </View>
-        </Link>
-        <Text style={[s.subheader, s.mt4]}>{t("alt_thought")}</Text>
-        <Link
-          style={[s.flex1, s.border, s.rounded]}
-          href={Routes.thoughtEditV2(thought.uuid, "alternative-thought")}
-        >
-          <View style={[s.flexRow]}>
-            {thought.alternativeThought ? (
-              <>
-                <Image
-                  source={ImagePath.pinkBubble}
-                  style={[{ width: 24, height: 24 }, s.selfCenter, s.m2]}
-                />
-                <View style={[s.border, s.rounded, s.p2]}>
-                  <Text style={[s.text]}>{thought.alternativeThought}</Text>
-                </View>
-              </>
-            ) : (
-              <Text style={[s.text, s.m2]}>{SHRUG_EMOJI}</Text>
+              <Typography type="body">{SHRUG_EMOJI}</Typography>
             )}
           </View>
         </Link>
       </View>
-    </SafeAreaView>
+
+      <View className="gap-1">
+        <Typography type="h4">{t("cog_distortion")}</Typography>
+        <Link href={Routes.thoughtEditV2(thought.uuid, "distortions")} asChild>
+          <View className="gap-1 rounded-lg border border-border bg-surface-secondary p-2">
+            {distortions.length ? (
+              distortions.map((d) => (
+                <Typography key={d.slug} type="body">
+                  {Distortion.emoji(d)} {t(d.labelKey)}
+                </Typography>
+              ))
+            ) : (
+              <Typography type="body">{SHRUG_EMOJI}</Typography>
+            )}
+          </View>
+        </Link>
+      </View>
+
+      <View className="gap-1">
+        <Typography type="h4">{t("challenge")}</Typography>
+        <Link href={Routes.thoughtEditV2(thought.uuid, "challenge")} asChild>
+          <View className="rounded-lg border border-border bg-surface-secondary p-2">
+            <Typography type="body" selectable>
+              {thought.challenge || SHRUG_EMOJI}
+            </Typography>
+          </View>
+        </Link>
+      </View>
+
+      <View className="gap-1">
+        <Typography type="h4">{t("alt_thought")}</Typography>
+        <Link href={Routes.thoughtEditV2(thought.uuid, "alternative-thought")} asChild>
+          <View className="flex-row items-center rounded-lg border border-border bg-surface-secondary p-2">
+            {thought.alternativeThought ? (
+              <>
+                <Image source={ImagePath.pinkBubble} className="h-6 w-6 self-center mr-2" />
+                <Typography type="body" selectable className="flex-1">
+                  {thought.alternativeThought}
+                </Typography>
+              </>
+            ) : (
+              <Typography type="body">{SHRUG_EMOJI}</Typography>
+            )}
+          </View>
+        </Link>
+      </View>
+    </Screen>
   );
 }
