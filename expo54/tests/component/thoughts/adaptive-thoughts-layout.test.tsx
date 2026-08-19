@@ -20,11 +20,21 @@ function resize(width: number) {
 }
 
 describe("AdaptiveThoughtsLayout", () => {
-  it("shows only Journal when no Thought is selected", () => {
+  it("shows only Journal when no Thought is selected in compact mode", () => {
+    renderLayout(null);
+    resize(500);
+
+    expect(screen.getByTestId("journal-pane")).toBeTruthy();
+    expect(screen.queryByTestId("detail-pane")).toBeNull();
+    expect(screen.queryByText("Select a thought.")).toBeNull();
+  });
+
+  it("shows a detail placeholder beside Journal when no Thought is selected in wide mode", () => {
     renderLayout(null);
     resize(1000);
 
     expect(screen.getByTestId("journal-pane")).toBeTruthy();
+    expect(screen.getByText("Select a thought.")).toBeTruthy();
     expect(screen.queryByTestId("detail-pane")).toBeNull();
   });
 

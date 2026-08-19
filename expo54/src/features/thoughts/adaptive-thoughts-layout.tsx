@@ -1,5 +1,5 @@
 import React from "react";
-import { LayoutChangeEvent, View } from "react-native";
+import { LayoutChangeEvent, Text, View } from "react-native";
 
 const MIN_LIST_WIDTH = 320;
 const MIN_DETAIL_WIDTH = 420;
@@ -24,14 +24,16 @@ export function AdaptiveThoughtsLayout({ list, detail, selectedId }: Props) {
       onLayout={onLayout}
       className="flex-1"
     >
-      {!selectedId ? (
+      {!selectedId && !canShowBoth ? (
         list
       ) : canShowBoth ? (
         <View className="flex-1 flex-row gap-4">
           <View style={{ minWidth: MIN_LIST_WIDTH, maxWidth: 420, flex: 0.42 }}>
             {list}
           </View>
-          <View style={{ minWidth: MIN_DETAIL_WIDTH, flex: 1 }}>{detail}</View>
+          <View style={{ minWidth: MIN_DETAIL_WIDTH, flex: 1 }}>
+            {selectedId ? detail : <Text>Select a thought.</Text>}
+          </View>
         </View>
       ) : (
         detail
