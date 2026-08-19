@@ -61,7 +61,7 @@ jest.mock("expo-router", () => {
       const { href, asChild, ...rest } = props;
       // If asChild is true, render children with the props
       if (asChild && props.children) {
-        return React.cloneElement(props.children, { ref, ...rest });
+        return React.cloneElement(props.children, { ref, accessible: true, ...rest });
       }
       return React.createElement(Pressable, { ref, ...rest });
     }),
@@ -80,10 +80,10 @@ describe("ThoughtViewScreen", () => {
 
     expect(screen.getByText("cbt_view.header")).toBeTruthy();
     expect(
-      screen.getByLabelText(/auto_thought.*I'll never finish this/)
+      screen.getByRole("link", { name: /auto_thought.*I'll never finish this/ })
     ).toBeTruthy();
     expect(
-      screen.getByLabelText(/challenge.*Not set/)
+      screen.getByRole("link", { name: /challenge.*Not set/ })
     ).toBeTruthy();
   });
 });
