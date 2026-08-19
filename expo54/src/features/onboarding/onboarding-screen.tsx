@@ -1,28 +1,48 @@
 import { Routes } from "@/src";
-import { Action } from "@/src/model";
-import { useSafeWindowDimensions } from "@/src/hooks/use-safe-area";
+import { FlowAction, FlowProgress } from "@/src/components";
 import { Reminders, useReminders } from "@/src/features/reminders/use-reminders";
-import { ImagePath, Screen, Section, SegmentedProgress } from "@/src/components";
-import { Link, useRouter } from "expo-router";
-import { Button, Typography } from "heroui-native";
-import React from "react";
-import { Image, Keyboard, Pressable, ScrollView, View } from "react-native";
-import Carousel, { CarouselRenderItem, ICarouselInstance } from "react-native-reanimated-carousel";
 import { ModelLoadedProps } from "@/src/hooks/use-model";
+import { Action } from "@/src/model";
+import { Link, useRouter } from "expo-router";
+import { Button, Typography, useThemeColor } from "heroui-native";
+import React from "react";
+import {
+  AccessibilityInfo,
+  I18nManager,
+  Keyboard,
+  LayoutChangeEvent,
+  Platform,
+  Pressable,
+  View,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import Carousel, { ICarouselInstance } from "react-native-reanimated-carousel";
+import { onboardingSteps, type OnboardingStep } from "./onboarding-content";
+import { OnboardingPage } from "./onboarding-page";
 
-const slideNames = ["record", "challenge", "change", "reminders"] as const;
-type SlideName = (typeof slideNames)[number];
+const stepsWithoutReminders = onboardingSteps.filter((step) => step.id !== "reminders");
 
-export function OnboardingScreen(props: ModelLoadedProps) {
+export type OnboardingScreenProps = ModelLoadedProps & {
+  onSkip: () => void;
+};
+
+export function OnboardingScreen(props: OnboardingScreenProps) {
   const ref = React.useRef<ICarouselInstance>(null);
   const completionRequested = React.useRef(false);
+  const transitionPending = React.useRef(false);
+  const announcedIndex = React.useRef(0);
   const [activeIndex, setActiveIndex] = React.useState(0);
+  const [pagerSize, setPagerSize] = React.useState<{ width: number; height: number }>();
   const router = useRouter();
   const reminders = useReminders();
+  const background = useThemeColor("background");
   const isSaving = props.model.onboardingCompletion === "saving";
   const hasFailed =
     typeof props.model.onboardingCompletion === "object" &&
     props.model.onboardingCompletion.status === "failure";
+  const slides = reminders.isSupported() ? onboardingSteps : stepsWithoutReminders;
+  const isFinal = activeIndex === slides.length - 1;
+  const showFailure = isFinal && hasFailed;
 
   React.useEffect(() => {
     if (completionRequested.current && props.model.onboardingCompletion === "idle") {
@@ -37,216 +57,216 @@ export function OnboardingScreen(props: ModelLoadedProps) {
     props.dispatch(Action.beginOnboardingCompletion());
   }
 
-  const onPressStep = (count: number) => {
-    ref.current?.scrollTo({
-      count,
-      animated: true,
-    });
-  };
+  function onPressStep(count: -1 | 1) {
+    if (
+      transitionPending.current ||
+      (count < 0 && activeIndex === 0) ||
+      (count > 0 && isFinal) ||
+      ref.current === null
+    ) {
+      return;
+    }
 
-  const slides = reminders.isSupported() ? slideNames : slideNames.slice(0, -1);
-  const w = useSafeWindowDimensions();
-  const width = Math.min(w.width - 32, 768);
+    transitionPending.current = true;
+    ref.current.scrollTo({ count, animated: true });
+  }
+
+  function onPagerLayout(event: LayoutChangeEvent) {
+    const { width, height } = event.nativeEvent.layout;
+    if (width === 0 || height === 0) return;
+
+    setPagerSize((current) =>
+      current?.width === width && current.height === height ? current : { width, height }
+    );
+  }
 
   return (
-    <Screen scroll={false} contentClassName="flex-1 py-6">
-      <View className="flex-1">
-        <Carousel
-          ref={ref}
-          data={[...slides]}
-          renderItem={IntroItem({
-            ...props,
-            reminders,
-            isSaving,
-            hasFailed,
-            onPressGetStarted,
-          })}
-          width={width}
-          height={w.height - 150}
-          loop={false}
-          defaultIndex={0}
-          onSnapToItem={(index) => {
-            setActiveIndex(index);
-            Keyboard.dismiss();
-          }}
-          mode="parallax"
-          modeConfig={{
-            parallaxScrollingScale: 0.9,
-            parallaxScrollingOffset: Math.round(width * 0.15),
-          }}
-          // fix vertical scrolling for distortions
-          onConfigurePanGesture={(gesture) => {
-            "worklet";
-            gesture.activeOffsetX([-10, 10]);
-          }}
-        />
-        <Section className="mt-4 gap-4">
-          <SegmentedProgress
+    <SafeAreaView className="flex-1" style={{ flex: 1, backgroundColor: background }}>
+      <View className="w-full max-w-3xl flex-1 self-center">
+        <View className="flex-row items-center justify-between px-4 py-2">
+          {activeIndex > 0 ? (
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={props.translate("onboarding_screen.previous")}
+              className="h-11 w-11 items-center justify-center rounded-full border border-border bg-surface-secondary"
+              style={{ width: 44, height: 44 }}
+              onPress={() => onPressStep(-1)}
+            >
+              <Typography type="h4">{I18nManager.isRTL ? "›" : "‹"}</Typography>
+            </Pressable>
+          ) : (
+            <View style={{ width: 44, height: 44 }} />
+          )}
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={props.translate("onboarding_screen.skip")}
+            className="h-11 w-11 items-center justify-center rounded-full border border-border bg-surface-secondary"
+            style={{ width: 44, height: 44 }}
+            onPress={props.onSkip}
+          >
+            <Typography type="body-sm">{props.translate("onboarding_screen.skip")}</Typography>
+          </Pressable>
+        </View>
+
+        <View
+          testID="onboarding-pager-viewport"
+          className="min-h-0 flex-1 overflow-hidden"
+          onLayout={onPagerLayout}
+        >
+          {pagerSize ? (
+            <Carousel
+              ref={ref}
+              data={[...slides]}
+              renderItem={({ item, index }) => {
+                const isActive = index === activeIndex;
+                return (
+                  <View
+                    testID={`onboarding-page-${item.id}`}
+                    accessibilityElementsHidden={!isActive}
+                    aria-hidden={!isActive}
+                    importantForAccessibility={
+                      isActive ? "auto" : "no-hide-descendants"
+                    }
+                    focusable={isActive ? undefined : false}
+                    tabIndex={isActive ? undefined : -1}
+                    {...(Platform.OS === "web" && !isActive
+                      ? ({ inert: true } as unknown as React.ComponentProps<typeof View>)
+                      : {})}
+                    style={{ width: "100%", flex: 1 }}
+                  >
+                    <OnboardingItem
+                      step={item}
+                      dispatch={props.dispatch}
+                      reminders={reminders}
+                      translate={props.translate}
+                    />
+                  </View>
+                );
+              }}
+              width={pagerSize.width}
+              height={pagerSize.height}
+              loop={false}
+              defaultIndex={0}
+              onSnapToItem={(index) => {
+                transitionPending.current = false;
+                setActiveIndex(index);
+                if (announcedIndex.current !== index) {
+                  announcedIndex.current = index;
+                  AccessibilityInfo.announceForAccessibility(
+                    props.translate(slides[index].titleKey)
+                  );
+                }
+                Keyboard.dismiss();
+              }}
+              onConfigurePanGesture={(gesture) => {
+                "worklet";
+                gesture.activeOffsetX([-10, 10]);
+              }}
+            />
+          ) : null}
+        </View>
+
+        <View className="px-4 pb-3 pt-2">
+          <FlowProgress
+            variant="segmented"
             currentIndex={activeIndex}
             count={slides.length}
-            accessibilityLabel="Onboarding progress"
+            accessibilityLabel={props.translate("onboarding_screen.progress")}
+            accessibilityValueText={props.translate("onboarding_screen.progress_step", {
+              step: activeIndex + 1,
+              count: slides.length,
+            })}
           />
-          <View className="flex-row items-center justify-between">
-            {activeIndex > 0 ? (
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel="Previous"
-                className="h-11 w-11 items-center justify-center rounded-full border border-border bg-surface-secondary"
-                style={{ width: 44, height: 44 }}
-                onPress={() => onPressStep(-1)}
-              >
-                <Typography type="h4">‹</Typography>
-              </Pressable>
-            ) : (
-              <View className="h-11 w-11" />
-            )}
-            {activeIndex < slides.length - 1 ? (
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel="Next"
-                className="h-11 w-11 items-center justify-center rounded-full border border-border bg-surface-secondary"
-                style={{ width: 44, height: 44 }}
-                onPress={() => onPressStep(1)}
-              >
-                <Typography type="h4">›</Typography>
-              </Pressable>
-            ) : null}
+        </View>
+
+        <View className="items-center gap-3 px-4 pb-4">
+          <View
+            testID="onboarding-failure-region"
+            accessibilityElementsHidden={!showFailure}
+            importantForAccessibility={showFailure ? "auto" : "no-hide-descendants"}
+          >
+            <Typography
+              type="body-sm"
+              className="text-danger"
+              style={{ opacity: showFailure ? 1 : 0 }}
+            >
+              {props.translate("onboarding_screen.save_failed")}
+            </Typography>
           </View>
-        </Section>
+          <View className="h-12 w-40 items-center">
+            <FlowAction
+              state={isFinal ? "final" : "next"}
+              onPress={isFinal ? onPressGetStarted : () => onPressStep(1)}
+              isDisabled={isFinal && isSaving}
+              accessibilityLabel={
+                isFinal
+                  ? props.translate(
+                      isSaving ? "onboarding_screen.saving" : "onboarding_screen.get_started"
+                    )
+                  : props.translate("onboarding_screen.next")
+              }
+              finalLabel={props.translate(
+                isSaving ? "onboarding_screen.saving" : "onboarding_screen.get_started"
+              )}
+            />
+          </View>
+        </View>
       </View>
-    </Screen>
+    </SafeAreaView>
   );
 }
 
-function IntroItem(
-  props: Pick<ModelLoadedProps, "dispatch" | "model" | "style" | "translate"> & {
+function OnboardingItem(
+  props: Pick<ModelLoadedProps, "dispatch" | "translate"> & {
     reminders: Reminders;
-    isSaving: boolean;
-    hasFailed: boolean;
-    onPressGetStarted: () => void;
+    step: OnboardingStep;
   }
-): CarouselRenderItem<SlideName> {
-  const { reminders, dispatch, translate: t, isSaving, hasFailed, onPressGetStarted } = props;
+) {
+  const { dispatch, reminders, step, translate: t } = props;
 
-  async function onPressYes() {
-    await reminders.enable(dispatch, t);
+  switch (step.presentation) {
+    case "guide":
+      return <OnboardingPage step={step} translate={t} variation={<GuideVariation translate={t} />} />;
+    case "informational":
+      return <OnboardingPage step={step} translate={t} variation={null} />;
+    case "reminders":
+      return (
+        <OnboardingPage
+          step={step}
+          translate={t}
+          variation={<ReminderVariation reminders={reminders} dispatch={dispatch} translate={t} />}
+        />
+      );
+    default:
+      throw new Error(`unknown presentation: ${step.presentation satisfies never}`);
   }
+}
 
-  async function onPressNo() {
-    await reminders.disable(dispatch);
-  }
+function GuideVariation({ translate: t }: Pick<ModelLoadedProps, "translate">) {
+  return (
+    <Link
+      asChild
+      href="https://freecbt.erosson.org/explanation/?ref=quirk"
+      accessibilityLabel={t("onboarding_screen.header")}
+    >
+      <Button variant="secondary">{t("onboarding_screen.header")}</Button>
+    </Link>
+  );
+}
 
-  function renderGetStarted() {
-    return (
-      <Section className="w-full gap-3">
-        {hasFailed ? (
-          <Typography type="body-sm" className="text-danger">
-            Unable to save. Try again.
-          </Typography>
-        ) : null}
-        <Button isDisabled={isSaving} onPress={onPressGetStarted}>
-          {isSaving ? "Saving…" : "Get started"}
-        </Button>
-      </Section>
-    );
-  }
+function ReminderVariation(
+  props: Pick<ModelLoadedProps, "dispatch" | "translate"> & { reminders: Reminders }
+) {
+  const { dispatch, reminders, translate: t } = props;
 
-  function slideContent(children: React.ReactNode) {
-    return (
-      <ScrollView
-        className="flex-1"
-        contentContainerClassName="grow justify-center px-2 pb-6"
-        showsVerticalScrollIndicator={false}
-        style={{ flex: 1 }}
-      >
-        <Section className="items-center gap-4">{children}</Section>
-      </ScrollView>
-    );
-  }
-
-  return function IntroItem({ item }) {
-    switch (item) {
-      case "record": {
-        return slideContent(
-          <>
-            <Image
-              source={ImagePath.looker}
-              resizeMode="contain"
-              accessibilityRole="image"
-              className="h-40 w-40"
-            />
-            <Typography type="h1" accessibilityRole="header" className="text-center">
-              {t("onboarding_screen.readme")}
-            </Typography>
-            <Link
-              asChild
-              href="https://freecbt.erosson.org/explanation/?ref=quirk"
-              accessibilityLabel={t("onboarding_screen.header")}
-            >
-              <Button variant="secondary">{t("onboarding_screen.header")}</Button>
-            </Link>
-          </>
-        );
-      }
-      case "challenge": {
-        return slideContent(
-          <>
-            <Image
-              source={ImagePath.eater}
-              resizeMode="contain"
-              accessibilityRole="image"
-              className="h-40 w-40"
-            />
-            <Typography type="h1" accessibilityRole="header" className="text-center">
-              {t("onboarding_screen.block1.header")}
-            </Typography>
-            <Typography type="body" color="muted" className="text-center">
-              {t("onboarding_screen.block1.body")}
-            </Typography>
-          </>
-        );
-      }
-      case "change": {
-        return slideContent(
-          <>
-            <Image
-              source={ImagePath.logo}
-              resizeMode="contain"
-              accessibilityRole="image"
-              className="h-40 w-40"
-            />
-            <Typography type="h1" accessibilityRole="header" className="text-center">
-              {t("onboarding_screen.block2.header")}
-            </Typography>
-            <Typography type="body" color="muted" className="text-center">
-              {t("onboarding_screen.block2.body")}
-            </Typography>
-            {reminders.isSupported() ? null : renderGetStarted()}
-          </>
-        );
-      }
-      case "reminders": {
-        return slideContent(
-          <>
-            <Image
-              source={ImagePath.notifications}
-              resizeMode="contain"
-              accessibilityRole="image"
-              className="h-48 w-64"
-            />
-            <Typography type="h1" accessibilityRole="header" className="text-center">
-              {t("onboarding_screen.reminders.header")}
-            </Typography>
-            <Button onPress={onPressYes}>{t("onboarding_screen.reminders.button.yes")}</Button>
-            <Button variant="secondary" onPress={onPressNo}>
-              {t("onboarding_screen.reminders.button.no")}
-            </Button>
-            {renderGetStarted()}
-          </>
-        );
-      }
-      default:
-        throw new Error(`unknown slide: ${item satisfies never}`);
-    }
-  };
+  return (
+    <View className="w-full gap-3">
+      <Button onPress={() => void reminders.enable(dispatch, t)}>
+        {t("onboarding_screen.reminders.button.yes")}
+      </Button>
+      <Button variant="secondary" onPress={() => void reminders.disable(dispatch)}>
+        {t("onboarding_screen.reminders.button.no")}
+      </Button>
+    </View>
+  );
 }

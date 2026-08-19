@@ -1,5 +1,13 @@
 {
   "onboarding_screen": {
+    "previous": "Précédent",
+    "skip": "Passer",
+    "next": "Suivant",
+    "progress": "Progression de la configuration",
+    "progress_step": "Étape %{step} sur %{count}",
+    "saving": "Enregistrement…",
+    "save_failed": "Échec de l’enregistrement. Réessayez.",
+    "get_started": "Commencer",
     "auto_thought_ex": "J'ai raté la fête de George, il doit me détester.",
     "challenge_ex": "Georges sait que je ne peux pas venir à chaque fois et je ne le détesterais pas s'il manquait un de mes évènements.\n\nJe devrais me traiter aussi bien que je traite les autres.",
     "alt_thought_ex": "C'est vrai que j'ai raté la fête de Georges, mais je peux m'excuser et il me pardonnera probablement.",

@@ -1,5 +1,13 @@
 {
   "onboarding_screen": {
+    "previous": "Precedente",
+    "skip": "Salta",
+    "next": "Avanti",
+    "progress": "Avanzamento configurazione",
+    "progress_step": "Passaggio %{step} di %{count}",
+    "saving": "Salvataggio…",
+    "save_failed": "Impossibile salvare. Riprova.",
+    "get_started": "Inizia",
     "header": "FreeCBT Guida",
     "block1": {
       "header": "FreeCBT ha bisogno di pratica",

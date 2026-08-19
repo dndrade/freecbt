@@ -1,5 +1,13 @@
 {
   "onboarding_screen": {
+    "previous": "이전",
+    "skip": "건너뛰기",
+    "next": "다음",
+    "progress": "설정 진행 상황",
+    "progress_step": "%{count}단계 중 %{step}단계",
+    "saving": "저장 중…",
+    "save_failed": "저장하지 못했습니다. 다시 시도하세요.",
+    "get_started": "시작하기",
     "auto_thought_ex": "나는 친구의 초대에 못갔어, 나를 미워할꺼야.",
     "challenge_ex": "그 친구는 내가 모든 모임에 나갈 수 없다는 걸 잘 알아. 나는 내 초대에 누군가 못 온다 해도 미워하지는 않을꺼야\n\n내가 나 자신을 대할 때도, 타인이 나를 대하는 만큼은 존중해줘야해.",
     "alt_thought_ex": "내가 모임에 못간건 사실이야, 하지만 내가 사과한다면, 친구는 나를 받아줄꺼야.",
