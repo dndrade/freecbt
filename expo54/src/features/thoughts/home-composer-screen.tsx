@@ -1,3 +1,4 @@
+import { Screen } from "@/src/components";
 import { HomeThoughtRecovery } from "./home-thought-recovery";
 import { ThoughtEntryForm } from "./thought-entry-form";
 import { useHomeThoughtDraft } from "./use-home-thought-draft";
@@ -5,10 +6,9 @@ import type { ModelLoadedProps } from "@/src/hooks/use-model";
 import { Model, Thought } from "@/src/model";
 import { Feather } from "@expo/vector-icons";
 import { useNavigation } from "expo-router";
-import { Button, Typography, useThemeColor, useToast } from "heroui-native";
+import { Button, Typography, useToast } from "heroui-native";
 import React from "react";
 import { BackHandler, Keyboard, Pressable, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 
 /**
  * Home is the immediate thought-entry experience. It owns the durable draft, the
@@ -59,7 +59,6 @@ export function HomeComposerScreen({ model, dispatch, translate: t }: ModelLoade
   const [paused, setPaused] = React.useState(
     () => Model.restorableHomeThoughtDraft(model) !== null
   );
-  const background = useThemeColor("background");
   const isSaving = model.thoughtSaveOutbox.some(
     (record) => record.status === "insertion-pending"
   );
@@ -77,73 +76,71 @@ export function HomeComposerScreen({ model, dispatch, translate: t }: ModelLoade
   useStagedBack(focused, pause);
 
   return (
-    <SafeAreaView
+    <Screen
       testID="create-thought-screen"
-      className="flex-1"
-      style={{ flex: 1, backgroundColor: background }}
+      scroll={false}
+      contentClassName="flex-1 gap-3"
     >
       <Pressable
         testID="thought-entry-outside"
         accessible={false}
-        className="flex-1 items-center"
+        className="flex-1"
         onPress={pause}
       >
-        <View className="w-full max-w-3xl flex-1 gap-3 px-4 py-4">
-          <HomeThoughtRecovery model={model} dispatch={dispatch} translate={t} />
-          {Thought.isMeaningfulSpec(draft.spec) && !draft.discarding ? (
-            <Button
-              testID="discard-draft"
-              variant="tertiary"
-              size="sm"
-              className="self-end"
-              onPress={draft.discard}
-            >
-              {t("cbt_form.discard_draft")}
-            </Button>
-          ) : null}
-          {draft.discarding ? (
-            <View
-              testID="discard-draft-confirmation"
-              accessibilityRole="alert"
-              className="gap-2 rounded-lg border border-border bg-surface-secondary p-3"
-            >
-              <Typography type="body-sm">
-                {t("cbt_form.discard_draft_confirm")}
-              </Typography>
-              <View className="flex-row gap-3">
-                <Button
-                  testID="discard-draft-confirm"
-                  className="flex-1"
-                  onPress={draft.confirmDiscard}
-                >
-                  {t("cbt_form.discard_draft_yes")}
-                </Button>
-                <Button
-                  testID="discard-draft-cancel"
-                  variant="secondary"
-                  className="flex-1"
-                  onPress={draft.cancelDiscard}
-                >
-                  {t("cbt_form.discard_draft_no")}
-                </Button>
-              </View>
+        <HomeThoughtRecovery model={model} dispatch={dispatch} translate={t} />
+        {Thought.isMeaningfulSpec(draft.spec) && !draft.discarding ? (
+          <Button
+            testID="discard-draft"
+            variant="tertiary"
+            size="sm"
+            className="self-end"
+            onPress={draft.discard}
+          >
+            {t("cbt_form.discard_draft")}
+          </Button>
+        ) : null}
+        {draft.discarding ? (
+          <View
+            testID="discard-draft-confirmation"
+            accessibilityRole="alert"
+            className="gap-2 rounded-lg border border-border bg-surface-secondary p-3"
+          >
+            <Typography type="body-sm">
+              {t("cbt_form.discard_draft_confirm")}
+            </Typography>
+            <View className="flex-row gap-3">
+              <Button
+                testID="discard-draft-confirm"
+                className="flex-1"
+                onPress={draft.confirmDiscard}
+              >
+                {t("cbt_form.discard_draft_yes")}
+              </Button>
+              <Button
+                testID="discard-draft-cancel"
+                variant="secondary"
+                className="flex-1"
+                onPress={draft.cancelDiscard}
+              >
+                {t("cbt_form.discard_draft_no")}
+              </Button>
             </View>
-          ) : null}
-          <ThoughtEntryForm
-            key={entryKey}
-            route="home"
-            translate={t}
-            distortions={model.distortionData.list}
-            value={draft.spec}
-            isSaving={isSaving}
-            onChange={draft.change}
-            onSave={draft.submit}
-            onStepChange={(_slide, index) => setStep(index)}
-            onFocusRequest={() => setPaused(false)}
-          />
-        </View>
+          </View>
+        ) : null}
+        <ThoughtEntryForm
+          key={entryKey}
+          route="home"
+          translate={t}
+          distortions={model.distortionData.list}
+          value={draft.spec}
+          isSaving={isSaving}
+          onChange={draft.change}
+          onSave={draft.submit}
+          onStepChange={(_slide, index) => setStep(index)}
+          onFocusRequest={() => setPaused(false)}
+        />
       </Pressable>
-    </SafeAreaView>
+    </Screen>
   );
 }
 

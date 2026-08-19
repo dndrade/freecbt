@@ -273,11 +273,7 @@ function DistortionRow(props: {
                   {d.explanationKeys.map((k) => t(k)).join("\n\n")}
                 </Card.Description>
                 <View className="flex-row items-center gap-2">
-                  <Image
-                    source={props.image}
-                    className="h-12 w-12"
-                    style={{ width: 48, height: 48 }}
-                  />
+                  <Image source={props.image} className="h-12 w-12" />
                   <Card.Description className="flex-1">
                     {t(d.explanationThoughtKey)}
                   </Card.Description>

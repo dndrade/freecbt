@@ -1,78 +1,74 @@
 import { Routes } from "@/src";
+import { Screen } from "@/src/components";
 import { ModelLoadedProps } from "@/src/hooks/use-model";
 import { Action, Model, Thought } from "@/src/model";
 import { Feather } from "@expo/vector-icons";
 import { Link } from "expo-router";
+import { Typography } from "heroui-native";
 import React from "react";
-import { ScrollView, Text, TouchableOpacity, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { SectionList, TouchableOpacity, View } from "react-native";
 
 export function ThoughtListScreen(props: ModelLoadedProps) {
-  const { model, dispatch, style: s, translate: t } = props;
+  const { model, dispatch, translate: t } = props;
   const list = Model.thoughtsByDate(model);
   const today = new Date().toDateString();
+  const sections = list.map(([date, thoughts]) => ({
+    title: today === date ? t("cbt_list.today") : date,
+    data: thoughts,
+  }));
+
   return (
-    <SafeAreaView style={[s.view]}>
-      <ScrollView style={[s.flexCol, s.container]}>
-        {list.length === 0 ? (
-          <Text style={[s.text]}>{t("cbt_list.empty")}</Text>
-        ) : (
-          list.map(([date, thoughts]) => (
-            <React.Fragment key={date}>
-              <Text style={[s.subheader]}>
-                {today === date ? t("cbt_list.today") : date}
-              </Text>
-              {thoughts.map((thought) => (
-                <ThoughtItem
-                  key={thought.uuid}
-                  style={s}
-                  translate={t}
-                  thought={thought}
-                  model={model}
-                  dispatch={dispatch}
-                />
-              ))}
-            </React.Fragment>
-          ))
-        )}
-      </ScrollView>
-    </SafeAreaView>
+    <Screen scroll={false} contentClassName="flex-1">
+      {sections.length === 0 ? (
+        <Typography type="body">{t("cbt_list.empty")}</Typography>
+      ) : (
+        <SectionList
+          sections={sections}
+          keyExtractor={(thought) => thought.uuid}
+          contentContainerClassName="gap-2"
+          renderSectionHeader={({ section }) => (
+            <Typography.Heading type="h4" className="mt-4 mb-2">
+              {section.title}
+            </Typography.Heading>
+          )}
+          renderItem={({ item }) => (
+            <ThoughtRow model={model} dispatch={dispatch} translate={t} thought={item} />
+          )}
+        />
+      )}
+    </Screen>
   );
 }
-function ThoughtItem(props: ModelLoadedProps & { thought: Thought.Thought }) {
-  const { model, thought, dispatch, style: s, translate: t } = props;
+
+function ThoughtRow(
+  props: Pick<ModelLoadedProps, "model" | "dispatch" | "translate"> & {
+    thought: Thought.Thought;
+  }
+) {
+  const { model, thought, dispatch, translate: t } = props;
   const onDelete = () => dispatch(Action.deleteThought(thought.uuid));
+
   return (
-    <View style={[s.flexRow, s.justifyBetween, s.m2]}>
-      <TouchableOpacity style={[s.flex1, s.border, s.rounded, s.p2]}>
-        <Link
-          style={[s.flex1, s.flexCol]}
-          href={Routes.thoughtViewV2(thought.uuid)}
-        >
-          <Text style={[s.text]}>
+    <View className="flex-row items-center justify-between gap-2">
+      <Link href={Routes.thoughtViewV2(thought.uuid)} asChild>
+        <TouchableOpacity className="flex-1 flex-col gap-1 rounded-lg border border-border bg-surface-secondary p-3 shadow-sm">
+          <Typography type="body" selectable>
             {Thought.label(thought, model)}
-            {"\n\n"}
-          </Text>
+          </Typography>
           {Thought.emojis(thought) ? (
-            <Text style={[s.text, s.bgCard, s.rounded, s.p1]}>
+            <Typography type="body" className="self-start rounded-md bg-surface-tertiary px-2 py-1">
               {Thought.emojis(thought)}
-            </Text>
-          ) : (
-            <></>
-          )}
-          <Text style={[s.text]}></Text>
-        </Link>
-      </TouchableOpacity>
+            </Typography>
+          ) : null}
+        </TouchableOpacity>
+      </Link>
       <TouchableOpacity
-        style={[s.selfStart, s.bgCard, s.border, s.rounded, s.p2, s.mx2]}
+        accessibilityRole="button"
+        accessibilityLabel={t("accessibility.delete_thought_button")}
         onPress={onDelete}
+        className="self-start rounded-lg border border-border bg-surface-secondary p-3"
       >
-        <Text style={[s.buttonText]}>
-          <Feather
-            name="trash"
-            accessibilityLabel={t("accessibility.delete_thought_button")}
-          />
-        </Text>
+        <Feather name="trash" size={18} />
       </TouchableOpacity>
     </View>
   );

@@ -7,6 +7,7 @@ type ScreenProps = PropsWithChildren<{
   scroll?: boolean;
   className?: string;
   contentClassName?: string;
+  testID?: string;
 }>;
 
 export function Screen({
@@ -14,6 +15,7 @@ export function Screen({
   scroll = true,
   className,
   contentClassName,
+  testID,
 }: ScreenProps) {
   const background = useThemeColor("background");
   const content = (
@@ -26,6 +28,7 @@ export function Screen({
 
   return (
     <SafeAreaView
+      testID={testID}
       className={cn("flex-1", className)}
       style={{ flex: 1, backgroundColor: background }}
     >

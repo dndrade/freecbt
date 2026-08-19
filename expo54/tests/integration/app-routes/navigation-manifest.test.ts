@@ -113,10 +113,19 @@ describe("production route namespace", () => {
     expect(tabsLayout).toContain("key={tab.name}");
     expect(tabsLayout).toContain("name={tab.name}");
     expect(tabsLayout).toContain("title: t(tab.labelKey)");
-    expect(tabsLayout).toContain('useThemeColor(["accent", "muted"])');
-    expect(tabsLayout).toContain("tabBarActiveTintColor: accent");
-    expect(tabsLayout).toContain("tabBarInactiveTintColor: muted");
-    expect(tabsLayout).not.toMatch(/accessibilityState/);
+    // Visible tab chrome is owned by MainTabBar, not the default tab bar.
+    expect(tabsLayout).toContain(
+      'import { MainTabBar } from "@/src/components/navigation/main-tab-bar"'
+    );
+    expect(tabsLayout).toContain("tabBar={(props) => <MainTabBar {...props} />}");
+
+    const mainTabBar = readSrcFile("components/navigation/main-tab-bar.tsx");
+    expect(mainTabBar).toContain("state.routes.map");
+    expect(mainTabBar).toContain("navigation.navigate(route.name)");
+
+    const mainTabItem = readSrcFile("components/navigation/main-tab-item.tsx");
+    expect(mainTabItem).toContain('accessibilityRole="tab"');
+    expect(mainTabItem).toContain("accessibilityState={{ selected }}");
 
     const tabsConfig = readSrcFile("constants/tabs-config.ts");
     expect(

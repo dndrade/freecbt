@@ -268,16 +268,3 @@
 .text__root--weight-bold {
     font-weight: var(--font-weight-bold);
 }
-
-/* Tab navigation styling */
-.tabs-icon {
-    @apply flex items-center justify-center;
-}
-
-.tabs-pill {
-    @apply rounded-full p-2 transition-all duration-200;
-}
-
-.tabs-active {
-    @apply bg-accent;
-}
