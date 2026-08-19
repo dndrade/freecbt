@@ -134,7 +134,7 @@ describe("production route namespace", () => {
     const tabsConfig = readSrcFile("constants/tabs-config.ts");
     expect(
       Array.from(tabsConfig.matchAll(/name:\s*"([^"]+)"/g), ([, name]) => name)
-    ).toEqual(["thoughts/index", "index", "settings/index"]);
+    ).toEqual(["thoughts", "index", "settings/index"]);
     expect(tabsConfig).toContain('labelKey: "settings.hub.journal.label"');
     expect(tabsConfig).toContain('labelKey: "settings.hub.home.label"');
     expect(tabsConfig).toContain('labelKey: "accessibility.settings_button"');

@@ -9,9 +9,17 @@ type Props = {
   list: React.ReactNode;
   detail: React.ReactNode;
   selectedId: string | null;
+  hasThoughts: boolean;
+  selectThoughtText: string;
 };
 
-export function AdaptiveThoughtsLayout({ list, detail, selectedId }: Props) {
+export function AdaptiveThoughtsLayout({
+  list,
+  detail,
+  selectedId,
+  hasThoughts,
+  selectThoughtText,
+}: Props) {
   const [width, setWidth] = React.useState(0);
   const canShowBoth = width >= MIN_LIST_WIDTH + MIN_DETAIL_WIDTH + PANE_GAP;
   const onLayout = (event: LayoutChangeEvent) => {
@@ -24,7 +32,7 @@ export function AdaptiveThoughtsLayout({ list, detail, selectedId }: Props) {
       onLayout={onLayout}
       className="flex-1"
     >
-      {!selectedId && !canShowBoth ? (
+      {!selectedId && (!hasThoughts || !canShowBoth) ? (
         list
       ) : canShowBoth ? (
         <View className="flex-1 flex-row gap-4">
@@ -32,7 +40,7 @@ export function AdaptiveThoughtsLayout({ list, detail, selectedId }: Props) {
             {list}
           </View>
           <View style={{ minWidth: MIN_DETAIL_WIDTH, flex: 1 }}>
-            {selectedId ? detail : <Text>Select a thought.</Text>}
+            {selectedId ? detail : <Text>{selectThoughtText}</Text>}
           </View>
         </View>
       ) : (

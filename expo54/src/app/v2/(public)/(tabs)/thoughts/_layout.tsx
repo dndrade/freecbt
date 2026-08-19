@@ -17,6 +17,8 @@ function ThoughtsLayout(props: ModelLoadedProps) {
       list={<ThoughtListScreen {...props} />}
       detail={<Slot />}
       selectedId={selectedId}
+      hasThoughts={props.model.thoughts.size > 0}
+      selectThoughtText={props.translate("cbt_list.select_thought")}
     />
   );
 }

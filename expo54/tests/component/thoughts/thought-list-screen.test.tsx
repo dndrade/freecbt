@@ -1,6 +1,7 @@
 import { DistortionData, Settings, Thought } from "@/src/model";
 import { fireEvent, screen } from "@testing-library/react-native";
 import React from "react";
+import { StyleSheet } from "react-native";
 import { ThoughtListScreen } from "@/src/features/thoughts/thought-list-screen";
 import { renderWithProviders } from "@/tests/support/render";
 
@@ -65,12 +66,14 @@ describe("ThoughtListScreen", () => {
       <ThoughtListScreen model={model} dispatch={jest.fn()} translate={translate} style={{} as any} />
     );
 
-    expect(
-      screen.getByRole("button", {
-        name: new RegExp(Thought.label(thought, model)),
-        selected: true,
-      })
-    ).toBeTruthy();
+    const row = screen.getByRole("button", {
+      name: new RegExp(Thought.label(thought, model)),
+      selected: true,
+    });
+    expect(StyleSheet.flatten(row.props.style)).toMatchObject({
+      borderColor: "#556de5",
+      borderWidth: 2,
+    });
   });
 
   it("marks the routed legacy Thought key row as selected", () => {

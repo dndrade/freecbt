@@ -1,14 +1,20 @@
 import { AdaptiveThoughtsLayout } from "@/src/features/thoughts/adaptive-thoughts-layout";
 import { fireEvent, render, screen } from "@testing-library/react-native";
 import React from "react";
-import { View } from "react-native";
+import { Text, View } from "react-native";
 
-function renderLayout(selectedId: string | null) {
+function renderLayout(
+  selectedId: string | null,
+  hasThoughts = true,
+  list = <View testID="journal-pane" />
+) {
   render(
     <AdaptiveThoughtsLayout
-      list={<View testID="journal-pane" />}
+      list={list}
       detail={<View testID="detail-pane" />}
       selectedId={selectedId}
+      hasThoughts={hasThoughts}
+      selectThoughtText="Select a thought"
     />
   );
 }
@@ -26,15 +32,24 @@ describe("AdaptiveThoughtsLayout", () => {
 
     expect(screen.getByTestId("journal-pane")).toBeTruthy();
     expect(screen.queryByTestId("detail-pane")).toBeNull();
-    expect(screen.queryByText("Select a thought.")).toBeNull();
+    expect(screen.queryByText("Select a thought")).toBeNull();
   });
 
-  it("shows a detail placeholder beside Journal when no Thought is selected in wide mode", () => {
+  it("shows a detail placeholder beside nonempty Journal when no Thought is selected in wide mode", () => {
     renderLayout(null);
     resize(1000);
 
     expect(screen.getByTestId("journal-pane")).toBeTruthy();
-    expect(screen.getByText("Select a thought.")).toBeTruthy();
+    expect(screen.getByText("Select a thought")).toBeTruthy();
+    expect(screen.queryByTestId("detail-pane")).toBeNull();
+  });
+
+  it("shows only empty Journal when no Thought exists in wide mode", () => {
+    renderLayout(null, false, <Text>No thoughts yet!</Text>);
+    resize(1000);
+
+    expect(screen.getByText("No thoughts yet!")).toBeTruthy();
+    expect(screen.queryByText("Select a thought")).toBeNull();
     expect(screen.queryByTestId("detail-pane")).toBeNull();
   });
 

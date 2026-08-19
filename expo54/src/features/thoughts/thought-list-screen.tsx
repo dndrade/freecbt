@@ -4,7 +4,7 @@ import { ModelLoadedProps } from "@/src/hooks/use-model";
 import { Action, Model, Thought } from "@/src/model";
 import { Feather } from "@expo/vector-icons";
 import { Link, useLocalSearchParams } from "expo-router";
-import { Typography } from "heroui-native";
+import { cn, Typography, useThemeColor } from "heroui-native";
 import React from "react";
 import { SectionList, TouchableOpacity, View } from "react-native";
 
@@ -61,6 +61,7 @@ function ThoughtRow(
   }
 ) {
   const { model, thought, dispatch, translate: t, selected } = props;
+  const accent = useThemeColor("accent");
   const onDelete = () => dispatch(Action.deleteThought(thought.uuid));
   const label = Thought.label(thought, model);
   const emojis = Thought.emojis(thought);
@@ -72,7 +73,11 @@ function ThoughtRow(
           accessibilityRole="button"
           accessibilityLabel={emojis ? `${label} ${emojis}` : label}
           accessibilityState={{ selected }}
-          className="flex-1 flex-col gap-1 rounded-lg border border-border bg-surface-secondary p-3 shadow-sm"
+          className={cn(
+            "flex-1 flex-col gap-1 rounded-lg border border-border bg-surface-secondary p-3 shadow-sm",
+            selected && "border-accent bg-surface-tertiary"
+          )}
+          style={selected ? { borderColor: accent, borderWidth: 2 } : undefined}
         >
           <Typography type="body" selectable>
             {label}
