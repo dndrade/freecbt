@@ -56,8 +56,10 @@ function record(
 // Home mounts/unmounts under a provider that outlives it, the way a route exit works.
 function HomeHost(props: { home: boolean }) {
   return React.createElement(
-    HeroUINativeProvider,
-    null,
+    HeroUINativeProvider as unknown as React.ComponentType<
+      Record<string, unknown>
+    >,
+    { config: { devInfo: { stylingPrinciples: false } } },
     React.createElement(
       ModelProvider,
       null,

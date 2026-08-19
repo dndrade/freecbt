@@ -7,5 +7,10 @@ export function renderWithProviders(
   ui: React.ReactElement,
   options?: RenderOptions
 ) {
-  return render(<HeroUINativeProvider>{ui}</HeroUINativeProvider>, options);
+  return render(
+    <HeroUINativeProvider config={{ devInfo: { stylingPrinciples: false } }}>
+      {ui}
+    </HeroUINativeProvider>,
+    options
+  );
 }

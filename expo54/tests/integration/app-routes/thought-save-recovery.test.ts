@@ -47,8 +47,10 @@ jest.mock("heroui-native", () => ({
 
 function HomeHost() {
   return React.createElement(
-    HeroUINativeProvider,
-    null,
+    HeroUINativeProvider as unknown as React.ComponentType<
+      Record<string, unknown>
+    >,
+    { config: { devInfo: { stylingPrinciples: false } } },
     React.createElement(ModelProvider, null, React.createElement(Home))
   );
 }

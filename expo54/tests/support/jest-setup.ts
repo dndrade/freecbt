@@ -1,4 +1,12 @@
 import { Platform } from "react-native";
+import { installFreeCBTTestTheme } from "./freecbt-test-theme";
+
+// HeroUI Native components resolve theme colors via Uniwind's
+// useCSSVariable(), which under jsdom reads real CSS custom properties from
+// document.head. Jest doesn't run Metro/Uniwind's CSS pipeline, so install a
+// resolved light-theme mirror before any test renders. See
+// tests/support/freecbt-test-theme.ts for details.
+installFreeCBTTestTheme();
 
 // https://react-native-async-storage.github.io/async-storage/docs/advanced/jest/
 jest.mock("@react-native-async-storage/async-storage", () =>
@@ -62,6 +70,28 @@ jest.mock("@react-navigation/native", () => {
     useTheme: () => useContext(actual.ThemeContext) ?? actual.DefaultTheme,
   };
 });
+
+// jest-expo's native module mock makes requireNativeModule('ExpoGo') always
+// succeed, so isRunningInExpoGo() reports true under Jest even though tests
+// never actually run in Expo Go. Left alone, that trips expo-notifications'
+// "removed from Expo Go" warning at import time. Nothing in src/ or tests/
+// reads isRunningInExpoGo(), so overriding it to false is safe.
+jest.mock("expo", () => ({
+  ...jest.requireActual("expo"),
+  isRunningInExpoGo: () => false,
+}));
+
+// @expo/vector-icons' Icon component checks Font.isLoaded() on mount and,
+// if false, awaits Font.loadAsync() before setState-ing fontIsLoaded: true.
+// jest-expo's ExpoFontLoader mock reports nothing as loaded, so that setState
+// lands on a later microtask outside any test's render()/act() call. Nothing
+// in src/ or tests/ uses expo-font directly - it's only pulled in
+// transitively via icons - so reporting every font as already loaded is
+// accurate enough for tests and skips the async branch entirely.
+jest.mock("expo-font", () => ({
+  ...jest.requireActual("expo-font"),
+  isLoaded: () => true,
+}));
 
 jest.mock("expo-router", () => ({
   useRouter: () => ({

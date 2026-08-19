@@ -48,7 +48,7 @@ jest.mock("heroui-native", () => ({
 
 function Host(props: { children: React.ReactNode }) {
   return (
-    <HeroUINativeProvider>
+    <HeroUINativeProvider config={{ devInfo: { stylingPrinciples: false } }}>
       <ModelProvider>{props.children}</ModelProvider>
     </HeroUINativeProvider>
   );
@@ -109,6 +109,7 @@ beforeEach(async () => {
 const realSetItem = (AsyncStorage.setItem as jest.Mock).getMockImplementation()!;
 
 afterEach(() => {
+  jest.useRealTimers();
   jest.restoreAllMocks();
   (AsyncStorage.setItem as jest.Mock).mockImplementation(realSetItem);
 });
@@ -248,7 +249,11 @@ describe("Home thought entry", () => {
     act(() => keyboard("keyboardDidHide"));
 
     // focused with the keyboard closed: pause, restoring the tabs
-    expect(back()()).toBe(true);
+    let handledBack = false;
+    act(() => {
+      handledBack = back()();
+    });
+    expect(handledBack).toBe(true);
     await waitFor(() =>
       expect(
         setOptions.mock.calls[setOptions.mock.calls.length - 1][0].tabBarStyle
@@ -469,14 +474,16 @@ describe("compatibility thought entry", () => {
 
     expect(view.getByTestId("automatic-thought-input").props.value).toBe("");
 
+    jest.useFakeTimers();
     fireEvent.changeText(
       view.getByTestId("automatic-thought-input"),
       "compatibility only"
     );
     await settle();
-    await act(async () => {
-      jest.advanceTimersByTime?.(2000);
+    act(() => {
+      jest.advanceTimersByTime(2000);
     });
+    jest.useRealTimers();
 
     await expect(AsyncStorage.getItem(HOME_THOUGHT_DRAFT_KEY)).resolves.toBe(
       stored
