@@ -23,4 +23,25 @@ describe("FlowProgress", () => {
       text: "Step 2 of 3",
     });
   });
+
+  it("delegates the dots semantic contract", () => {
+    render(
+      <FlowProgress
+        variant="dots"
+        currentIndex={1}
+        count={3}
+        accessibilityLabel="Onboarding progress"
+        accessibilityValueText="Step 2 of 3"
+      />
+    );
+
+    expect(
+      screen.getByRole("progressbar", { name: "Onboarding progress" })
+    ).toHaveProp("accessibilityValue", {
+      min: 1,
+      max: 3,
+      now: 2,
+      text: "Step 2 of 3",
+    });
+  });
 });

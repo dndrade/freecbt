@@ -86,6 +86,17 @@ jest.mock("@/src", () => ({
 
 jest.mock("@/src/components", () => ({
   Section: (props: { children: React.ReactNode }) => React.createElement(View, null, props.children),
+  Screen: (props: {
+    children: React.ReactNode;
+    footer?: React.ReactNode;
+    contentClassName?: string;
+  }) =>
+    React.createElement(
+      View,
+      null,
+      React.createElement(View, null, props.children),
+      props.footer ? React.createElement(View, null, props.footer) : null
+    ),
   FlowProgress: ({
     count,
     currentIndex,
