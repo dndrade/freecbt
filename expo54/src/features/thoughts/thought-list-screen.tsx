@@ -1,5 +1,5 @@
 import { Routes } from "@/src";
-import { Screen } from "@/src/components";
+import { Screen, ScreenHeader } from "@/src/components";
 import { ModelLoadedProps } from "@/src/hooks/use-model";
 import { Action, Model, Thought } from "@/src/model";
 import { Feather } from "@expo/vector-icons";
@@ -19,6 +19,7 @@ export function ThoughtListScreen(props: ModelLoadedProps) {
 
   return (
     <Screen scroll={false} contentClassName="flex-1">
+      <ScreenHeader title={t("cbt_list.header")} showBack={false} />
       {sections.length === 0 ? (
         <Typography type="body">{t("cbt_list.empty")}</Typography>
       ) : (
@@ -47,17 +48,23 @@ function ThoughtRow(
 ) {
   const { model, thought, dispatch, translate: t } = props;
   const onDelete = () => dispatch(Action.deleteThought(thought.uuid));
+  const label = Thought.label(thought, model);
+  const emojis = Thought.emojis(thought);
 
   return (
     <View className="flex-row items-center justify-between gap-2">
       <Link href={Routes.thoughtViewV2(thought.uuid)} asChild>
-        <TouchableOpacity className="flex-1 flex-col gap-1 rounded-lg border border-border bg-surface-secondary p-3 shadow-sm">
+        <TouchableOpacity
+          accessibilityRole="button"
+          accessibilityLabel={emojis ? `${label} ${emojis}` : label}
+          className="flex-1 flex-col gap-1 rounded-lg border border-border bg-surface-secondary p-3 shadow-sm"
+        >
           <Typography type="body" selectable>
-            {Thought.label(thought, model)}
+            {label}
           </Typography>
-          {Thought.emojis(thought) ? (
+          {emojis ? (
             <Typography type="body" className="self-start rounded-md bg-surface-tertiary px-2 py-1">
-              {Thought.emojis(thought)}
+              {emojis}
             </Typography>
           ) : null}
         </TouchableOpacity>
