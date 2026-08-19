@@ -61,7 +61,7 @@ jest.mock("expo-router", () => {
       const { href, asChild, ...rest } = props;
       // If asChild is true, render children with the props
       if (asChild && props.children) {
-        return React.cloneElement(props.children, { ref, accessible: true, ...rest });
+        return React.cloneElement(props.children, { ref, ...rest });
       }
       return React.createElement(Pressable, { ref, ...rest });
     }),

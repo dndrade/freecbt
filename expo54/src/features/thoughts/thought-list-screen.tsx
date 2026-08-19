@@ -19,7 +19,7 @@ export function ThoughtListScreen(props: ModelLoadedProps) {
 
   return (
     <Screen scroll={false} contentClassName="flex-1">
-      <ScreenHeader title={t("cbt_list.header")} showBack={false} />
+      <ScreenHeader title={t("settings.journal.header")} showBack={false} />
       {sections.length === 0 ? (
         <Typography type="body">{t("cbt_list.empty")}</Typography>
       ) : (

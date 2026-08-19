@@ -37,7 +37,7 @@ export function ThoughtViewScreen({ model, translate: t }: ModelLoadedProps) {
           accessibilityLabel={`${t("auto_thought")}: ${thought.automaticThought || notSet}`}
           asChild
         >
-          <View className="flex-row items-center rounded-lg border border-border bg-surface-secondary p-2">
+          <View accessible className="flex-row items-center rounded-lg border border-border bg-surface-secondary p-2">
             {thought.automaticThought ? (
               <>
                 <Image source={ImagePath.yellowBubble} className="h-6 w-6 self-center mr-2" />
@@ -60,7 +60,7 @@ export function ThoughtViewScreen({ model, translate: t }: ModelLoadedProps) {
           accessibilityLabel={`${t("cog_distortion")}: ${distortionsSummary}`}
           asChild
         >
-          <View className="gap-1 rounded-lg border border-border bg-surface-secondary p-2">
+          <View accessible className="gap-1 rounded-lg border border-border bg-surface-secondary p-2">
             {distortions.length ? (
               distortions.map((d) => (
                 <Typography key={d.slug} type="body">
@@ -82,7 +82,7 @@ export function ThoughtViewScreen({ model, translate: t }: ModelLoadedProps) {
           accessibilityLabel={`${t("challenge")}: ${thought.challenge || notSet}`}
           asChild
         >
-          <View className="rounded-lg border border-border bg-surface-secondary p-2">
+          <View accessible className="rounded-lg border border-border bg-surface-secondary p-2">
             <Typography type="body" selectable>
               {thought.challenge || SHRUG_EMOJI}
             </Typography>
@@ -98,7 +98,7 @@ export function ThoughtViewScreen({ model, translate: t }: ModelLoadedProps) {
           accessibilityLabel={`${t("alt_thought")}: ${thought.alternativeThought || notSet}`}
           asChild
         >
-          <View className="flex-row items-center rounded-lg border border-border bg-surface-secondary p-2">
+          <View accessible className="flex-row items-center rounded-lg border border-border bg-surface-secondary p-2">
             {thought.alternativeThought ? (
               <>
                 <Image source={ImagePath.pinkBubble} className="h-6 w-6 self-center mr-2" />

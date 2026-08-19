@@ -36,7 +36,7 @@ describe("ThoughtListScreen", () => {
       <ThoughtListScreen model={model} dispatch={jest.fn()} translate={translate} style={{} as any} />
     );
 
-    expect(screen.getByText("cbt_list.header")).toBeTruthy();
+    expect(screen.getByText("settings.journal.header")).toBeTruthy();
     expect(screen.queryByRole("button", { name: "Back" })).toBeNull();
     expect(
       screen.getByRole("button", { name: new RegExp(Thought.label(thought, model)) })
