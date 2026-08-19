@@ -60,10 +60,23 @@ function walkReverse<T extends object>(obj: T): T {
 export function defaultLocale(): LocaleTag {
   // use one of the user's preferred locale by default
   for (const loc of Localization.getLocales()) {
-    // parsing fails if the user prefers a language we don't have a translation for
-    const res = LocaleTag.safeParse(loc.languageTag);
-    if (res.success) {
-      return res.data;
+    // languageTag is always region-qualified (e.g. "en-US"), but most of our
+    // locale keys are bare language codes (e.g. "en"), so try an exact match
+    // first (this also lets region-specific keys like "pt-BR"/"pt-PT" win
+    // over each other), then fall back to matching by bare language code.
+    // Falling through to the next preferred locale on a failed exact match
+    // let a later, region-tagged locale (frequently Portuguese) outrank the
+    // user's actual top preference.
+    const exact = LocaleTag.safeParse(loc.languageTag);
+    if (exact.success) {
+      return exact.data;
+    }
+
+    if (loc.languageCode !== null) {
+      const byLanguage = LocaleTag.safeParse(loc.languageCode);
+      if (byLanguage.success) {
+        return byLanguage.data;
+      }
     }
   }
   // if the user prefers none of our translated languages, give up and default to english
