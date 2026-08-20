@@ -1,15 +1,14 @@
 import { Routes } from "@/src";
 import { FlowAction, FlowProgress, Screen } from "@/src/components";
+import { TopBar } from "@/src/components/layout/top-bar";
 import { Reminders, useReminders } from "@/src/features/reminders/use-reminders";
 import { ModelLoadedProps } from "@/src/hooks/use-model";
 import { Action } from "@/src/model";
-import { Feather } from "@expo/vector-icons";
 import { Link, useRouter } from "expo-router";
 import { Button, Typography, useThemeColor } from "heroui-native";
 import React from "react";
 import {
   AccessibilityInfo,
-  I18nManager,
   Keyboard,
   LayoutChangeEvent,
   Platform,
@@ -128,36 +127,23 @@ export function OnboardingScreen(props: OnboardingScreenProps) {
   return (
     <Screen scroll={false} contentClassName="flex-1 gap-0 py-2" footer={footer}>
       <View className="flex-1">
-        <View className="flex-row items-center justify-between py-2">
-          {activeIndex > 0 ? (
+        <TopBar
+          onBack={activeIndex > 0 ? () => onPressStep(-1) : undefined}
+          backAccessibilityLabel={props.translate("onboarding_screen.previous")}
+          right={
             <Pressable
               accessibilityRole="button"
-              accessibilityLabel={props.translate("onboarding_screen.previous")}
+              accessibilityLabel={props.translate("onboarding_screen.skip")}
               className="items-center justify-center"
               style={{ width: 44, height: 44 }}
-              onPress={() => onPressStep(-1)}
+              onPress={props.onSkip}
             >
-              <Feather
-                name={I18nManager.isRTL ? "chevron-right" : "chevron-left"}
-                size={24}
-                color={accent}
-              />
+              <Typography type="body-sm" style={{ color: accent }}>
+                {props.translate("onboarding_screen.skip")}
+              </Typography>
             </Pressable>
-          ) : (
-            <View style={{ width: 44, height: 44 }} />
-          )}
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel={props.translate("onboarding_screen.skip")}
-            className="items-center justify-center"
-            style={{ width: 44, height: 44 }}
-            onPress={props.onSkip}
-          >
-            <Typography type="body-sm" style={{ color: accent }}>
-              {props.translate("onboarding_screen.skip")}
-            </Typography>
-          </Pressable>
-        </View>
+          }
+        />
 
         <View
           testID="onboarding-pager-viewport"
