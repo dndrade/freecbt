@@ -140,12 +140,15 @@ export function useSecureBackupsFlow(initialMockKey?: string) {
 }
 
 function LearnMoreSheet(props: { readonly isOpen: boolean; readonly onOpenChange: (open: boolean) => void }) {
-  // gorhom's bottom sheet content stays mounted (just animated off-screen) once opened,
-  // so it never unmounts on close. Gate mounting on isOpen ourselves instead.
-  if (!props.isOpen) return null;
-
+  // Stay mounted at all times and let BottomSheet's own isOpen-driven
+  // snapToIndex/close lifecycle animate it open and shut. Unmounting this
+  // component on close (an earlier approach) forced a fresh cold-start
+  // spring animation on every open, which can overshoot the library's
+  // swipe-to-dismiss progress threshold and trigger a false immediate
+  // close — invisible in Jest (no real Reanimated animation runs there)
+  // but reproducible on-device.
   return (
-    <BottomSheet isOpen onOpenChange={props.onOpenChange}>
+    <BottomSheet isOpen={props.isOpen} onOpenChange={props.onOpenChange}>
       <BottomSheet.Portal>
         <BottomSheet.Overlay />
         <BottomSheet.Content onClose={undefined}>
@@ -176,12 +179,15 @@ function PasswordManagerSheet(props: {
   readonly onContinue: () => void;
   readonly onCancel: () => void;
 }) {
-  // gorhom's bottom sheet content stays mounted (just animated off-screen) once opened,
-  // so it never unmounts on close. Gate mounting on isOpen ourselves instead.
-  if (!props.isOpen) return null;
-
+  // Stay mounted at all times and let BottomSheet's own isOpen-driven
+  // snapToIndex/close lifecycle animate it open and shut. Unmounting this
+  // component on close (an earlier approach) forced a fresh cold-start
+  // spring animation on every open, which can overshoot the library's
+  // swipe-to-dismiss progress threshold and trigger a false immediate
+  // close — invisible in Jest (no real Reanimated animation runs there)
+  // but reproducible on-device.
   return (
-    <BottomSheet isOpen onOpenChange={props.onOpenChange}>
+    <BottomSheet isOpen={props.isOpen} onOpenChange={props.onOpenChange}>
       <BottomSheet.Portal>
         <BottomSheet.Overlay />
         <BottomSheet.Content>
@@ -213,12 +219,15 @@ function FinalNoticeSheet(props: {
   readonly onContinue: () => void;
   readonly onSeeKeyAgain: () => void;
 }) {
-  // gorhom's bottom sheet content stays mounted (just animated off-screen) once opened,
-  // so it never unmounts on close. Gate mounting on isOpen ourselves instead.
-  if (!props.isOpen) return null;
-
+  // Stay mounted at all times and let BottomSheet's own isOpen-driven
+  // snapToIndex/close lifecycle animate it open and shut. Unmounting this
+  // component on close (an earlier approach) forced a fresh cold-start
+  // spring animation on every open, which can overshoot the library's
+  // swipe-to-dismiss progress threshold and trigger a false immediate
+  // close — invisible in Jest (no real Reanimated animation runs there)
+  // but reproducible on-device.
   return (
-    <BottomSheet isOpen onOpenChange={props.onOpenChange}>
+    <BottomSheet isOpen={props.isOpen} onOpenChange={props.onOpenChange}>
       <BottomSheet.Portal>
         <BottomSheet.Overlay />
         <BottomSheet.Content>
