@@ -9,6 +9,7 @@ describe("labFamilies", () => {
   it("exposes onboarding and settings families in order", () => {
     expect(labFamilies.map((family) => family.title)).toEqual([
       "Onboarding",
+      "Thoughts",
       "Settings",
     ]);
   });

@@ -37,6 +37,12 @@ export const labFamilies = [
     href: "/v2/debug/lab/onboarding",
   },
   {
+    id: "thoughts",
+    title: "Thoughts",
+    description: "Current thought list and detail experience.",
+    href: "/v2/debug/lab/thoughts",
+  },
+  {
     id: "settings",
     title: "Settings",
     description: "Current settings baselines and entry flows.",
