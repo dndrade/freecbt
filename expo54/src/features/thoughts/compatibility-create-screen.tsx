@@ -1,5 +1,6 @@
 import { Routes } from "@/src";
-import { Screen, ScreenHeader } from "@/src/components";
+import { Screen } from "@/src/components";
+import { TopBar } from "@/src/components/layout/top-bar";
 import { HomeThoughtRecovery } from "./home-thought-recovery";
 import { useThoughtEntryForm } from "./thought-entry-form";
 import type { ModelLoadedProps } from "@/src/hooks/use-model";
@@ -106,7 +107,7 @@ export function CompatibilityCreateScreen({ model, dispatch, translate: t }: Mod
 
   return (
     <Screen scroll={false} contentClassName="flex-1 gap-3" footer={actions}>
-      <ScreenHeader title={t("cbt_form.new")} />
+      <TopBar title={t("cbt_form.new")} onBack={() => router.back()} />
       {/* the same recovery surface Home uses, so Retry here goes through the
           model's own retry instead of a fresh save that duplicates the Thought */}
       <HomeThoughtRecovery

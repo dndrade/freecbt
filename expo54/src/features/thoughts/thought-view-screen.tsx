@@ -1,9 +1,10 @@
 import { Routes } from "@/src";
-import { Screen, ScreenHeader } from "@/src/components";
+import { Screen } from "@/src/components";
+import { TopBar } from "@/src/components/layout/top-bar";
 import { ModelLoadedProps } from "@/src/hooks/use-model";
 import { Distortion } from "@/src/model";
 import * as ImagePath from "@/src/assets/image-path";
-import { Link } from "expo-router";
+import { Link, useRouter } from "expo-router";
 import { Typography } from "heroui-native";
 import React from "react";
 import { Image, View } from "react-native";
@@ -13,6 +14,7 @@ export const SHRUG_EMOJI = "🤷‍";
 
 export function ThoughtViewScreen({ model, translate: t }: ModelLoadedProps) {
   const res = useThoughtFromParams(model);
+  const router = useRouter();
   if (res.status === "error") return res.error;
   const thought = res.value;
   const slugs = new Set(
@@ -28,7 +30,7 @@ export function ThoughtViewScreen({ model, translate: t }: ModelLoadedProps) {
 
   return (
     <Screen scroll contentClassName="flex-1 gap-4">
-      <ScreenHeader title={t("cbt_view.header")} />
+      <TopBar title={t("cbt_view.header")} onBack={() => router.back()} />
       <View testID="view-thought-screen" className="gap-1">
         <Typography type="h4">{t("auto_thought")}</Typography>
         <Link

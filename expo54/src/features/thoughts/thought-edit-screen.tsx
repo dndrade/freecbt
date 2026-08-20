@@ -1,13 +1,15 @@
-import { Screen, ScreenHeader } from "@/src/components";
+import { Screen } from "@/src/components";
+import { TopBar } from "@/src/components/layout/top-bar";
 import { useThoughtEntryForm } from "./thought-entry-form";
 import { ModelLoadedProps } from "@/src/hooks/use-model";
 import { Action, Thought } from "@/src/model";
-import { useLocalSearchParams } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useState } from "react";
 import { useThoughtFromParams } from "./use-thought-from-route";
 
 export function ThoughtEditScreen({ model, dispatch, translate: t }: ModelLoadedProps) {
   const res = useThoughtFromParams(model);
+  const router = useRouter();
   const params = useLocalSearchParams<{ slide?: string }>();
   const slide = Thought.SlideName.safeParse(params.slide);
   const [value, setValue] = useState<Thought.Spec>(
@@ -35,7 +37,7 @@ export function ThoughtEditScreen({ model, dispatch, translate: t }: ModelLoaded
   if (res.status === "error") return res.error;
   return (
     <Screen scroll={false} contentClassName="flex-1">
-      <ScreenHeader title={t("cbt_form.edit")} />
+      <TopBar title={t("cbt_form.edit")} onBack={() => router.back()} />
       {body}
       {actions}
     </Screen>

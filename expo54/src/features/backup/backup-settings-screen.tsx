@@ -1,18 +1,21 @@
-import { Screen, ScreenHeader } from "@/src/components";
+import { Screen } from "@/src/components";
+import { TopBar } from "@/src/components/layout/top-bar";
 import { ModelLoadedProps } from "@/src/hooks/use-model";
 import { backupFlags } from "./backup-flags";
 import { EncryptedBackupExport } from "./encrypted-backup-export";
 import { EncryptedBackupImport } from "./encrypted-backup-import";
 import { LegacyBackupExport } from "./legacy-backup-export";
 import { LegacyBackupImport } from "./legacy-backup-import";
+import { useRouter } from "expo-router";
 import React from "react";
-import { View } from "react-native";
+import { Text, View } from "react-native";
 import { Typography } from "heroui-native";
 
 export function BackupSettingsScreen(
   props: ModelLoadedProps
 ): React.ReactNode {
   const { style: s, translate: t } = props;
+  const router = useRouter();
 
   const ExportControl = backupFlags.encryptedBackup
     ? EncryptedBackupExport
@@ -24,7 +27,7 @@ export function BackupSettingsScreen(
 
   return (
     <Screen>
-      <ScreenHeader title={t("nav.backup")} />
+      <TopBar title={t("nav.backup")} onBack={() => router.back()} />
       <View className="mt-2">
         <Typography type="body-sm" className="my-2">
           {t("backup_screen.export.description")}

@@ -1,7 +1,8 @@
-import { fireEvent, render, screen } from "@testing-library/react-native";
+import { fireEvent, screen } from "@testing-library/react-native";
 import React from "react";
 import { Action } from "@/src/model";
 import { PinUpdateScreen } from "@/src/features/lock/pin-update-screen";
+import { renderWithProviders } from "@/tests/support/render";
 
 const mockDispatch = jest.fn();
 
@@ -12,7 +13,6 @@ jest.mock("@/src/components", () => {
   return {
     Screen: ({ children }: { children: React.ReactNode }) => <View>{children}</View>,
     Section: ({ children }: { children: React.ReactNode }) => <View>{children}</View>,
-    ScreenHeader: ({ title }: { title: string }) => <Text>{title}</Text>,
   };
 });
 
@@ -48,11 +48,12 @@ jest.mock("expo-router", () => {
     Redirect: ({ href }: { href: string }) => (
       <Text testID="redirect">{href}</Text>
     ),
+    useRouter: () => ({ back: jest.fn() }),
   };
 });
 
 function renderPinUpdateScreen() {
-  return render(
+  return renderWithProviders(
     <PinUpdateScreen
       dispatch={mockDispatch}
       translate={(key: string) => key}

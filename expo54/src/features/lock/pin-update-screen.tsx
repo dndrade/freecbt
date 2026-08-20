@@ -1,15 +1,17 @@
-import { Screen, ScreenHeader, Section } from "@/src/components";
+import { Screen, Section } from "@/src/components";
+import { TopBar } from "@/src/components/layout/top-bar";
 import { PinInput } from "./ui/pin-input";
 import { ModelLoadedProps } from "@/src/hooks/use-model";
 import { Action } from "@/src/model";
 import * as Routes from "@/src/routes";
-import { Redirect } from "expo-router";
+import { Redirect, useRouter } from "expo-router";
 import React, { useState } from "react";
 
 export function PinUpdateScreen(
   props: Pick<ModelLoadedProps, "dispatch" | "translate">
 ): React.ReactNode {
   const { dispatch, translate: t } = props;
+  const router = useRouter();
   const [form, setForm] = useState(emptyForm());
 
   function onSubmit(candidate: string) {
@@ -49,6 +51,7 @@ export function PinUpdateScreen(
           value={form.code}
           setValue={(code) => setForm({ ...form, code })}
           onComplete={onSubmit}
+          onBack={() => router.back()}
         />
       );
     }
@@ -59,6 +62,7 @@ export function PinUpdateScreen(
           value={form.confirm}
           setValue={(confirm) => setForm({ ...form, confirm })}
           onComplete={onSubmit}
+          onBack={() => router.back()}
         />
       );
     }
@@ -87,11 +91,12 @@ function PinStep(props: {
   value: string;
   setValue: (s: string) => void;
   onComplete: (candidate: string) => void;
+  onBack: () => void;
 }) {
-  const { header, value, setValue, onComplete } = props;
+  const { header, value, setValue, onComplete, onBack } = props;
   return (
     <Screen>
-      <ScreenHeader title={header} />
+      <TopBar title={header} onBack={onBack} />
       <Section className="items-center gap-4 mt-6">
         <PinInput
           value={value}

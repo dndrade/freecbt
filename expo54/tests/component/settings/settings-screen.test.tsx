@@ -32,7 +32,6 @@ function mockPanel(name: string) {
 
 jest.mock("@/src/components", () => ({
   Screen: ({ children }: { children: React.ReactNode }) => <View>{children}</View>,
-  ScreenHeader: ({ title }: { title: string }) => <Text>{title}</Text>,
 }));
 
 jest.mock("@/src/features/reminders/use-reminders", () => ({
@@ -48,9 +47,14 @@ jest.mock("expo-router", () => ({
   useRouter: jest.fn(),
 }));
 
-jest.mock("heroui-native", () => ({
-  Typography: ({ children }: { children: React.ReactNode }) => <Text>{children}</Text>,
-}));
+jest.mock("heroui-native", () => {
+  const TypographyMock = ({ children }: { children: React.ReactNode }) => <Text>{children}</Text>;
+  TypographyMock.Heading = TypographyMock;
+  return {
+    Typography: TypographyMock,
+    useThemeColor: () => "#000000",
+  };
+});
 
 jest.mock("@/src/features/settings/ui/settings-card", () => ({
   SettingsCard: ({ children }: { children: React.ReactNode }) => <View>{children}</View>,
@@ -194,7 +198,7 @@ describe("SettingsScreen", () => {
   beforeEach(() => {
     jest.clearAllMocks();
     generalSheetMountCount.current = 0;
-    (useRouter as jest.Mock).mockReturnValue({ push: jest.fn() });
+    (useRouter as jest.Mock).mockReturnValue({ push: jest.fn(), back: jest.fn() });
   });
 
   it("renders the hub rows in order", () => {

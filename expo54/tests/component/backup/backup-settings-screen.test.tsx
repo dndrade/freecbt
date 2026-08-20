@@ -1,16 +1,19 @@
 import React from "react";
-import { render, screen } from "@testing-library/react-native";
+import { screen } from "@testing-library/react-native";
 import { Text, View } from "react-native";
 import { BackupSettingsScreen } from "@/src/features/backup/backup-settings-screen";
 import { backupFlags } from "@/src/features/backup/backup-flags";
+import { renderWithProviders } from "@/tests/support/render";
 
 const backupFlagsMock = backupFlags as { encryptedBackup: boolean };
 
 jest.mock("@/src/components", () => ({
   Screen: (props: { children: React.ReactNode }) =>
     React.createElement(View, null, props.children),
-  ScreenHeader: ({ title }: { title: string }) =>
-    React.createElement(Text, null, title),
+}));
+
+jest.mock("expo-router", () => ({
+  useRouter: () => ({ back: jest.fn() }),
 }));
 
 jest.mock("@/src/features/backup/backup-flags", () => ({
@@ -34,7 +37,7 @@ jest.mock("@/src/features/backup/legacy-backup-import", () => ({
 }));
 
 function renderScreen() {
-  return render(
+  return renderWithProviders(
     <BackupSettingsScreen
       model={{ distortionData: {} } as never}
       dispatch={jest.fn()}

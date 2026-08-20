@@ -1,5 +1,6 @@
 import { Routes } from "@/src";
-import { Screen, ScreenHeader } from "@/src/components";
+import { Screen } from "@/src/components";
+import { TopBar } from "@/src/components/layout/top-bar";
 import { ModelLoadedProps } from "@/src/hooks/use-model";
 import { Action, Model, Thought } from "@/src/model";
 import { Feather } from "@expo/vector-icons";
@@ -21,7 +22,7 @@ export function ThoughtListScreen(props: ModelLoadedProps) {
 
   return (
     <Screen scroll={false} contentClassName="flex-1">
-      <ScreenHeader title={t("settings.journal.header")} showBack={false} />
+      <TopBar title={t("settings.journal.header")} />
       {sections.length === 0 ? (
         <Typography type="body">{t("cbt_list.empty")}</Typography>
       ) : (
