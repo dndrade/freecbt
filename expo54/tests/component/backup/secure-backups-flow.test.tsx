@@ -7,6 +7,10 @@ import {
   SecureBackupsFlowPrototype,
 } from "@/src/debug/ui-lab/secure-backups/secure-backups-flow";
 
+jest.mock("expo-clipboard", () => ({
+  setStringAsync: jest.fn().mockResolvedValue(true),
+}));
+
 function renderFlow(initialMockKey?: string) {
   return render(
     <HeroUINativeProvider config={{ devInfo: { stylingPrinciples: false } }}>
@@ -210,11 +214,14 @@ describe("secure backups flow UI: screens 4 and 6", () => {
     expect(rtlScreen.getByTestId("sb-screen-manual-save")).toBeTruthy();
   });
 
-  it("Copy to clipboard shows local feedback with no navigation", () => {
+  it("Copy to clipboard writes the real key to the clipboard and shows local feedback", async () => {
+    const Clipboard = require("expo-clipboard");
     toSaveKey();
     fireEvent.press(rtlScreen.getByTestId("sb-save-manual"));
+    const key = rtlScreen.getByTestId("sb-full-key").props.children as string;
     fireEvent.press(rtlScreen.getByTestId("sb-copy-to-clipboard"));
-    expect(rtlScreen.getByText("Copied")).toBeTruthy();
+    expect(await rtlScreen.findByText("Copied")).toBeTruthy();
+    expect(Clipboard.setStringAsync).toHaveBeenCalledWith(key);
     expect(rtlScreen.getByTestId("sb-screen-manual-save")).toBeTruthy();
   });
 

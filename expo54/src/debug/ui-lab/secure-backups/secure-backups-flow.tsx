@@ -1,4 +1,5 @@
 import { generateMockRecoveryKey } from "./fixtures";
+import * as Clipboard from "expo-clipboard";
 import React from "react";
 import { Screen, Section } from "@/src/components";
 import { BottomSheet, Button, Label, TextArea, TextField, Typography } from "heroui-native";
@@ -409,7 +410,13 @@ export function SecureBackupsFlowPrototype(props: { readonly initialMockKey?: st
           </Typography>
         </Section>
         <Section>
-          <Button testID="sb-copy-to-clipboard" onPress={() => dispatch({ type: "COPY_TO_CLIPBOARD" })}>
+          <Button
+            testID="sb-copy-to-clipboard"
+            onPress={async () => {
+              await Clipboard.setStringAsync(state.mockKey);
+              dispatch({ type: "COPY_TO_CLIPBOARD" });
+            }}
+          >
             Copy to clipboard
           </Button>
           {state.copiedFeedback ? <Typography type="body-sm" color="muted">Copied</Typography> : null}
