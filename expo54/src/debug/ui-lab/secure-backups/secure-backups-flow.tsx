@@ -113,10 +113,10 @@ export function reducer(state: FlowState, action: FlowAction): FlowState {
       if (normalize(state.confirmInput) !== normalize(state.mockKey)) return state;
       return { ...state, recoveryKeyConfirmed: true, sheet: "final-notice" };
     case "SEE_KEY_AGAIN":
-      return { ...state, sheet: "none", screen: "manual-save" };
+      return { ...state, sheet: "none", screen: "manual-save", recoveryKeyViewed: true };
     case "SHEET_DISMISSED":
       if (state.sheet === "final-notice") {
-        return { ...state, sheet: "none", screen: "manual-save" };
+        return { ...state, sheet: "none", screen: "manual-save", recoveryKeyViewed: true };
       }
       return { ...state, sheet: "none" };
     case "FINAL_NOTICE_CONTINUE":
@@ -435,12 +435,11 @@ export function SecureBackupsFlowPrototype(props: { readonly initialMockKey?: st
   }
 
   if (state.screen === "confirm") {
-    const matches =
-      state.confirmInput.trim().replace(/\s+/g, " ") === state.mockKey.trim().replace(/\s+/g, " ");
+    const matches = normalize(state.confirmInput) === normalize(state.mockKey);
     const hasInput = state.confirmInput.length > 0;
 
     return (
-      <Screen scroll={false} contentClassName="gap-4 py-4" testID="sb-screen-confirm">
+      <Screen contentClassName="gap-4 py-4" testID="sb-screen-confirm">
         <Section>
           <Typography type="h4" accessibilityRole="header">Confirm key</Typography>
           <Typography type="body-sm" color="muted">

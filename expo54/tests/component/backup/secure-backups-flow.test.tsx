@@ -108,26 +108,29 @@ describe("secure backups reducer", () => {
       screen: "enable",
     });
 
-    state = { ...state, screen: "confirm", sheet: "final-notice" };
+    state = { ...state, screen: "confirm", sheet: "final-notice", recoveryKeyViewed: false };
     expect(reducer(state, { type: "SHEET_DISMISSED" })).toMatchObject({
       sheet: "none",
       screen: "manual-save",
       backupEnabled: false,
+      recoveryKeyViewed: true,
     });
   });
 
-  it("SEE_KEY_AGAIN returns to manual-save from the confirm screen or the final-notice sheet", () => {
+  it("SEE_KEY_AGAIN returns to manual-save from the confirm screen or the final-notice sheet, and marks the key as viewed", () => {
     let state = init();
-    state = { ...state, screen: "confirm", sheet: "none" };
+    state = { ...state, screen: "confirm", sheet: "none", recoveryKeyViewed: false };
     expect(reducer(state, { type: "SEE_KEY_AGAIN" })).toMatchObject({
       screen: "manual-save",
       sheet: "none",
+      recoveryKeyViewed: true,
     });
 
-    state = { ...state, screen: "confirm", sheet: "final-notice" };
+    state = { ...state, screen: "confirm", sheet: "final-notice", recoveryKeyViewed: false };
     expect(reducer(state, { type: "SEE_KEY_AGAIN" })).toMatchObject({
       screen: "manual-save",
       sheet: "none",
+      recoveryKeyViewed: true,
     });
   });
 
