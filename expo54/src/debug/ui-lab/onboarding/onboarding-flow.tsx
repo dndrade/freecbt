@@ -10,7 +10,8 @@ import {
   type SlideName,
 } from "./fixtures";
 import React from "react";
-import { Button, Text, View } from "react-native";
+import { Button, View } from "react-native";
+import { Typography } from "heroui-native";
 
 type CompletionState =
   | typeof completionIdle
@@ -122,18 +123,18 @@ export function OnboardingFlowPrototype(props: {
   return (
     <Screen scroll={false} contentClassName="gap-4 py-4">
       <Section>
-        <Text style={[s.text, s.subheader]}>Prototype state</Text>
-        <Text style={[s.text]}>Slide: {slide}</Text>
+        <Text style={[s.text, s.subheader]}>Prototype state</Typography>
+        <Text style={[s.text]}>Slide: {slide}</Typography>
         <Text style={[s.text]}>
           Completion:{" "}
           {hasFailed ? "failure" : isSaving ? "saving" : "idle"}
-        </Text>
+        </Typography>
         <Text style={[s.text]}>
           Reminders: {state.remindersSupported ? "supported" : "unsupported"}
-        </Text>
+        </Typography>
         <Text style={[s.text]}>
           Reminder choice: {state.reminderChoice ?? "none"}
-        </Text>
+        </Typography>
       </Section>
 
       <Section>
@@ -143,36 +144,36 @@ export function OnboardingFlowPrototype(props: {
           accessibilityLabel="Onboarding progress"
         />
 
-        <Text style={[s.text, s.my2]}>Step {state.activeIndex + 1} of {state.slides.length}</Text>
+        <Text style={[s.text, s.my2]}>Step {state.activeIndex + 1} of {state.slides.length}</Typography>
         <View style={[s.my2]}>
           {slide === "record" ? (
             <>
-              <Text style={[s.text, s.subheader]}>{t("onboarding_screen.readme")}</Text>
-              <Text style={[s.text]}>{t("onboarding_screen.header")}</Text>
+              <Text style={[s.text, s.subheader]}>{t("onboarding_screen.readme")}</Typography>
+              <Text style={[s.text]}>{t("onboarding_screen.header")}</Typography>
             </>
           ) : null}
           {slide === "challenge" ? (
             <>
-              <Text style={[s.text, s.subheader]}>{t("onboarding_screen.block1.header")}</Text>
-              <Text style={[s.text]}>{t("onboarding_screen.block1.body")}</Text>
+              <Text style={[s.text, s.subheader]}>{t("onboarding_screen.block1.header")}</Typography>
+              <Text style={[s.text]}>{t("onboarding_screen.block1.body")}</Typography>
             </>
           ) : null}
           {slide === "change" ? (
             <>
-              <Text style={[s.text, s.subheader]}>{t("onboarding_screen.block2.header")}</Text>
-              <Text style={[s.text]}>{t("onboarding_screen.block2.body")}</Text>
+              <Text style={[s.text, s.subheader]}>{t("onboarding_screen.block2.header")}</Typography>
+              <Text style={[s.text]}>{t("onboarding_screen.block2.body")}</Typography>
             </>
           ) : null}
           {hasReminders ? (
             <>
-              <Text style={[s.text, s.subheader]}>{t("onboarding_screen.reminders.header")}</Text>
+              <Text style={[s.text, s.subheader]}>{t("onboarding_screen.reminders.header")}</Typography>
               <Text style={[s.text]}>
                 {state.reminderChoice === "enabled"
                   ? "Reminders: enabled"
                   : state.reminderChoice === "disabled"
                     ? "Reminders: disabled"
                     : "Choose whether reminders should be enabled."}
-              </Text>
+              </Typography>
             </>
           ) : null}
         </View>
@@ -225,7 +226,7 @@ export function OnboardingFlowPrototype(props: {
 
         <View style={[s.mt2]}>
           {hasFailed ? (
-            <Text style={[s.text, s.my2]}>Unable to save. Try again.</Text>
+            <Text style={[s.text, s.my2]}>Unable to save. Try again.</Typography>
           ) : null}
           <Button
             title={hasFailed ? "Retry" : isSaving ? "Saving..." : "Get started"}
