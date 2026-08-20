@@ -237,3 +237,115 @@ describe("secure backups flow UI: screens 4 and 6", () => {
     expect(rtlScreen.getByTestId("sb-screen-save-key")).toBeTruthy();
   });
 });
+
+describe("secure backups flow UI: screens 7 and 9", () => {
+  it("Next stays disabled until the pasted key matches, manual branch", () => {
+    render(
+      <HeroUINativeProvider config={{ devInfo: { stylingPrinciples: false } }}>
+        <SecureBackupsFlowPrototype />
+      </HeroUINativeProvider>
+    );
+    fireEvent.press(rtlScreen.getByTestId("sb-set-up"));
+    fireEvent.press(rtlScreen.getByTestId("sb-enable"));
+    fireEvent.press(rtlScreen.getByTestId("sb-view-key"));
+    fireEvent.press(rtlScreen.getByTestId("sb-save-manual"));
+    const key = rtlScreen.getByTestId("sb-full-key").props.children as string;
+    fireEvent.press(rtlScreen.getByTestId("sb-manual-next"));
+
+    expect(rtlScreen.getByTestId("sb-confirm-next").props.accessibilityState.disabled).toBe(true);
+    fireEvent.changeText(rtlScreen.getByTestId("sb-confirm-input"), "wrong key");
+    expect(rtlScreen.getByText("Doesn't match")).toBeTruthy();
+    fireEvent.changeText(rtlScreen.getByTestId("sb-confirm-input"), key);
+    expect(rtlScreen.getByText("Matches")).toBeTruthy();
+    expect(rtlScreen.getByTestId("sb-confirm-next").props.accessibilityState.disabled).toBe(false);
+  });
+
+  it("does not render Paste from password manager on the manual branch", () => {
+    render(
+      <HeroUINativeProvider config={{ devInfo: { stylingPrinciples: false } }}>
+        <SecureBackupsFlowPrototype />
+      </HeroUINativeProvider>
+    );
+    fireEvent.press(rtlScreen.getByTestId("sb-set-up"));
+    fireEvent.press(rtlScreen.getByTestId("sb-enable"));
+    fireEvent.press(rtlScreen.getByTestId("sb-view-key"));
+    fireEvent.press(rtlScreen.getByTestId("sb-save-manual"));
+    fireEvent.press(rtlScreen.getByTestId("sb-manual-next"));
+    expect(rtlScreen.queryByTestId("sb-paste-from-password-manager")).toBeNull();
+  });
+
+  it("walks final notice through to Screen 9 with a pending last-backup state", () => {
+    render(
+      <HeroUINativeProvider config={{ devInfo: { stylingPrinciples: false } }}>
+        <SecureBackupsFlowPrototype initialMockKey="ABCD-EFGH-IJKL-MNOP" />
+      </HeroUINativeProvider>
+    );
+    fireEvent.press(rtlScreen.getByTestId("sb-set-up"));
+    fireEvent.press(rtlScreen.getByTestId("sb-enable"));
+    fireEvent.press(rtlScreen.getByTestId("sb-view-key"));
+    fireEvent.press(rtlScreen.getByTestId("sb-save-manual"));
+    fireEvent.press(rtlScreen.getByTestId("sb-manual-next"));
+    fireEvent.changeText(rtlScreen.getByTestId("sb-confirm-input"), "ABCD-EFGH-IJKL-MNOP");
+    fireEvent.press(rtlScreen.getByTestId("sb-confirm-next"));
+    expect(rtlScreen.getByTestId("sb-sheet-final-notice")).toBeTruthy();
+    fireEvent.press(rtlScreen.getByTestId("sb-final-notice-continue"));
+    expect(rtlScreen.getByTestId("sb-screen-active")).toBeTruthy();
+    expect(rtlScreen.getByText("Starting backup...")).toBeTruthy();
+    expect(rtlScreen.getByText("Not backed up yet")).toBeTruthy();
+  });
+
+  it("dismissing final notice ambiently returns to Screen 6 without enabling backups", () => {
+    render(
+      <HeroUINativeProvider config={{ devInfo: { stylingPrinciples: false } }}>
+        <SecureBackupsFlowPrototype initialMockKey="ABCD-EFGH-IJKL-MNOP" />
+      </HeroUINativeProvider>
+    );
+    fireEvent.press(rtlScreen.getByTestId("sb-set-up"));
+    fireEvent.press(rtlScreen.getByTestId("sb-enable"));
+    fireEvent.press(rtlScreen.getByTestId("sb-view-key"));
+    fireEvent.press(rtlScreen.getByTestId("sb-save-manual"));
+    fireEvent.press(rtlScreen.getByTestId("sb-manual-next"));
+    fireEvent.changeText(rtlScreen.getByTestId("sb-confirm-input"), "ABCD-EFGH-IJKL-MNOP");
+    fireEvent.press(rtlScreen.getByTestId("sb-confirm-next"));
+    fireEvent.press(rtlScreen.getByTestId("sb-final-notice-close"));
+    expect(rtlScreen.queryByTestId("sb-sheet-final-notice")).toBeNull();
+    expect(rtlScreen.getByTestId("sb-screen-manual-save")).toBeTruthy();
+  });
+
+  it("See key again from the final notice sheet returns to Screen 6", () => {
+    render(
+      <HeroUINativeProvider config={{ devInfo: { stylingPrinciples: false } }}>
+        <SecureBackupsFlowPrototype initialMockKey="ABCD-EFGH-IJKL-MNOP" />
+      </HeroUINativeProvider>
+    );
+    fireEvent.press(rtlScreen.getByTestId("sb-set-up"));
+    fireEvent.press(rtlScreen.getByTestId("sb-enable"));
+    fireEvent.press(rtlScreen.getByTestId("sb-view-key"));
+    fireEvent.press(rtlScreen.getByTestId("sb-save-manual"));
+    fireEvent.press(rtlScreen.getByTestId("sb-manual-next"));
+    fireEvent.changeText(rtlScreen.getByTestId("sb-confirm-input"), "ABCD-EFGH-IJKL-MNOP");
+    fireEvent.press(rtlScreen.getByTestId("sb-confirm-next"));
+    fireEvent.press(rtlScreen.getByTestId("sb-final-notice-see-key-again"));
+    expect(rtlScreen.getByTestId("sb-screen-manual-save")).toBeTruthy();
+  });
+
+  it("password-manager branch renders and works via Paste from password manager", () => {
+    render(
+      <HeroUINativeProvider config={{ devInfo: { stylingPrinciples: false } }}>
+        <SecureBackupsFlowPrototype initialMockKey="ABCD-EFGH-IJKL-MNOP" />
+      </HeroUINativeProvider>
+    );
+    fireEvent.press(rtlScreen.getByTestId("sb-set-up"));
+    fireEvent.press(rtlScreen.getByTestId("sb-enable"));
+    fireEvent.press(rtlScreen.getByTestId("sb-view-key"));
+    fireEvent.press(rtlScreen.getByTestId("sb-save-password-manager"));
+    fireEvent.press(rtlScreen.getByTestId("sb-password-manager-continue"));
+    expect(rtlScreen.getByTestId("sb-screen-confirm")).toBeTruthy();
+    expect(rtlScreen.getByTestId("sb-paste-from-password-manager")).toBeTruthy();
+    fireEvent.press(rtlScreen.getByTestId("sb-paste-from-password-manager"));
+    expect(rtlScreen.getByText("Matches")).toBeTruthy();
+    fireEvent.press(rtlScreen.getByTestId("sb-confirm-next"));
+    fireEvent.press(rtlScreen.getByTestId("sb-final-notice-continue"));
+    expect(rtlScreen.getByTestId("sb-screen-active")).toBeTruthy();
+  });
+});

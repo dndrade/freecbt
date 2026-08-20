@@ -1,7 +1,7 @@
 import { generateMockRecoveryKey } from "./fixtures";
 import React from "react";
 import { Screen, Section } from "@/src/components";
-import { BottomSheet, Button, Typography } from "heroui-native";
+import { BottomSheet, Button, Label, TextArea, TextField, Typography } from "heroui-native";
 import { Pressable, View } from "react-native";
 
 export type Screen =
@@ -206,6 +206,45 @@ function PasswordManagerSheet(props: {
   );
 }
 
+function FinalNoticeSheet(props: {
+  readonly isOpen: boolean;
+  readonly onOpenChange: (open: boolean) => void;
+  readonly onContinue: () => void;
+  readonly onSeeKeyAgain: () => void;
+}) {
+  // gorhom's bottom sheet content stays mounted (just animated off-screen) once opened,
+  // so it never unmounts on close. Gate mounting on isOpen ourselves instead.
+  if (!props.isOpen) return null;
+
+  return (
+    <BottomSheet isOpen onOpenChange={props.onOpenChange}>
+      <BottomSheet.Portal>
+        <BottomSheet.Overlay />
+        <BottomSheet.Content>
+          <View testID="sb-sheet-final-notice" className="px-4 pt-3 gap-3">
+            <View className="flex-row items-center gap-2">
+              <View className="w-11" />
+              <View className="flex-1 items-center">
+                <BottomSheet.Title className="text-xl font-semibold tracking-tight text-foreground">
+                  Keep your key safe
+                </BottomSheet.Title>
+              </View>
+              <BottomSheet.Close testID="sb-final-notice-close" accessibilityLabel="Close" className="h-11 w-11 items-center justify-center" />
+            </View>
+            <Typography type="body-sm">
+              FreeCBT cannot recover this key for you. Make sure it&apos;s saved somewhere outside the app before backups start.
+            </Typography>
+            <Button testID="sb-final-notice-continue" onPress={props.onContinue}>Continue</Button>
+            <Button testID="sb-final-notice-see-key-again" variant="secondary" onPress={props.onSeeKeyAgain}>
+              See key again
+            </Button>
+          </View>
+        </BottomSheet.Content>
+      </BottomSheet.Portal>
+    </BottomSheet>
+  );
+}
+
 export function SecureBackupsFlowPrototype(props: { readonly initialMockKey?: string }) {
   const [state, dispatch] = useSecureBackupsFlow(props.initialMockKey);
 
@@ -214,6 +253,10 @@ export function SecureBackupsFlowPrototype(props: { readonly initialMockKey?: st
   }
 
   function onPasswordManagerOpenChange(open: boolean) {
+    if (!open) dispatch({ type: "SHEET_DISMISSED" });
+  }
+
+  function onFinalNoticeOpenChange(open: boolean) {
     if (!open) dispatch({ type: "SHEET_DISMISSED" });
   }
 
@@ -387,6 +430,93 @@ export function SecureBackupsFlowPrototype(props: { readonly initialMockKey?: st
           onContinue={() => dispatch({ type: "PASSWORD_MANAGER_CONTINUE" })}
           onCancel={() => dispatch({ type: "PASSWORD_MANAGER_CANCEL" })}
         />
+      </Screen>
+    );
+  }
+
+  if (state.screen === "confirm") {
+    const matches =
+      state.confirmInput.trim().replace(/\s+/g, " ") === state.mockKey.trim().replace(/\s+/g, " ");
+    const hasInput = state.confirmInput.length > 0;
+
+    return (
+      <Screen scroll={false} contentClassName="gap-4 py-4" testID="sb-screen-confirm">
+        <Section>
+          <Typography type="h4" accessibilityRole="header">Confirm key</Typography>
+          <Typography type="body-sm" color="muted">
+            Paste the key you were given.
+          </Typography>
+        </Section>
+        <Section>
+          {state.recoveryKeySavedIntent === "password_manager" ? (
+            <Button
+              testID="sb-paste-from-password-manager"
+              variant="secondary"
+              onPress={() => dispatch({ type: "PASTE_FROM_PASSWORD_MANAGER" })}
+            >
+              Paste from password manager
+            </Button>
+          ) : null}
+          <TextField>
+            <Label>Recovery key</Label>
+            <TextArea
+              testID="sb-confirm-input"
+              accessibilityLabel="Recovery key"
+              value={state.confirmInput}
+              numberOfLines={4}
+              onChangeText={(value) => dispatch({ type: "CONFIRM_INPUT_CHANGED", value })}
+            />
+          </TextField>
+          {hasInput ? (
+            <Typography type="body-sm" color="muted">{matches ? "Matches" : "Doesn't match"}</Typography>
+          ) : null}
+          <Typography type="body-sm" color="muted">
+            Next is enabled only when the pasted key matches.
+          </Typography>
+        </Section>
+        <Section>
+          <Button testID="sb-see-key-again" variant="secondary" onPress={() => dispatch({ type: "SEE_KEY_AGAIN" })}>
+            See key again
+          </Button>
+          <Button
+            testID="sb-confirm-next"
+            isDisabled={!matches}
+            onPress={() => dispatch({ type: "CONFIRM_NEXT" })}
+          >
+            Next
+          </Button>
+        </Section>
+        <FinalNoticeSheet
+          isOpen={state.sheet === "final-notice"}
+          onOpenChange={onFinalNoticeOpenChange}
+          onContinue={() => dispatch({ type: "FINAL_NOTICE_CONTINUE" })}
+          onSeeKeyAgain={() => dispatch({ type: "SEE_KEY_AGAIN" })}
+        />
+      </Screen>
+    );
+  }
+
+  if (state.screen === "active") {
+    return (
+      <Screen scroll={false} contentClassName="gap-4 py-4" testID="sb-screen-active">
+        <Section>
+          <Typography type="h4" accessibilityRole="header">Backups</Typography>
+          <Typography type="body-sm" color="muted">
+            Automatic encrypted backups are on.
+          </Typography>
+        </Section>
+        <Section>
+          <Typography type="h4">Backup active</Typography>
+          <Typography type="body-sm">First encrypted backup is starting now.</Typography>
+          <Typography type="body-sm" color="muted">Starting backup...</Typography>
+        </Section>
+        <Section>
+          <Typography type="body-sm" color="muted">Last backup</Typography>
+          <Typography type="body" weight="semibold">{state.lastBackupAt ?? "Not backed up yet"}</Typography>
+          <Typography type="body-sm" color="muted">
+            Stored on this phone outside app internal storage.
+          </Typography>
+        </Section>
       </Screen>
     );
   }
