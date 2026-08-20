@@ -176,3 +176,64 @@ describe("secure backups flow UI: screens 1-3", () => {
     expect(rtlScreen.getByTestId("sb-screen-recovery-intro")).toBeTruthy();
   });
 });
+
+describe("secure backups flow UI: screens 4 and 6", () => {
+  function toSaveKey() {
+    renderFlow();
+    fireEvent.press(rtlScreen.getByTestId("sb-set-up"));
+    fireEvent.press(rtlScreen.getByTestId("sb-enable"));
+    fireEvent.press(rtlScreen.getByTestId("sb-view-key"));
+  }
+
+  it("Screen 4 shows a blurred preview and offers both save paths", () => {
+    toSaveKey();
+    expect(rtlScreen.getByTestId("sb-screen-save-key")).toBeTruthy();
+    expect(rtlScreen.getByTestId("sb-save-password-manager")).toBeTruthy();
+    expect(rtlScreen.getByTestId("sb-save-manual")).toBeTruthy();
+  });
+
+  it("Save key manually routes to Screen 6 and reveals the full key", () => {
+    toSaveKey();
+    fireEvent.press(rtlScreen.getByTestId("sb-save-manual"));
+    expect(rtlScreen.getByTestId("sb-screen-manual-save")).toBeTruthy();
+    expect(rtlScreen.getByTestId("sb-full-key").props.children).toEqual(
+      expect.stringMatching(/^[A-Z0-9]{4}(-[A-Z0-9]{4}){3}$/)
+    );
+  });
+
+  it("See full key also routes to Screen 6", () => {
+    toSaveKey();
+    fireEvent.press(rtlScreen.getByTestId("sb-see-full-key"));
+    expect(rtlScreen.getByTestId("sb-screen-manual-save")).toBeTruthy();
+  });
+
+  it("Copy to clipboard shows local feedback with no navigation", () => {
+    toSaveKey();
+    fireEvent.press(rtlScreen.getByTestId("sb-save-manual"));
+    fireEvent.press(rtlScreen.getByTestId("sb-copy-to-clipboard"));
+    expect(rtlScreen.getByText("Copied")).toBeTruthy();
+    expect(rtlScreen.getByTestId("sb-screen-manual-save")).toBeTruthy();
+  });
+
+  it("Save to password manager opens the sheet from Screen 4", () => {
+    toSaveKey();
+    fireEvent.press(rtlScreen.getByTestId("sb-save-password-manager"));
+    expect(rtlScreen.getByTestId("sb-sheet-password-manager")).toBeTruthy();
+  });
+
+  it("Cancelling the password manager sheet returns to Screen 4", () => {
+    toSaveKey();
+    fireEvent.press(rtlScreen.getByTestId("sb-save-password-manager"));
+    fireEvent.press(rtlScreen.getByTestId("sb-password-manager-cancel"));
+    expect(rtlScreen.queryByTestId("sb-sheet-password-manager")).toBeNull();
+    expect(rtlScreen.getByTestId("sb-screen-save-key")).toBeTruthy();
+  });
+
+  it("Dismissing the password manager sheet ambiently behaves like Cancel", () => {
+    toSaveKey();
+    fireEvent.press(rtlScreen.getByTestId("sb-save-password-manager"));
+    fireEvent.press(rtlScreen.getByTestId("sb-password-manager-close"));
+    expect(rtlScreen.queryByTestId("sb-sheet-password-manager")).toBeNull();
+    expect(rtlScreen.getByTestId("sb-screen-save-key")).toBeTruthy();
+  });
+});

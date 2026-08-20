@@ -2,7 +2,7 @@ import { generateMockRecoveryKey } from "./fixtures";
 import React from "react";
 import { Screen, Section } from "@/src/components";
 import { BottomSheet, Button, Typography } from "heroui-native";
-import { View } from "react-native";
+import { Pressable, View } from "react-native";
 
 export type Screen =
   | "inactive"
@@ -169,10 +169,51 @@ function LearnMoreSheet(props: { readonly isOpen: boolean; readonly onOpenChange
   );
 }
 
+function PasswordManagerSheet(props: {
+  readonly isOpen: boolean;
+  readonly onOpenChange: (open: boolean) => void;
+  readonly onContinue: () => void;
+  readonly onCancel: () => void;
+}) {
+  // gorhom's bottom sheet content stays mounted (just animated off-screen) once opened,
+  // so it never unmounts on close. Gate mounting on isOpen ourselves instead.
+  if (!props.isOpen) return null;
+
+  return (
+    <BottomSheet isOpen onOpenChange={props.onOpenChange}>
+      <BottomSheet.Portal>
+        <BottomSheet.Overlay />
+        <BottomSheet.Content>
+          <View testID="sb-sheet-password-manager" className="px-4 pt-3 gap-3">
+            <View className="flex-row items-center gap-2">
+              <View className="w-11" />
+              <View className="flex-1 items-center">
+                <BottomSheet.Title className="text-xl font-semibold tracking-tight text-foreground">
+                  Save to password manager?
+                </BottomSheet.Title>
+              </View>
+              <BottomSheet.Close testID="sb-password-manager-close" accessibilityLabel="Close" className="h-11 w-11 items-center justify-center" />
+            </View>
+            <Typography type="body-sm">
+              FreeCBT will open your system password manager and store the recovery key as a secure note or password item.
+            </Typography>
+            <Button testID="sb-password-manager-continue" onPress={props.onContinue}>Continue</Button>
+            <Button testID="sb-password-manager-cancel" variant="secondary" onPress={props.onCancel}>Cancel</Button>
+          </View>
+        </BottomSheet.Content>
+      </BottomSheet.Portal>
+    </BottomSheet>
+  );
+}
+
 export function SecureBackupsFlowPrototype(props: { readonly initialMockKey?: string }) {
   const [state, dispatch] = useSecureBackupsFlow(props.initialMockKey);
 
   function onLearnMoreOpenChange(open: boolean) {
+    if (!open) dispatch({ type: "SHEET_DISMISSED" });
+  }
+
+  function onPasswordManagerOpenChange(open: boolean) {
     if (!open) dispatch({ type: "SHEET_DISMISSED" });
   }
 
@@ -267,6 +308,85 @@ export function SecureBackupsFlowPrototype(props: { readonly initialMockKey?: st
             View recovery key
           </Button>
         </Section>
+      </Screen>
+    );
+  }
+
+  if (state.screen === "save-key") {
+    return (
+      <Screen scroll={false} contentClassName="gap-4 py-4" testID="sb-screen-save-key">
+        <Section>
+          <Typography type="h4" accessibilityRole="header">Save your key</Typography>
+          <Typography type="body-sm" color="muted">
+            This code lets you restore your backup later.
+          </Typography>
+        </Section>
+        <Section>
+          <Typography type="body-sm" color="muted">Recovery key</Typography>
+          <Pressable testID="sb-see-full-key" onPress={() => dispatch({ type: "SEE_FULL_KEY" })}>
+            <Typography type="body" weight="semibold">•••• - •••• - •••• - ••••</Typography>
+            <Typography type="body-sm" color="muted">See full key</Typography>
+          </Pressable>
+        </Section>
+        <Section>
+          <Button testID="sb-save-password-manager" onPress={() => dispatch({ type: "CHOOSE_PASSWORD_MANAGER" })}>
+            Save to password manager
+          </Button>
+          <Typography type="body-sm" color="muted">Recommended</Typography>
+          <Button testID="sb-save-manual" variant="secondary" onPress={() => dispatch({ type: "CHOOSE_MANUAL" })}>
+            Save key manually
+          </Button>
+          <Typography type="body-sm" color="muted">Copy, print, or store it yourself</Typography>
+        </Section>
+        <PasswordManagerSheet
+          isOpen={state.sheet === "password-manager"}
+          onOpenChange={onPasswordManagerOpenChange}
+          onContinue={() => dispatch({ type: "PASSWORD_MANAGER_CONTINUE" })}
+          onCancel={() => dispatch({ type: "PASSWORD_MANAGER_CANCEL" })}
+        />
+      </Screen>
+    );
+  }
+
+  if (state.screen === "manual-save") {
+    return (
+      <Screen scroll={false} contentClassName="gap-4 py-4" testID="sb-screen-manual-save">
+        <Section>
+          <Typography type="h4" accessibilityRole="header">Save manually</Typography>
+          <Typography type="body-sm" color="muted">
+            Copy the full recovery key before continuing.
+          </Typography>
+        </Section>
+        <Section>
+          <Typography type="body" weight="semibold" testID="sb-full-key" selectable>
+            {state.mockKey}
+          </Typography>
+          <Typography type="body-sm" className="mt-2">
+            Do not save this only inside FreeCBT.
+          </Typography>
+        </Section>
+        <Section>
+          <Button testID="sb-copy-to-clipboard" onPress={() => dispatch({ type: "COPY_TO_CLIPBOARD" })}>
+            Copy to clipboard
+          </Button>
+          {state.copiedFeedback ? <Typography type="body-sm" color="muted">Copied</Typography> : null}
+          <Button
+            testID="sb-save-password-manager-from-manual"
+            variant="secondary"
+            onPress={() => dispatch({ type: "CHOOSE_PASSWORD_MANAGER" })}
+          >
+            Save to password manager
+          </Button>
+          <Button testID="sb-manual-next" onPress={() => dispatch({ type: "MANUAL_NEXT" })}>
+            Next
+          </Button>
+        </Section>
+        <PasswordManagerSheet
+          isOpen={state.sheet === "password-manager"}
+          onOpenChange={onPasswordManagerOpenChange}
+          onContinue={() => dispatch({ type: "PASSWORD_MANAGER_CONTINUE" })}
+          onCancel={() => dispatch({ type: "PASSWORD_MANAGER_CANCEL" })}
+        />
       </Screen>
     );
   }
