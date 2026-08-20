@@ -5,7 +5,8 @@ import {
 import * as DocumentPicker from "expo-document-picker";
 import * as FileSystem from "expo-file-system";
 import React, { useState } from "react";
-import { Text, TouchableOpacity } from "react-native";
+import { TouchableOpacity } from "react-native";
+import { Typography } from "heroui-native";
 import type { BackupImportControlProps } from "./backup-control-contract";
 
 export function LegacyBackupImport(props: BackupImportControlProps) {
@@ -59,12 +60,12 @@ export function LegacyBackupImport(props: BackupImportControlProps) {
                     void importBackup();
                 }}
             >
-                <Text style={[s.buttonText]}>
+                <Typography type="body-sm">
                     {t("backup_screen.import.file.button")}
-                </Text>
+                </Typography>
             </TouchableOpacity>
 
-            <Text style={[s.text]}>{importResult}</Text>
+            <Typography type="body-sm">{importResult}</Typography>
         </>
     );
 }

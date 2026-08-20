@@ -4,7 +4,8 @@ import { Archive, Model } from "@/src/model";
 import { DownloadOrShareLink } from "@/src/platform/sharing/download-or-share";
 import { toCSV, toMarkdown } from "./export-format";
 import React from "react";
-import { Text, TouchableOpacity, View } from "react-native";
+import { TouchableOpacity, View } from "react-native";
+import { Typography } from "heroui-native";
 
 export function ExportScreen(props: ModelLoadedProps): React.ReactNode {
   const { style: s, translate: t } = props;
@@ -12,7 +13,7 @@ export function ExportScreen(props: ModelLoadedProps): React.ReactNode {
     <Screen>
       <ScreenHeader title={t("export_screen.header")} />
       <View style={[s.container]} className="mt-2">
-        <Text style={[s.text, s.my2]}>{t("export_screen.description")}</Text>
+        <Typography type="body-sm" className="my-2">{t("export_screen.description")}</Typography>
         <MarkdownLink {...props} />
         <CSVLink {...props} />
         <JSONLink {...props} />
@@ -31,19 +32,19 @@ function MarkdownLink(props: ModelLoadedProps) {
       type="text/markdown"
       UTI="public.text"
       translate={t}
-      error={(e) => <Text style={[s.errorText]}>{e}</Text>}
+      error={(e) => <Typography type="body-sm" color="danger">{e}</Typography>}
       share={(onPress) => (
         <TouchableOpacity style={[s.button, s.my2]} onPress={onPress}>
-          <Text style={[s.buttonText]}>
+          <Typography type="body-sm">
             {t("export_screen.markdown.button")}
-          </Text>
+          </Typography>
         </TouchableOpacity>
       )}
       download={() => (
         <TouchableOpacity style={[s.button, s.my2]}>
-          <Text style={[s.buttonText]}>
+          <Typography type="body-sm">
             {t("export_screen.markdown.button")}
-          </Text>
+          </Typography>
         </TouchableOpacity>
       )}
     />
@@ -60,15 +61,15 @@ function CSVLink(props: ModelLoadedProps) {
       type="text/csv"
       UTI="public.comma-separated-values-text"
       translate={t}
-      error={(e) => <Text style={[s.errorText]}>{e}</Text>}
+      error={(e) => <Typography type="body-sm" color="danger">{e}</Typography>}
       share={(onPress) => (
         <TouchableOpacity style={[s.button, s.my2]} onPress={onPress}>
-          <Text style={[s.buttonText]}>{t("export_screen.csv.button")}</Text>
+          <Typography type="body-sm">{t("export_screen.csv.button")}</Typography>
         </TouchableOpacity>
       )}
       download={() => (
         <TouchableOpacity style={[s.button, s.my2]}>
-          <Text style={[s.buttonText]}>{t("export_screen.csv.button")}</Text>
+          <Typography type="body-sm">{t("export_screen.csv.button")}</Typography>
         </TouchableOpacity>
       )}
     />
@@ -86,15 +87,15 @@ function JSONLink(props: ModelLoadedProps) {
       type="application/json"
       UTI="public.json"
       translate={t}
-      error={(e) => <Text style={[s.errorText]}>{e}</Text>}
+      error={(e) => <Typography type="body-sm" color="danger">{e}</Typography>}
       share={(onPress) => (
         <TouchableOpacity style={[s.button, s.my2]} onPress={onPress}>
-          <Text style={[s.buttonText]}>{t("export_screen.json.button")}</Text>
+          <Typography type="body-sm">{t("export_screen.json.button")}</Typography>
         </TouchableOpacity>
       )}
       download={() => (
         <TouchableOpacity style={[s.button, s.my2]}>
-          <Text style={[s.buttonText]}>{t("export_screen.json.button")}</Text>
+          <Typography type="body-sm">{t("export_screen.json.button")}</Typography>
         </TouchableOpacity>
       )}
     />

@@ -6,7 +6,8 @@ import { EncryptedBackupImport } from "./encrypted-backup-import";
 import { LegacyBackupExport } from "./legacy-backup-export";
 import { LegacyBackupImport } from "./legacy-backup-import";
 import React from "react";
-import { Text, View } from "react-native";
+import { View } from "react-native";
+import { Typography } from "heroui-native";
 
 export function BackupSettingsScreen(
   props: ModelLoadedProps
@@ -25,9 +26,9 @@ export function BackupSettingsScreen(
     <Screen>
       <ScreenHeader title={t("nav.backup")} />
       <View className="mt-2">
-        <Text style={[s.text, s.my2]}>
+        <Typography type="body-sm" className="my-2">
           {t("backup_screen.export.description")}
-        </Text>
+        </Typography>
 
         <ExportControl
           model={props.model}

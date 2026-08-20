@@ -1,5 +1,6 @@
 import React from "react";
-import { LayoutChangeEvent, Text, View } from "react-native";
+import { LayoutChangeEvent, View } from "react-native";
+import { Typography } from "heroui-native";
 
 const MIN_LIST_WIDTH = 320;
 const MIN_DETAIL_WIDTH = 420;
@@ -40,7 +41,7 @@ export function AdaptiveThoughtsLayout({
             {list}
           </View>
           <View style={{ minWidth: MIN_DETAIL_WIDTH, flex: 1 }}>
-            {selectedId ? detail : <Text>{selectThoughtText}</Text>}
+            {selectedId ? detail : <Typography type="body-sm">{selectThoughtText}</Typography>}
           </View>
         </View>
       ) : (
