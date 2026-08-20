@@ -17,7 +17,10 @@ jest.mock("@/src/platform/sharing/download-or-share", () => ({
 jest.mock("@/src/components", () => ({
   Screen: ({ children }: { children: React.ReactNode }) =>
     React.createElement(View, null, children),
-  ScreenHeader: () => null,
+}));
+
+jest.mock("expo-router", () => ({
+  useRouter: () => ({ back: jest.fn() }),
 }));
 
 const T = Thought.createParsers(DistortionData);

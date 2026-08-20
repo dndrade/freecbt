@@ -18,8 +18,8 @@ import { useTranslate } from "@/src/i18n/use-i18n";
 import { TAB_CONFIG } from "@/src/constants/tabs-config";
 
 // Matches the icon size already used for other interactive controls in this
-// app (ScreenHeader back chevron, FlowAction icon) rather than inventing a
-// new value — see expo54/src/components/layout/screen-header.tsx and
+// app (TopBar back chevron, FlowAction icon) rather than inventing a
+// new value — see expo54/src/components/layout/top-bar.tsx and
 // expo54/src/components/flow/flow-action.tsx.
 const ICON_SIZE = 20;
 
