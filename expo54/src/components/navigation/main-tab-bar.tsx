@@ -1,11 +1,19 @@
 // src/components/navigation/main-tab-bar.tsx
 
 import type { BottomTabBarProps } from "@react-navigation/bottom-tabs";
+import { BottomTabBarHeightCallbackContext } from "@react-navigation/bottom-tabs";
 import type { Feather } from "@expo/vector-icons";
 import { Feather as FeatherIcon } from "@expo/vector-icons";
 import { Tabs as HeroTabs, cn, useThemeColor } from "heroui-native";
-import { View } from "react-native";
+import { useContext, useEffect, useState } from "react";
+import type { LayoutChangeEvent } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import Animated, {
+  ReduceMotion,
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from "react-native-reanimated";
 import { useTranslate } from "@/src/i18n/use-i18n";
 import { TAB_CONFIG } from "@/src/constants/tabs-config";
 
@@ -22,18 +30,51 @@ const MIN_TOUCH_TARGET = 48;
 // ponytail: icon-only by default; set to true to show labels, false to hide
 const SHOW_TAB_LABELS = false;
 
+// Distance between the pill's bottom edge and the safe-area bottom inset -
+// the same 12 already used for the wrapper's `bottom` offset below, kept as
+// one constant so the height reported upstream matches what's actually
+// reserved.
+const BOTTOM_MARGIN = 12;
+const timingConfig = { duration: 200, reduceMotion: ReduceMotion.System };
+
 /**
  * Presentation-only replacement for the default Expo Router / React
  * Navigation tab bar chrome. Navigation state and route registration remain
  * owned by `Tabs` (via TAB_CONFIG in the parent layout); this component only
  * renders the floating bar and forwards presses to `navigation`.
  */
-export function MainTabBar({ state, navigation }: BottomTabBarProps) {
+export function MainTabBar({ state, navigation, descriptors }: BottomTabBarProps) {
   const t = useTranslate();
   const insets = useSafeAreaInsets();
   const [accent, muted] = useThemeColor(["accent", "muted"]);
+  const reportHeight = useContext(BottomTabBarHeightCallbackContext);
+  const [measuredHeight, setMeasuredHeight] = useState(0);
 
-  const activeRouteName = state.routes[state.index].name;
+  const activeRoute = state.routes[state.index];
+  const activeRouteName = activeRoute.name;
+  const tabBarStyle = descriptors[activeRoute.key]?.options.tabBarStyle;
+  const hidden =
+    typeof tabBarStyle === "object" && tabBarStyle !== null && "display" in tabBarStyle
+      ? tabBarStyle.display === "none"
+      : false;
+
+  useEffect(() => {
+    reportHeight?.(hidden ? 0 : measuredHeight);
+  }, [reportHeight, hidden, measuredHeight]);
+
+  const onLayout = (event: LayoutChangeEvent) => {
+    setMeasuredHeight(event.nativeEvent.layout.height + BOTTOM_MARGIN);
+  };
+
+  const progress = useSharedValue(hidden ? 1 : 0);
+  useEffect(() => {
+    progress.value = withTiming(hidden ? 1 : 0, timingConfig);
+  }, [progress, hidden]);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    opacity: 1 - progress.value,
+    transform: [{ translateY: 24 * progress.value }],
+  }));
 
   const handleValueChange = (routeName: string) => {
     const route = state.routes.find((r) => r.name === routeName);
@@ -45,12 +86,17 @@ export function MainTabBar({ state, navigation }: BottomTabBarProps) {
   };
 
   return (
-    <View
+    <Animated.View
+      testID="main-tab-bar"
       // Positioning-only wrapper: bounds where the pill can center itself,
       // renders nothing on its own. Wide margins (left-8/right-8) keep the
       // pill compact instead of edge-to-edge.
       className="absolute left-8 right-8 items-center"
-      style={{ bottom: insets.bottom + 12 }}
+      style={[{ bottom: insets.bottom + BOTTOM_MARGIN }, animatedStyle]}
+      pointerEvents={hidden ? "none" : "auto"}
+      accessibilityElementsHidden={hidden}
+      importantForAccessibility={hidden ? "no-hide-descendants" : "auto"}
+      onLayout={onLayout}
     >
       <HeroTabs value={activeRouteName} onValueChange={handleValueChange}>
         <HeroTabs.List
@@ -94,6 +140,6 @@ export function MainTabBar({ state, navigation }: BottomTabBarProps) {
           })}
         </HeroTabs.List>
       </HeroTabs>
-    </View>
+    </Animated.View>
   );
 }
