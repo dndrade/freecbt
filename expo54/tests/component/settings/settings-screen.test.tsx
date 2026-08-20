@@ -198,7 +198,7 @@ describe("SettingsScreen", () => {
   beforeEach(() => {
     jest.clearAllMocks();
     generalSheetMountCount.current = 0;
-    (useRouter as jest.Mock).mockReturnValue({ push: jest.fn(), back: jest.fn() });
+    (useRouter as jest.Mock).mockReturnValue({ push: jest.fn() });
   });
 
   it("renders the hub rows in order", () => {

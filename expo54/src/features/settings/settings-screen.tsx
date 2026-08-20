@@ -4,7 +4,6 @@ import { useReminders } from "@/src/features/reminders/use-reminders";
 import { ModelLoadedProps } from "@/src/hooks/use-model";
 import * as Routes from "@/src/routes";
 import Constants from "expo-constants";
-import { useRouter } from "expo-router";
 import { Typography } from "heroui-native";
 import React, { useState } from "react";
 import { AppearancePicker } from "./ui/appearance-picker";
@@ -27,7 +26,6 @@ type GeneralView = "root" | "language";
 
 export function SettingsScreen(props: ModelLoadedProps) {
   const { model, dispatch, translate: t } = props;
-  const router = useRouter();
   const [open, setOpen] = useState<OpenPanel>(null);
   const [generalView, setGeneralView] = useState<GeneralView>("root");
   const [showCrisisTodo, setShowCrisisTodo] = useState(false);
@@ -54,7 +52,7 @@ export function SettingsScreen(props: ModelLoadedProps) {
 
   return (
     <Screen>
-      <TopBar title={t("settings.header")} onBack={() => router.back()} />
+      <TopBar title={t("settings.header")} />
       <SettingsCard className="mt-2">
         <SettingsRow
           type="nav"
