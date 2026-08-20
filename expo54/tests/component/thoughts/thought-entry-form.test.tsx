@@ -1,7 +1,10 @@
-import { DistortionData, Thought } from "@/src/model";
 import { fireEvent, screen } from "@testing-library/react-native";
+import { BottomTabBarHeightContext } from "@react-navigation/bottom-tabs";
 import React from "react";
-import { ThoughtEntryForm, type ThoughtEntryFormProps } from "@/src/features/thoughts/thought-entry-form";
+import { View } from "react-native";
+import { useThoughtEntryForm, type ThoughtEntryFormProps } from "@/src/features/thoughts/thought-entry-form";
+import { Screen } from "@/src/components/layout/screen";
+import { Distortion, DistortionData, Thought } from "@/src/model";
 import { renderWithProviders } from "@/tests/support/render";
 
 const translate = ((key: string, values?: Record<string, unknown>) =>
@@ -14,18 +17,22 @@ function Harness(
   const [value, setValue] = React.useState<Thought.Spec>(
     props.initial ?? Thought.emptySpec()
   );
+  const { body, actions } = useThoughtEntryForm({
+    route: "home",
+    translate,
+    distortions: DistortionData.list,
+    ...props,
+    value,
+    onChange: (next) => {
+      setValue(next);
+      props.onChange?.(next);
+    },
+  });
   return (
-    <ThoughtEntryForm
-      route="home"
-      translate={translate}
-      distortions={DistortionData.list}
-      {...props}
-      value={value}
-      onChange={(next) => {
-        setValue(next);
-        props.onChange?.(next);
-      }}
-    />
+    <>
+      {body}
+      {actions}
+    </>
   );
 }
 
@@ -243,5 +250,63 @@ describe("ThoughtEntryForm", () => {
     expect(screen.getByTestId("thought-entry-save-error")).toBeTruthy();
     fireEvent.press(screen.getByTestId("thought-entry-retry"));
     expect(onRetry).toHaveBeenCalledTimes(1);
+  });
+});
+
+function HookHarness() {
+  const { body, actions } = useThoughtEntryForm({
+    route: "home",
+    translate,
+    distortions: [] as Distortion.Distortion[],
+    value: Thought.emptySpec(),
+  });
+  return (
+    <View>
+      <View testID="body-slot">{body}</View>
+      <View testID="actions-slot">{actions}</View>
+    </View>
+  );
+}
+
+describe("useThoughtEntryForm", () => {
+  it("returns body and actions as independently placeable nodes sharing one step state", () => {
+    renderWithProviders(<HookHarness />);
+
+    expect(screen.getByTestId("body-slot")).toBeTruthy();
+    expect(screen.getByTestId("actions-slot")).toBeTruthy();
+    expect(screen.getByTestId("thought-entry-actions")).toBeTruthy();
+
+    fireEvent.press(screen.getByTestId("thought-entry-next"));
+
+    // advancing via Actions' Next button is reflected in Body's own step
+    // indicator, proving both nodes share one state instance, not two
+    expect(screen.getByTestId("thought-entry-previous").props.accessibilityState?.disabled).toBe(false);
+  });
+});
+
+function FooterHarness() {
+  const { body, actions } = useThoughtEntryForm({
+    route: "home",
+    translate,
+    distortions: [] as Distortion.Distortion[],
+    value: Thought.emptySpec(),
+  });
+  return (
+    <Screen footer={actions}>
+      {body}
+    </Screen>
+  );
+}
+
+describe("create-thought regression: actions row clears the tab bar", () => {
+  it("pads the actions row by the reported tab-bar height, not by content flow", () => {
+    renderWithProviders(
+      <BottomTabBarHeightContext.Provider value={72}>
+        <FooterHarness />
+      </BottomTabBarHeightContext.Provider>
+    );
+
+    const footerWrapper = screen.getByTestId("thought-entry-actions").parent?.parent;
+    expect(footerWrapper?.props.style.paddingBottom).toBe(24 + 72);
   });
 });

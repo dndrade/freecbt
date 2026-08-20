@@ -41,17 +41,29 @@ export interface ThoughtEntryFormProps {
   onStepChange?: (slide: Thought.SlideName, index: number) => void;
   /** Any interaction with a control inside the flow: the wrapper keeps/returns focus. */
   onFocusRequest?: () => void;
+  /** Changing this resets the form back to its first step - the hook's
+   *  replacement for the old `<ThoughtEntryForm key={entryKey}>` remount. */
+  resetKey?: string | number;
 }
 
-export function ThoughtEntryForm(props: ThoughtEntryFormProps) {
+export function useThoughtEntryForm(props: ThoughtEntryFormProps): {
+  body: React.ReactNode;
+  actions: React.ReactNode;
+} {
   const { translate: t, value, isSaving = false, saveError = null } = props;
-  const [index, setIndex] = React.useState(() =>
-    Math.max(0, steps.indexOf(props.slide ?? steps[0]))
-  );
+  const initialIndex = Math.max(0, steps.indexOf(props.slide ?? steps[0]));
+  const [index, setIndex] = React.useState(initialIndex);
   const [showDetails, setShowDetails] = React.useState(false);
   const focus = props.onFocusRequest ?? (() => {});
   const step = steps[index];
   const isLast = index === steps.length - 1;
+
+  // Reset to the first step whenever the caller's resetKey changes - the
+  // hook equivalent of remounting `<ThoughtEntryForm key={entryKey}>`.
+  React.useEffect(() => {
+    setIndex(initialIndex);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [props.resetKey]);
 
   function go(to: number) {
     const clamped = Math.min(steps.length - 1, Math.max(0, to));
@@ -167,7 +179,7 @@ export function ThoughtEntryForm(props: ThoughtEntryFormProps) {
     }
   }
 
-  return (
+  const body = (
     <View testID={`thought-entry-form-${props.route}`} className="flex-1">
       <View
         testID="thought-entry-content"
@@ -210,46 +222,51 @@ export function ThoughtEntryForm(props: ThoughtEntryFormProps) {
             ) : null}
           </View>
         ) : null}
-        <View
-          testID="thought-entry-actions"
-          className="w-full flex-row items-center justify-between gap-3"
-        >
-          <Button
-            testID="thought-entry-previous"
-            variant="secondary"
-            className="flex-1"
-            isDisabled={index === 0}
-            accessibilityLabel={t("cbt_form.previous")}
-            onPress={() => go(index - 1)}
-          >
-            {t("cbt_form.previous")}
-          </Button>
-          {isLast ? (
-            <Button
-              testID="thought-entry-save"
-              className="flex-1"
-              isDisabled={isSaving}
-              onPress={() => {
-                if (isSaving) return;
-                props.onSave?.();
-              }}
-            >
-              {isSaving ? t("cbt_form.saving") : t("cbt_form.submit")}
-            </Button>
-          ) : (
-            <Button
-              testID="thought-entry-next"
-              className="flex-1"
-              accessibilityLabel={t("cbt_form.next")}
-              onPress={() => go(index + 1)}
-            >
-              {t("cbt_form.next")}
-            </Button>
-          )}
-        </View>
       </View>
     </View>
   );
+
+  const actions = (
+    <View
+      testID="thought-entry-actions"
+      className="w-full flex-row items-center justify-between gap-3"
+    >
+      <Button
+        testID="thought-entry-previous"
+        variant="secondary"
+        className="flex-1"
+        isDisabled={index === 0}
+        accessibilityLabel={t("cbt_form.previous")}
+        onPress={() => go(index - 1)}
+      >
+        {t("cbt_form.previous")}
+      </Button>
+      {isLast ? (
+        <Button
+          testID="thought-entry-save"
+          className="flex-1"
+          isDisabled={isSaving}
+          onPress={() => {
+            if (isSaving) return;
+            props.onSave?.();
+          }}
+        >
+          {isSaving ? t("cbt_form.saving") : t("cbt_form.submit")}
+        </Button>
+      ) : (
+        <Button
+          testID="thought-entry-next"
+          className="flex-1"
+          accessibilityLabel={t("cbt_form.next")}
+          onPress={() => go(index + 1)}
+        >
+          {t("cbt_form.next")}
+        </Button>
+      )}
+    </View>
+  );
+
+  return { body, actions };
 }
 
 function DistortionRow(props: {

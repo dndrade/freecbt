@@ -1,6 +1,6 @@
 import { Screen } from "@/src/components";
 import { HomeThoughtRecovery } from "./home-thought-recovery";
-import { ThoughtEntryForm } from "./thought-entry-form";
+import { useThoughtEntryForm } from "./thought-entry-form";
 import { useHomeThoughtDraft } from "./use-home-thought-draft";
 import type { ModelLoadedProps } from "@/src/hooks/use-model";
 import { Model, Thought } from "@/src/model";
@@ -75,11 +75,25 @@ export function HomeComposerScreen({ model, dispatch, translate: t }: ModelLoade
   useTabBarHidden(focused);
   useStagedBack(focused, pause);
 
+  const { body, actions } = useThoughtEntryForm({
+    route: "home",
+    resetKey: entryKey,
+    translate: t,
+    distortions: model.distortionData.list,
+    value: draft.spec,
+    isSaving,
+    onChange: draft.change,
+    onSave: draft.submit,
+    onStepChange: (_slide, index) => setStep(index),
+    onFocusRequest: () => setPaused(false),
+  });
+
   return (
     <Screen
       testID="create-thought-screen"
       scroll={false}
       contentClassName="flex-1 gap-3"
+      footer={actions}
     >
       <Pressable
         testID="thought-entry-outside"
@@ -127,18 +141,7 @@ export function HomeComposerScreen({ model, dispatch, translate: t }: ModelLoade
             </View>
           </View>
         ) : null}
-        <ThoughtEntryForm
-          key={entryKey}
-          route="home"
-          translate={t}
-          distortions={model.distortionData.list}
-          value={draft.spec}
-          isSaving={isSaving}
-          onChange={draft.change}
-          onSave={draft.submit}
-          onStepChange={(_slide, index) => setStep(index)}
-          onFocusRequest={() => setPaused(false)}
-        />
+        {body}
       </Pressable>
     </Screen>
   );

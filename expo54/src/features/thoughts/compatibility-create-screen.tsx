@@ -1,7 +1,7 @@
 import { Routes } from "@/src";
 import { Screen, ScreenHeader } from "@/src/components";
 import { HomeThoughtRecovery } from "./home-thought-recovery";
-import { ThoughtEntryForm } from "./thought-entry-form";
+import { useThoughtEntryForm } from "./thought-entry-form";
 import type { ModelLoadedProps } from "@/src/hooks/use-model";
 import { Action, Thought } from "@/src/model";
 import { useRouter } from "expo-router";
@@ -79,8 +79,33 @@ export function CompatibilityCreateScreen({ model, dispatch, translate: t }: Mod
     router,
   ]);
 
+  const { body, actions } = useThoughtEntryForm({
+    route: "compatibility",
+    translate: t,
+    distortions: model.distortionData.list,
+    value,
+    isSaving,
+    saveError:
+      rejected === null
+        ? null
+        : t(
+            rejected.stage === "capacity"
+              ? "cbt_form.thought_save_capacity"
+              : "cbt_form.thought_save_failed"
+          ),
+    onChange: setValue,
+    onSave: () => {
+      // "standalone": this input never came from Home's draft, so a durable
+      // save here must not trigger the cleanup that clears that draft
+      const action = Action.createThought(value, new Date(), "standalone");
+      requested.current = action.submissionId;
+      setSubmitted(action.submissionId);
+      dispatch(action);
+    },
+  });
+
   return (
-    <Screen scroll={false} contentClassName="flex-1 gap-3">
+    <Screen scroll={false} contentClassName="flex-1 gap-3" footer={actions}>
       <ScreenHeader title={t("cbt_form.new")} />
       {/* the same recovery surface Home uses, so Retry here goes through the
           model's own retry instead of a fresh save that duplicates the Thought */}
@@ -90,35 +115,7 @@ export function CompatibilityCreateScreen({ model, dispatch, translate: t }: Mod
         dispatch={dispatch}
         translate={t}
       />
-      <ThoughtEntryForm
-        route="compatibility"
-        translate={t}
-        distortions={model.distortionData.list}
-        value={value}
-        isSaving={isSaving}
-        saveError={
-          rejected === null
-            ? null
-            : t(
-                rejected.stage === "capacity"
-                  ? "cbt_form.thought_save_capacity"
-                  : "cbt_form.thought_save_failed"
-              )
-        }
-        onChange={setValue}
-        onSave={() => {
-          // "standalone": this input never came from Home's draft, so a durable
-          // save here must not trigger the cleanup that clears that draft
-          const action = Action.createThought(
-            value,
-            new Date(),
-            "standalone"
-          );
-          requested.current = action.submissionId;
-          setSubmitted(action.submissionId);
-          dispatch(action);
-        }}
-      />
+      {body}
     </Screen>
   );
 }
