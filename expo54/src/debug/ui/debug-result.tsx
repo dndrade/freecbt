@@ -1,6 +1,7 @@
 import { useDefaultStyle } from "@/src/hooks/use-style";
 import React from "react";
-import { Text, View } from "react-native";
+import { View } from "react-native";
+import { Typography } from "heroui-native";
 
 export interface DebugResultProps {
   value: string;
@@ -17,9 +18,9 @@ export function DebugResult(props: DebugResultProps) {
 
   return (
     <View style={[s.border, s.p3, s.my2]}>
-      <Text selectable style={[s.text]}>
+      <Typography type="body-sm" selectable>
         {text}
-      </Text>
+      </Typography>
     </View>
   );
 }

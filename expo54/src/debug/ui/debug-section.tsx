@@ -1,6 +1,7 @@
 import { useDefaultStyle } from "@/src/hooks/use-style";
 import React, { ReactNode } from "react";
-import { Text, View } from "react-native";
+import { View } from "react-native";
+import { Typography } from "heroui-native";
 
 export interface DebugSectionProps {
   title?: string;
@@ -13,7 +14,7 @@ export function DebugSection(props: DebugSectionProps) {
   return (
     <View style={[s.my2]}>
       {props.title ? (
-        <Text style={[s.subheader, s.my2]}>{props.title}</Text>
+        <Typography type="h4" className="my-2">{props.title}</Typography>
       ) : null}
 
       <View>{props.children}</View>
