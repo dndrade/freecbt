@@ -17,6 +17,8 @@ describe("debug lab route namespace", () => {
         "./debug/lab/settings/pin/current.tsx",
         "./debug/lab/settings/backup/index.tsx",
         "./debug/lab/settings/backup/current.tsx",
+        "./debug/lab/settings/secure-backups-v2/index.tsx",
+        "./debug/lab/settings/secure-backups-v2/current.tsx",
         "./debug/lab/settings/export/index.tsx",
         "./debug/lab/settings/export/current.tsx",
       ],
@@ -41,6 +43,8 @@ describe("debug lab route namespace", () => {
         "/v2/debug/lab/settings/pin/current",
         "/v2/debug/lab/settings/backup",
         "/v2/debug/lab/settings/backup/current",
+        "/v2/debug/lab/settings/secure-backups-v2",
+        "/v2/debug/lab/settings/secure-backups-v2/current",
         "/v2/debug/lab/settings/export",
         "/v2/debug/lab/settings/export/current",
       ])

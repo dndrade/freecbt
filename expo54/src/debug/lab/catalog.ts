@@ -88,6 +88,21 @@ export const labFamilies = [
         ],
       },
       {
+        id: "secure-backups-v2",
+        title: "Secure Backups (v2)",
+        description: "Proposed secure-vault backup setup experience (mocked).",
+        href: "/v2/debug/lab/settings/secure-backups-v2",
+        variants: [
+          {
+            id: "secure-backups-v2-current",
+            title: "Proposed",
+            description: "Mocked 9-screen secure backups setup flow.",
+            href: "/v2/debug/lab/settings/secure-backups-v2/current",
+            status: "experimental",
+          },
+        ],
+      },
+      {
         id: "export",
         title: "Export",
         description: "Current export experience.",
