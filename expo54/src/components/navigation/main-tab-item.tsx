@@ -2,8 +2,8 @@
 
 import type { Feather } from "@expo/vector-icons";
 import { Feather as FeatherIcon } from "@expo/vector-icons";
-import { cn, useThemeColor } from "heroui-native";
-import { Pressable, Text } from "react-native";
+import { cn, Typography, useThemeColor } from "heroui-native";
+import { Pressable } from "react-native";
 
 // Matches the icon size already used for other interactive controls in this
 // app (ScreenHeader back chevron, FlowAction icon) rather than inventing a
@@ -45,15 +45,14 @@ export function MainTabItem({
         size={ICON_SIZE}
         color={selected ? accent : muted}
       />
-      <Text
-        className={cn(
-          "text-xs",
-          selected ? "text-accent font-semibold" : "text-muted",
-        )}
+      <Typography
+        type="body-xs"
+        color={selected ? "accent" : "muted"}
+        className={cn(selected && "font-semibold")}
         numberOfLines={1}
       >
         {label}
-      </Text>
+      </Typography>
     </Pressable>
   );
 }
