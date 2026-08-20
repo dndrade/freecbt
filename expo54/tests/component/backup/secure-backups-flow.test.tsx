@@ -185,6 +185,17 @@ describe("secure backups flow UI: screens 1-3", () => {
     fireEvent.press(rtlScreen.getByTestId("sb-enable"));
     expect(rtlScreen.getByTestId("sb-screen-recovery-intro")).toBeTruthy();
   });
+
+  it("shows no step progress on Screen 1, and step progress from Screen 2 onward", () => {
+    renderFlow();
+    expect(rtlScreen.queryByRole("progressbar")).toBeNull();
+
+    fireEvent.press(rtlScreen.getByTestId("sb-set-up"));
+    expect(rtlScreen.getByRole("progressbar").props.accessibilityValue.text).toBe("Step 1 of 5");
+
+    fireEvent.press(rtlScreen.getByTestId("sb-enable"));
+    expect(rtlScreen.getByRole("progressbar").props.accessibilityValue.text).toBe("Step 2 of 5");
+  });
 });
 
 describe("secure backups flow UI: screens 4 and 6", () => {
@@ -302,7 +313,9 @@ describe("secure backups flow UI: screens 7 and 9", () => {
     fireEvent.press(rtlScreen.getByTestId("sb-final-notice-continue"));
     expect(rtlScreen.getByTestId("sb-screen-active")).toBeTruthy();
     expect(rtlScreen.getByText("Starting backup...")).toBeTruthy();
+    expect(rtlScreen.getByTestId("sb-backup-starting-indicator")).toBeTruthy();
     expect(rtlScreen.getByText("Not backed up yet")).toBeTruthy();
+    expect(rtlScreen.getByRole("progressbar").props.accessibilityValue.text).toBe("Step 5 of 5");
   });
 
   it("dismissing final notice ambiently returns to Screen 6 without enabling backups", () => {

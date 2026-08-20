@@ -1,9 +1,22 @@
 import { generateMockRecoveryKey } from "./fixtures";
 import * as Clipboard from "expo-clipboard";
 import React from "react";
-import { Screen, Section } from "@/src/components";
+import { Screen, Section, SegmentedProgress } from "@/src/components";
 import { BottomSheet, Button, Label, TextArea, TextField, Typography } from "heroui-native";
-import { Pressable, View } from "react-native";
+import { ActivityIndicator, Pressable, View } from "react-native";
+
+// Setup-flow step progress, per the source spec's per-screen "Progress
+// indicator" notes: Enable -> Recovery key intro -> Save/confirm key
+// (save-key and manual-save share one stage) -> Confirm -> Active/complete.
+const SETUP_STEP_COUNT = 5;
+const SETUP_STEP_BY_SCREEN: Partial<Record<Screen, number>> = {
+  enable: 0,
+  "recovery-intro": 1,
+  "save-key": 2,
+  "manual-save": 2,
+  confirm: 3,
+  active: 4,
+};
 
 export type Screen =
   | "inactive"
@@ -137,6 +150,21 @@ export function reducer(state: FlowState, action: FlowAction): FlowState {
 
 export function useSecureBackupsFlow(initialMockKey?: string) {
   return React.useReducer(reducer, initialMockKey, init);
+}
+
+function SetupProgress(props: { readonly screen: Screen }) {
+  const currentIndex = SETUP_STEP_BY_SCREEN[props.screen];
+  if (currentIndex === undefined) return null;
+
+  return (
+    <Section>
+      <SegmentedProgress
+        currentIndex={currentIndex}
+        count={SETUP_STEP_COUNT}
+        accessibilityLabel="Secure backups setup progress"
+      />
+    </Section>
+  );
 }
 
 function LearnMoreSheet(props: { readonly isOpen: boolean; readonly onOpenChange: (open: boolean) => void }) {
@@ -311,6 +339,7 @@ export function SecureBackupsFlowPrototype(props: { readonly initialMockKey?: st
             Backup thoughts using secure, end-to-end encrypted local storage.
           </Typography>
         </Section>
+        <SetupProgress screen={state.screen} />
         <Section>
           <Typography type="h4">Never lose your data on this phone</Typography>
           <Typography type="body-sm">
@@ -344,6 +373,7 @@ export function SecureBackupsFlowPrototype(props: { readonly initialMockKey?: st
             This key unlocks the backup if you need to restore it later.
           </Typography>
         </Section>
+        <SetupProgress screen={state.screen} />
         <Section>
           <Typography type="h4">One key. One way back.</Typography>
           <Typography type="body-sm">
@@ -374,6 +404,7 @@ export function SecureBackupsFlowPrototype(props: { readonly initialMockKey?: st
             This code lets you restore your backup later.
           </Typography>
         </Section>
+        <SetupProgress screen={state.screen} />
         <Section>
           <Typography type="body-sm" color="muted">Recovery key</Typography>
           <Pressable testID="sb-see-full-key" onPress={() => dispatch({ type: "SEE_FULL_KEY" })}>
@@ -410,6 +441,7 @@ export function SecureBackupsFlowPrototype(props: { readonly initialMockKey?: st
             Copy the full recovery key before continuing.
           </Typography>
         </Section>
+        <SetupProgress screen={state.screen} />
         <Section>
           <Typography type="body" weight="semibold" testID="sb-full-key" selectable>
             {state.mockKey}
@@ -462,6 +494,7 @@ export function SecureBackupsFlowPrototype(props: { readonly initialMockKey?: st
             Paste the key you were given.
           </Typography>
         </Section>
+        <SetupProgress screen={state.screen} />
         <Section>
           {state.recoveryKeySavedIntent === "password_manager" ? (
             <Button
@@ -524,10 +557,14 @@ export function SecureBackupsFlowPrototype(props: { readonly initialMockKey?: st
             Automatic encrypted backups are on.
           </Typography>
         </Section>
+        <SetupProgress screen={state.screen} />
         <Section>
           <Typography type="h4">Backup active</Typography>
           <Typography type="body-sm">First encrypted backup is starting now.</Typography>
-          <Typography type="body-sm" color="muted">Starting backup...</Typography>
+          <View className="flex-row items-center gap-2 mt-1">
+            <ActivityIndicator testID="sb-backup-starting-indicator" />
+            <Typography type="body-sm" color="muted">Starting backup...</Typography>
+          </View>
         </Section>
         <Section>
           <Typography type="body-sm" color="muted">Last backup</Typography>
