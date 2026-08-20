@@ -40,7 +40,7 @@ export interface FlowState {
   readonly recoveryKeyViewed: boolean;
   readonly recoveryKeySavedIntent: "none" | "password_manager" | "manual";
   readonly recoveryKeyConfirmed: boolean;
-  readonly firstBackupStatus: "not_started" | "starting";
+  readonly firstBackupStatus: "not_started" | "starting" | "complete";
   readonly lastBackupAt: string | null;
 }
 
@@ -62,6 +62,7 @@ export type FlowAction =
   | { readonly type: "SEE_KEY_AGAIN" }
   | { readonly type: "SHEET_DISMISSED" }
   | { readonly type: "FINAL_NOTICE_CONTINUE" }
+  | { readonly type: "MOCK_BACKUP_COMPLETE"; readonly lastBackupAt: string }
   | { readonly type: "RESET" };
 
 function normalize(value: string): string {
@@ -141,6 +142,9 @@ export function reducer(state: FlowState, action: FlowAction): FlowState {
         backupEnabled: true,
         firstBackupStatus: "starting",
       };
+    case "MOCK_BACKUP_COMPLETE":
+      if (state.firstBackupStatus !== "starting") return state;
+      return { ...state, firstBackupStatus: "complete", lastBackupAt: action.lastBackupAt };
     case "RESET":
       return init(state.mockKey);
     default:
@@ -283,8 +287,23 @@ function FinalNoticeSheet(props: {
   );
 }
 
+const MOCK_BACKUP_DURATION_MS = 1500;
+
+function formatLastBackupAt(): string {
+  const time = new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+  return `Today at ${time}`;
+}
+
 export function SecureBackupsFlowPrototype(props: { readonly initialMockKey?: string }) {
   const [state, dispatch] = useSecureBackupsFlow(props.initialMockKey);
+
+  React.useEffect(() => {
+    if (state.firstBackupStatus !== "starting") return;
+    const timer = setTimeout(() => {
+      dispatch({ type: "MOCK_BACKUP_COMPLETE", lastBackupAt: formatLastBackupAt() });
+    }, MOCK_BACKUP_DURATION_MS);
+    return () => clearTimeout(timer);
+  }, [dispatch, state.firstBackupStatus]);
 
   function onLearnMoreOpenChange(open: boolean) {
     if (!open) dispatch({ type: "SHEET_DISMISSED" });
@@ -560,11 +579,19 @@ export function SecureBackupsFlowPrototype(props: { readonly initialMockKey?: st
         <SetupProgress screen={state.screen} />
         <Section>
           <Typography type="h4">Backup active</Typography>
-          <Typography type="body-sm">First encrypted backup is starting now.</Typography>
-          <View className="flex-row items-center gap-2 mt-1">
-            <ActivityIndicator testID="sb-backup-starting-indicator" />
-            <Typography type="body-sm" color="muted">Starting backup...</Typography>
-          </View>
+          {state.firstBackupStatus === "complete" ? (
+            <Typography type="body-sm" testID="sb-backup-complete">
+              First encrypted backup finished.
+            </Typography>
+          ) : (
+            <>
+              <Typography type="body-sm">First encrypted backup is starting now.</Typography>
+              <View className="flex-row items-center gap-2 mt-1">
+                <ActivityIndicator testID="sb-backup-starting-indicator" />
+                <Typography type="body-sm" color="muted">Starting backup...</Typography>
+              </View>
+            </>
+          )}
         </Section>
         <Section>
           <Typography type="body-sm" color="muted">Last backup</Typography>

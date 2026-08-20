@@ -296,7 +296,7 @@ describe("secure backups flow UI: screens 7 and 9", () => {
     expect(rtlScreen.queryByTestId("sb-paste-from-password-manager")).toBeNull();
   });
 
-  it("walks final notice through to Screen 9 with a pending last-backup state", () => {
+  it("walks final notice through to Screen 9 starting, then auto-completes with a real timestamp", async () => {
     render(
       <HeroUINativeProvider config={{ devInfo: { stylingPrinciples: false } }}>
         <SecureBackupsFlowPrototype initialMockKey="ABCD-EFGH-IJKL-MNOP" />
@@ -316,6 +316,11 @@ describe("secure backups flow UI: screens 7 and 9", () => {
     expect(rtlScreen.getByTestId("sb-backup-starting-indicator")).toBeTruthy();
     expect(rtlScreen.getByText("Not backed up yet")).toBeTruthy();
     expect(rtlScreen.getByRole("progressbar").props.accessibilityValue.text).toBe("Step 5 of 5");
+
+    expect(await rtlScreen.findByTestId("sb-backup-complete", {}, { timeout: 3000 })).toBeTruthy();
+    expect(rtlScreen.queryByTestId("sb-backup-starting-indicator")).toBeNull();
+    expect(rtlScreen.getByText(/^Today at /)).toBeTruthy();
+    expect(rtlScreen.queryByText("Not backed up yet")).toBeNull();
   });
 
   it("dismissing final notice ambiently returns to Screen 6 without enabling backups", () => {
