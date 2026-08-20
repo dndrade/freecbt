@@ -20,7 +20,7 @@ describe("secure backups reducer", () => {
     const state = init();
     expect(state.screen).toBe("inactive");
     expect(state.sheet).toBe("none");
-    expect(state.mockKey).toMatch(/^[A-Z0-9]{4}(-[A-Z0-9]{4}){3}$/);
+    expect(state.mockKey).toMatch(/^[A-Z0-9]{8}(-[A-Z0-9]{8}){7}$/);
     expect(state.backupEnabled).toBe(false);
     expect(state.recoveryKeyGenerated).toBe(false);
     expect(state.recoveryKeyViewed).toBe(false);
@@ -200,7 +200,7 @@ describe("secure backups flow UI: screens 4 and 6", () => {
     fireEvent.press(rtlScreen.getByTestId("sb-save-manual"));
     expect(rtlScreen.getByTestId("sb-screen-manual-save")).toBeTruthy();
     expect(rtlScreen.getByTestId("sb-full-key").props.children).toEqual(
-      expect.stringMatching(/^[A-Z0-9]{4}(-[A-Z0-9]{4}){3}$/)
+      expect.stringMatching(/^[A-Z0-9]{8}(-[A-Z0-9]{8}){7}$/)
     );
   });
 

@@ -1,9 +1,10 @@
 import { generateMockRecoveryKey } from "@/src/debug/ui-lab/secure-backups/fixtures";
 
 describe("generateMockRecoveryKey", () => {
-  it("returns four dash-separated four-character groups", () => {
+  it("returns eight dash-separated eight-character groups, 64 key characters total", () => {
     const key = generateMockRecoveryKey();
-    expect(key).toMatch(/^[A-Z0-9]{4}(-[A-Z0-9]{4}){3}$/);
+    expect(key).toMatch(/^[A-Z0-9]{8}(-[A-Z0-9]{8}){7}$/);
+    expect(key.replace(/-/g, "")).toHaveLength(64);
   });
 
   it("excludes visually ambiguous characters", () => {

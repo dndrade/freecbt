@@ -1,6 +1,6 @@
 const RECOVERY_KEY_ALPHABET = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
-const GROUP_LENGTH = 4;
-const GROUP_COUNT = 4;
+const GROUP_LENGTH = 8;
+const GROUP_COUNT = 8; // 64 key characters total, matching the real recovery key's length
 
 function randomGroup(): string {
   let group = "";

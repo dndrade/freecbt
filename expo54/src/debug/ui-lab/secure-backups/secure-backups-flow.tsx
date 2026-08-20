@@ -464,6 +464,10 @@ export function SecureBackupsFlowPrototype(props: { readonly initialMockKey?: st
               value={state.confirmInput}
               numberOfLines={4}
               onChangeText={(value) => dispatch({ type: "CONFIRM_INPUT_CHANGED", value })}
+              autoComplete="off"
+              autoCorrect={false}
+              importantForAutofill="no"
+              textContentType="none"
             />
           </TextField>
           {hasInput ? (
