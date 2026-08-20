@@ -26,7 +26,11 @@ export function DebugDrawerContent(props: DrawerContentComponentProps) {
   }
 
   return (
-    <DrawerContentScrollView {...props}>
+    <DrawerContentScrollView
+      {...props}
+      style={[s.bgRoot, { flex: 1 }]}
+      contentContainerStyle={[s.bgRoot]}
+    >
       <Text style={[s.subheader, s.my2, s.p3]}>FreeCBT Debug</Text>
 
       {debugNavItems.map((item) => {

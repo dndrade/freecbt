@@ -7,6 +7,9 @@ export function useStyle(c: Model.ColorScheme) {
 export function useDefaultStyle() {
   return useStyle(useColorScheme() ?? "light");
 }
+export function useDefaultTheme(): Theme {
+  return useTheme(useColorScheme() ?? "light");
+}
 
 export function useTheme(c: Model.ColorScheme): Theme {
   switch (c) {
