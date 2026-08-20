@@ -1,9 +1,19 @@
-import { renderHook, act } from "@testing-library/react-native";
+import { renderHook, act, fireEvent, render, screen as rtlScreen } from "@testing-library/react-native";
+import { HeroUINativeProvider } from "heroui-native";
 import {
   init,
   reducer,
   useSecureBackupsFlow,
+  SecureBackupsFlowPrototype,
 } from "@/src/debug/ui-lab/secure-backups/secure-backups-flow";
+
+function renderFlow(initialMockKey?: string) {
+  return render(
+    <HeroUINativeProvider config={{ devInfo: { stylingPrinciples: false } }}>
+      <SecureBackupsFlowPrototype initialMockKey={initialMockKey} />
+    </HeroUINativeProvider>
+  );
+}
 
 describe("secure backups reducer", () => {
   it("starts inactive with no sheet and a generated key when no override is given", () => {
@@ -137,5 +147,32 @@ describe("secure backups reducer", () => {
       result.current[1]({ type: "SET_UP" });
     });
     expect(result.current[0].screen).toBe("enable");
+  });
+});
+
+describe("secure backups flow UI: screens 1-3", () => {
+  it("starts on Screen 1 with a single set-up CTA", () => {
+    renderFlow();
+    expect(rtlScreen.getByTestId("sb-screen-inactive")).toBeTruthy();
+    expect(rtlScreen.getByText("Not set up")).toBeTruthy();
+    fireEvent.press(rtlScreen.getByTestId("sb-set-up"));
+    expect(rtlScreen.getByTestId("sb-screen-enable")).toBeTruthy();
+  });
+
+  it("Learn more opens and closes without changing the screen", () => {
+    renderFlow();
+    fireEvent.press(rtlScreen.getByTestId("sb-set-up"));
+    fireEvent.press(rtlScreen.getByTestId("sb-learn-more"));
+    expect(rtlScreen.getByTestId("sb-sheet-learn-more")).toBeTruthy();
+    fireEvent.press(rtlScreen.getByTestId("sb-learn-more-close"));
+    expect(rtlScreen.queryByTestId("sb-sheet-learn-more")).toBeNull();
+    expect(rtlScreen.getByTestId("sb-screen-enable")).toBeTruthy();
+  });
+
+  it("Enable moves to Screen 3, recovery key intro", () => {
+    renderFlow();
+    fireEvent.press(rtlScreen.getByTestId("sb-set-up"));
+    fireEvent.press(rtlScreen.getByTestId("sb-enable"));
+    expect(rtlScreen.getByTestId("sb-screen-recovery-intro")).toBeTruthy();
   });
 });
