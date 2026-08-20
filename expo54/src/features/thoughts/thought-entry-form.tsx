@@ -108,7 +108,7 @@ export function ThoughtEntryForm(props: ThoughtEntryFormProps) {
         );
       case "distortions":
         return (
-          <View testID="distortions-step" className="gap-3">
+          <View testID="distortions-step" className="gap-4">
             <Typography type="h4" accessibilityRole="header">
               {t("cog_distortion")}
             </Typography>
@@ -126,21 +126,23 @@ export function ThoughtEntryForm(props: ThoughtEntryFormProps) {
                 }}
               />
             </View>
-            {props.distortions.map((d, i) => (
-              <DistortionRow
-                key={d.slug}
-                distortion={d}
-                image={ImagePath.bubbles[i % ImagePath.bubbles.length]}
-                translate={t}
-                showDetails={showDetails}
-                isSelected={value.cognitiveDistortions.has(d)}
-                onToggle={() => {
-                  const next = new Set(value.cognitiveDistortions);
-                  if (!next.delete(d)) next.add(d);
-                  edit({ cognitiveDistortions: next });
-                }}
-              />
-            ))}
+            <View className="gap-3 pl-3">
+              {props.distortions.map((d, i) => (
+                <DistortionRow
+                  key={d.slug}
+                  distortion={d}
+                  image={ImagePath.bubbles[i % ImagePath.bubbles.length]}
+                  translate={t}
+                  showDetails={showDetails}
+                  isSelected={value.cognitiveDistortions.has(d)}
+                  onToggle={() => {
+                    const next = new Set(value.cognitiveDistortions);
+                    if (!next.delete(d)) next.add(d);
+                    edit({ cognitiveDistortions: next });
+                  }}
+                />
+              ))}
+            </View>
           </View>
         );
       case "challenge":
@@ -166,75 +168,85 @@ export function ThoughtEntryForm(props: ThoughtEntryFormProps) {
   }
 
   return (
-    <View testID={`thought-entry-form-${props.route}`} className="flex-1 gap-4">
-      <SegmentedProgress
-        currentIndex={index}
-        count={steps.length}
-        accessibilityLabel={t("cbt_form.step_progress", {
-          step: index + 1,
-          count: steps.length,
-        })}
-      />
-      <ScrollView
-        className="flex-1"
-        contentContainerClassName="grow gap-3 pb-4"
-        keyboardShouldPersistTaps="handled"
+    <View testID={`thought-entry-form-${props.route}`} className="flex-1">
+      <View
+        testID="thought-entry-content"
+        className="flex-1 w-full max-w-xl self-center gap-4 px-2"
       >
-        {content()}
-      </ScrollView>
-      {saveError !== null ? (
-        <View
-          testID="thought-entry-save-error"
-          accessibilityRole="alert"
-          className="gap-2"
-        >
-          <Typography type="body-sm" className="text-danger">
-            {saveError}
-          </Typography>
-          {props.onRetry ? (
-            <Button
-              testID="thought-entry-retry"
-              variant="secondary"
-              onPress={props.onRetry}
-            >
-              {t("cbt_form.retry")}
-            </Button>
-          ) : null}
+        <View testID="thought-entry-progress" className="w-full">
+          <SegmentedProgress
+            currentIndex={index}
+            count={steps.length}
+            accessibilityLabel={t("cbt_form.step_progress", {
+              step: index + 1,
+              count: steps.length,
+            })}
+          />
         </View>
-      ) : null}
-      <View className="flex-row items-center justify-between gap-3">
-        <Button
-          testID="thought-entry-previous"
-          variant="secondary"
-          className="flex-1"
-          isDisabled={index === 0}
-          accessibilityLabel={t("cbt_form.previous")}
-          onPress={() => go(index - 1)}
+        <ScrollView
+          className="flex-1 w-full"
+          contentContainerClassName="grow gap-3 pb-4"
+          keyboardShouldPersistTaps="handled"
         >
-          {t("cbt_form.previous")}
-        </Button>
-        {isLast ? (
-          <Button
-            testID="thought-entry-save"
-            className="flex-1"
-            isDisabled={isSaving}
-            onPress={() => {
-              if (isSaving) return;
-              props.onSave?.();
-            }}
+          {content()}
+        </ScrollView>
+        {saveError !== null ? (
+          <View
+            testID="thought-entry-save-error"
+            accessibilityRole="alert"
+            className="w-full gap-2"
           >
-            {isSaving ? t("cbt_form.saving") : t("cbt_form.submit")}
-          </Button>
-        ) : (
+            <Typography type="body-sm" className="text-danger">
+              {saveError}
+            </Typography>
+            {props.onRetry ? (
+              <Button
+                testID="thought-entry-retry"
+                variant="secondary"
+                onPress={props.onRetry}
+              >
+                {t("cbt_form.retry")}
+              </Button>
+            ) : null}
+          </View>
+        ) : null}
+        <View
+          testID="thought-entry-actions"
+          className="w-full flex-row items-center justify-between gap-3"
+        >
           <Button
-            testID="thought-entry-next"
+            testID="thought-entry-previous"
+            variant="secondary"
             className="flex-1"
-            accessibilityLabel={t("cbt_form.next")}
-            onPress={() => go(index + 1)}
+            isDisabled={index === 0}
+            accessibilityLabel={t("cbt_form.previous")}
+            onPress={() => go(index - 1)}
           >
-            {t("cbt_form.next")}
+            {t("cbt_form.previous")}
           </Button>
-        )}
+          {isLast ? (
+            <Button
+              testID="thought-entry-save"
+              className="flex-1"
+              isDisabled={isSaving}
+              onPress={() => {
+                if (isSaving) return;
+                props.onSave?.();
+              }}
+            >
+              {isSaving ? t("cbt_form.saving") : t("cbt_form.submit")}
+            </Button>
+          ) : (
+            <Button
+              testID="thought-entry-next"
+              className="flex-1"
+              accessibilityLabel={t("cbt_form.next")}
+              onPress={() => go(index + 1)}
+            >
+              {t("cbt_form.next")}
+            </Button>
+          )}
+        </View>
       </View>
     </View>
   );
@@ -253,12 +265,13 @@ function DistortionRow(props: {
   return (
     <Pressable
       testID={`distortion-${d.slug}`}
+      className="w-full"
       accessibilityRole="checkbox"
       accessibilityLabel={label}
       accessibilityState={{ checked: isSelected }}
       onPress={props.onToggle}
     >
-      <Card>
+      <Card className="w-full">
         <Card.Body className="flex-row items-start gap-3">
           <Checkbox
             isSelected={isSelected}

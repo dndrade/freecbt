@@ -7,11 +7,12 @@ describe("production route namespace", () => {
       [
         "./(public)/(tabs)/_layout.tsx",
         "./(public)/(tabs)/index.tsx",
+        "./(public)/(tabs)/thoughts/_layout.tsx",
         "./(public)/(tabs)/thoughts/index.tsx",
+        "./(public)/(tabs)/thoughts/[idOrKey]/index.tsx",
         "./(public)/(tabs)/settings/index.tsx",
         "./(public)/_layout.tsx",
         "./(public)/thoughts/create.tsx",
-        "./(public)/thoughts/[idOrKey]/index.tsx",
         "./(public)/thoughts/[idOrKey]/edit.tsx",
         "./(public)/settings/_layout.tsx",
         "./(public)/settings/lock.tsx",
@@ -33,12 +34,16 @@ describe("production route namespace", () => {
         return route === "/" ? "/v2" : `/v2${route}`;
       });
     const tabRoutes = routeEntries.filter(({ page }) => page.includes("/(tabs)/"));
-    expect(tabRoutes).toHaveLength(3);
+    expect(tabRoutes).toHaveLength(4);
     expect(tabRoutes).toEqual(
       expect.arrayContaining([
         {
           file: "./(public)/(tabs)/thoughts/index.tsx",
           page: "/(public)/(tabs)/thoughts/index",
+        },
+        {
+          file: "./(public)/(tabs)/thoughts/[idOrKey]/index.tsx",
+          page: "/(public)/(tabs)/thoughts/[idOrKey]/index",
         },
         {
           file: "./(public)/(tabs)/index.tsx",
@@ -56,7 +61,6 @@ describe("production route namespace", () => {
     expect(publicRoutes).toEqual(
       expect.arrayContaining([
         "/(public)/thoughts/create",
-        "/(public)/thoughts/[idOrKey]/index",
         "/(public)/thoughts/[idOrKey]/edit",
         "/(public)/settings/lock",
         "/(public)/settings/data/backup/index",
@@ -87,16 +91,16 @@ describe("production route namespace", () => {
           page: "/(public)/(tabs)/thoughts/index",
         },
         {
+          file: "./(public)/(tabs)/thoughts/[idOrKey]/index.tsx",
+          page: "/(public)/(tabs)/thoughts/[idOrKey]/index",
+        },
+        {
           file: "./(public)/(tabs)/settings/index.tsx",
           page: "/(public)/(tabs)/settings/index",
         },
         {
           file: "./(public)/thoughts/create.tsx",
           page: "/(public)/thoughts/create",
-        },
-        {
-          file: "./(public)/thoughts/[idOrKey]/index.tsx",
-          page: "/(public)/thoughts/[idOrKey]/index",
         },
         {
           file: "./(public)/thoughts/[idOrKey]/edit.tsx",
@@ -130,7 +134,7 @@ describe("production route namespace", () => {
     const tabsConfig = readSrcFile("constants/tabs-config.ts");
     expect(
       Array.from(tabsConfig.matchAll(/name:\s*"([^"]+)"/g), ([, name]) => name)
-    ).toEqual(["thoughts/index", "index", "settings/index"]);
+    ).toEqual(["thoughts", "index", "settings/index"]);
     expect(tabsConfig).toContain('labelKey: "settings.hub.journal.label"');
     expect(tabsConfig).toContain('labelKey: "settings.hub.home.label"');
     expect(tabsConfig).toContain('labelKey: "accessibility.settings_button"');
@@ -139,6 +143,7 @@ describe("production route namespace", () => {
     expect(tabsConfig).toContain('icon: "settings"');
 
     const publicLayout = readSrcFile("app/v2/(public)/_layout.tsx");
+    expect(publicLayout).not.toMatch(/name="thoughts\/\[idOrKey\]\/index"/);
     expect(publicLayout).not.toMatch(/name="settings(?:\/|"|$)/);
     expect(publicLayout).not.toMatch(/name="settings\/lock"/);
     expect(publicLayout).not.toMatch(/name="settings\/data\/backup"/);

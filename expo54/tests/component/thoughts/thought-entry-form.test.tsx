@@ -72,6 +72,20 @@ describe("ThoughtEntryForm", () => {
     });
   });
 
+  test("keeps progress and actions inside the centered entry column", () => {
+    render(<Harness />);
+
+    expect(screen.getByTestId("thought-entry-content").props.className).toContain(
+      "max-w-xl"
+    );
+    expect(screen.getByTestId("thought-entry-progress").props.className).toContain(
+      "w-full"
+    );
+    expect(screen.getByTestId("thought-entry-actions").props.className).toContain(
+      "w-full"
+    );
+  });
+
   test("Previous returns to the earlier step and is unavailable on the first", () => {
     render(<Harness />);
 

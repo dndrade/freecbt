@@ -22,7 +22,7 @@ export interface TabConfig {
  */
 export const TAB_CONFIG: TabConfig[] = [
   {
-    name: "thoughts/index",
+    name: "thoughts",
     labelKey: "settings.hub.journal.label",
     icon: "book-open",
   },

@@ -1,6 +1,7 @@
 import { DistortionData, Settings, Thought } from "@/src/model";
 import { fireEvent, screen } from "@testing-library/react-native";
 import React from "react";
+import { StyleSheet } from "react-native";
 import { ThoughtListScreen } from "@/src/features/thoughts/thought-list-screen";
 import { renderWithProviders } from "@/tests/support/render";
 
@@ -24,13 +25,19 @@ const model = {
 } as any;
 
 const translate = ((k: string) => k) as any;
+const mockUseLocalSearchParams = jest.fn(() => ({}));
 
 jest.mock("expo-router", () => ({
+  useLocalSearchParams: () => mockUseLocalSearchParams(),
   useRouter: () => ({ back: jest.fn() }),
   Link: ({ children }: { children: React.ReactNode }) => children,
 }));
 
 describe("ThoughtListScreen", () => {
+  beforeEach(() => {
+    mockUseLocalSearchParams.mockReturnValue({});
+  });
+
   it("renders a headerless-back header and an accessible row", () => {
     renderWithProviders(
       <ThoughtListScreen model={model} dispatch={jest.fn()} translate={translate} style={{} as any} />
@@ -51,5 +58,35 @@ describe("ThoughtListScreen", () => {
 
     fireEvent.press(screen.getByLabelText("accessibility.delete_thought_button"));
     expect(dispatch).toHaveBeenCalledTimes(1);
+  });
+
+  it("marks the routed Thought row as selected", () => {
+    mockUseLocalSearchParams.mockReturnValue({ idOrKey: thought.uuid });
+    renderWithProviders(
+      <ThoughtListScreen model={model} dispatch={jest.fn()} translate={translate} style={{} as any} />
+    );
+
+    const row = screen.getByRole("button", {
+      name: new RegExp(Thought.label(thought, model)),
+      selected: true,
+    });
+    expect(StyleSheet.flatten(row.props.style)).toMatchObject({
+      borderColor: "#556de5",
+      borderWidth: 2,
+    });
+  });
+
+  it("marks the routed legacy Thought key row as selected", () => {
+    mockUseLocalSearchParams.mockReturnValue({ idOrKey: key });
+    renderWithProviders(
+      <ThoughtListScreen model={model} dispatch={jest.fn()} translate={translate} style={{} as any} />
+    );
+
+    expect(
+      screen.getByRole("button", {
+        name: new RegExp(Thought.label(thought, model)),
+        selected: true,
+      })
+    ).toBeTruthy();
   });
 });
