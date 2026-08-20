@@ -40,7 +40,10 @@ export const labFamilies = [
     id: "thoughts",
     title: "Thoughts",
     description: "Current thought list and detail experience.",
-    href: "/v2/debug/lab/thoughts",
+    // Points at the real production route (not a lab-local reconstruction):
+    // the adaptive list/detail split can only be correctly assembled by the
+    // actual nested route tree, including [idOrKey] detail routing.
+    href: "/v2/thoughts",
   },
   {
     id: "settings",
