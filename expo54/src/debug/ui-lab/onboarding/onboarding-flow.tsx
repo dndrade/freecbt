@@ -123,16 +123,16 @@ export function OnboardingFlowPrototype(props: {
   return (
     <Screen scroll={false} contentClassName="gap-4 py-4">
       <Section>
-        <Text style={[s.text, s.subheader]}>Prototype state</Typography>
-        <Text style={[s.text]}>Slide: {slide}</Typography>
-        <Text style={[s.text]}>
+        <Typography type="h4">Prototype state</Typography>
+        <Typography type="body-sm">Slide: {slide}</Typography>
+        <Typography type="body-sm">
           Completion:{" "}
           {hasFailed ? "failure" : isSaving ? "saving" : "idle"}
         </Typography>
-        <Text style={[s.text]}>
+        <Typography type="body-sm">
           Reminders: {state.remindersSupported ? "supported" : "unsupported"}
         </Typography>
-        <Text style={[s.text]}>
+        <Typography type="body-sm">
           Reminder choice: {state.reminderChoice ?? "none"}
         </Typography>
       </Section>
@@ -144,30 +144,30 @@ export function OnboardingFlowPrototype(props: {
           accessibilityLabel="Onboarding progress"
         />
 
-        <Text style={[s.text, s.my2]}>Step {state.activeIndex + 1} of {state.slides.length}</Typography>
+        <Typography type="body-sm" className="my-2">Step {state.activeIndex + 1} of {state.slides.length}</Typography>
         <View style={[s.my2]}>
           {slide === "record" ? (
             <>
-              <Text style={[s.text, s.subheader]}>{t("onboarding_screen.readme")}</Typography>
-              <Text style={[s.text]}>{t("onboarding_screen.header")}</Typography>
+              <Typography type="h4">{t("onboarding_screen.readme")}</Typography>
+              <Typography type="body-sm">{t("onboarding_screen.header")}</Typography>
             </>
           ) : null}
           {slide === "challenge" ? (
             <>
-              <Text style={[s.text, s.subheader]}>{t("onboarding_screen.block1.header")}</Typography>
-              <Text style={[s.text]}>{t("onboarding_screen.block1.body")}</Typography>
+              <Typography type="h4">{t("onboarding_screen.block1.header")}</Typography>
+              <Typography type="body-sm">{t("onboarding_screen.block1.body")}</Typography>
             </>
           ) : null}
           {slide === "change" ? (
             <>
-              <Text style={[s.text, s.subheader]}>{t("onboarding_screen.block2.header")}</Typography>
-              <Text style={[s.text]}>{t("onboarding_screen.block2.body")}</Typography>
+              <Typography type="h4">{t("onboarding_screen.block2.header")}</Typography>
+              <Typography type="body-sm">{t("onboarding_screen.block2.body")}</Typography>
             </>
           ) : null}
           {hasReminders ? (
             <>
-              <Text style={[s.text, s.subheader]}>{t("onboarding_screen.reminders.header")}</Typography>
-              <Text style={[s.text]}>
+              <Typography type="h4">{t("onboarding_screen.reminders.header")}</Typography>
+              <Typography type="body-sm">
                 {state.reminderChoice === "enabled"
                   ? "Reminders: enabled"
                   : state.reminderChoice === "disabled"
@@ -226,7 +226,7 @@ export function OnboardingFlowPrototype(props: {
 
         <View style={[s.mt2]}>
           {hasFailed ? (
-            <Text style={[s.text, s.my2]}>Unable to save. Try again.</Typography>
+            <Typography type="body-sm" className="my-2">Unable to save. Try again.</Typography>
           ) : null}
           <Button
             title={hasFailed ? "Retry" : isSaving ? "Saving..." : "Get started"}
