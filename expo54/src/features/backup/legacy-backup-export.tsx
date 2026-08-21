@@ -24,7 +24,7 @@ export function LegacyBackupExport(props: BackupExportControlProps) {
             type={BACKUP_EXPORT_MIME_TYPE}
             UTI="org.erosson.freecbt.backup"
             translate={t}
-            error={(error) => <Typography type="body-sm" color="danger">{error}</Typography>}
+            error={(error) => <Typography type="body-sm" className="text-danger">{error}</Typography>}
             share={(onPress) => (
                 <TouchableOpacity style={[s.button, s.my2]} onPress={onPress}>
                     <Typography type="body-sm">
