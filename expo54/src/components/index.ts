@@ -3,6 +3,8 @@ export { SegmentedProgress } from "./segmented-progress";
 export { DotsProgress } from "./dots-progress";
 export { FlowAction } from "./flow/flow-action";
 export { FlowProgress } from "./flow/flow-progress";
+export { ErrorBoundary } from "./ErrorBoundary";
+export type { ErrorBoundaryProps } from "./ErrorBoundary";
 
 
 // Primitives
