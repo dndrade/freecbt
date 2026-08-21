@@ -1,5 +1,4 @@
-import { Screen } from "@/src/components";
-import { TopBar } from "@/src/components/layout/top-bar";
+import { StandardScreen, backHeaderAction } from "@/src/components";
 import { useThoughtEntryForm } from "./thought-entry-form";
 import { ModelLoadedProps } from "@/src/hooks/use-model";
 import { Action, Thought } from "@/src/model";
@@ -36,10 +35,14 @@ export function ThoughtEditScreen({ model, dispatch, translate: t }: ModelLoaded
 
   if (res.status === "error") return res.error;
   return (
-    <Screen scroll={false} contentClassName="flex-1">
-      <TopBar title={t("cbt_form.edit")} onBack={() => router.back()} />
+    <StandardScreen
+      title={t("cbt_form.edit")}
+      leftAction={backHeaderAction(() => router.back())}
+      scrollable={false}
+      contentClassName="flex-1"
+    >
       {body}
       {actions}
-    </Screen>
+    </StandardScreen>
   );
 }

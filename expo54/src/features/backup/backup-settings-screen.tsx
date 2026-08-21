@@ -1,5 +1,4 @@
-import { Screen } from "@/src/components";
-import { TopBar } from "@/src/components/layout/top-bar";
+import { StandardScreen, backHeaderAction } from "@/src/components";
 import { ModelLoadedProps } from "@/src/hooks/use-model";
 import { backupFlags } from "./backup-flags";
 import { EncryptedBackupExport } from "./encrypted-backup-export";
@@ -26,8 +25,7 @@ export function BackupSettingsScreen(
     : LegacyBackupImport;
 
   return (
-    <Screen>
-      <TopBar title={t("nav.backup")} onBack={() => router.back()} />
+    <StandardScreen title={t("nav.backup")} leftAction={backHeaderAction(() => router.back())}>
       <View className="mt-2">
         <Typography type="body-sm" className="my-2">
           {t("backup_screen.export.description")}
@@ -50,6 +48,6 @@ export function BackupSettingsScreen(
           translate={props.translate}
         />
       </View>
-    </Screen>
+    </StandardScreen>
   );
 }

@@ -3,7 +3,7 @@ import { BottomTabBarHeightContext } from "@react-navigation/bottom-tabs";
 import React from "react";
 import { View } from "react-native";
 import { useThoughtEntryForm, type ThoughtEntryFormProps } from "@/src/features/thoughts/thought-entry-form";
-import { Screen } from "@/src/components/layout/screen";
+import { StandardScreen } from "@/components/Layout/StandardScreen";
 import { Distortion, DistortionData, Thought } from "@/src/model";
 import { renderWithProviders } from "@/tests/support/render";
 
@@ -292,9 +292,9 @@ function FooterHarness() {
     value: Thought.emptySpec(),
   });
   return (
-    <Screen footer={actions}>
+    <StandardScreen footer={actions}>
       {body}
-    </Screen>
+    </StandardScreen>
   );
 }
 

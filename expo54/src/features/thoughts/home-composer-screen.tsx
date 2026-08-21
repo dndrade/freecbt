@@ -1,4 +1,4 @@
-import { Screen } from "@/src/components";
+import { StandardScreen } from "@/src/components";
 import { HomeThoughtRecovery } from "./home-thought-recovery";
 import { useThoughtEntryForm } from "./thought-entry-form";
 import { useHomeThoughtDraft } from "./use-home-thought-draft";
@@ -89,9 +89,9 @@ export function HomeComposerScreen({ model, dispatch, translate: t }: ModelLoade
   });
 
   return (
-    <Screen
+    <StandardScreen
       testID="create-thought-screen"
-      scroll={false}
+      scrollable={false}
       contentClassName="flex-1 gap-3"
       footer={actions}
     >
@@ -143,7 +143,7 @@ export function HomeComposerScreen({ model, dispatch, translate: t }: ModelLoade
         ) : null}
         {body}
       </Pressable>
-    </Screen>
+    </StandardScreen>
   );
 }
 

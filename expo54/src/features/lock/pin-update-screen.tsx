@@ -1,5 +1,4 @@
-import { Screen, Section } from "@/src/components";
-import { TopBar } from "@/src/components/layout/top-bar";
+import { Section, StandardScreen, backHeaderAction } from "@/src/components";
 import { PinInput } from "./ui/pin-input";
 import { ModelLoadedProps } from "@/src/hooks/use-model";
 import { Action } from "@/src/model";
@@ -95,8 +94,7 @@ function PinStep(props: {
 }) {
   const { header, value, setValue, onComplete, onBack } = props;
   return (
-    <Screen>
-      <TopBar title={header} onBack={onBack} />
+    <StandardScreen title={header} leftAction={backHeaderAction(onBack)}>
       <Section className="items-center gap-4 mt-6">
         <PinInput
           value={value}
@@ -104,6 +102,6 @@ function PinStep(props: {
           onComplete={onComplete}
         />
       </Section>
-    </Screen>
+    </StandardScreen>
   );
 }

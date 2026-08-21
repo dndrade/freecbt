@@ -1,6 +1,5 @@
 import { Routes } from "@/src";
-import { Screen } from "@/src/components";
-import { TopBar } from "@/src/components/layout/top-bar";
+import { StandardScreen, backHeaderAction } from "@/src/components";
 import { ModelLoadedProps } from "@/src/hooks/use-model";
 import { Distortion } from "@/src/model";
 import * as ImagePath from "@/src/assets/image-path";
@@ -29,8 +28,11 @@ export function ThoughtViewScreen({ model, translate: t }: ModelLoadedProps) {
     : notSet;
 
   return (
-    <Screen scroll contentClassName="flex-1 gap-4">
-      <TopBar title={t("cbt_view.header")} onBack={() => router.back()} />
+    <StandardScreen
+      title={t("cbt_view.header")}
+      leftAction={backHeaderAction(() => router.back())}
+      contentClassName="flex-1 gap-4"
+    >
       <View testID="view-thought-screen" className="gap-1">
         <Typography type="h4">{t("auto_thought")}</Typography>
         <Link
@@ -114,6 +116,6 @@ export function ThoughtViewScreen({ model, translate: t }: ModelLoadedProps) {
           </View>
         </Link>
       </View>
-    </Screen>
+    </StandardScreen>
   );
 }
