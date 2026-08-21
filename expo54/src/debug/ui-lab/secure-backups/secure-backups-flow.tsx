@@ -1,13 +1,13 @@
 import { generateMockRecoveryKey } from "./fixtures";
 import * as Clipboard from "expo-clipboard";
 import React from "react";
-import { Screen, Section, SegmentedProgress } from "@/src/components";
+import { Section, SegmentedProgress, StandardScreen } from "@/src/components";
 import { BottomSheet, Button, Label, TextArea, TextField, Typography } from "heroui-native";
 import { ActivityIndicator, Pressable, View } from "react-native";
 
-// Setup-flow step progress, per the source spec's per-screen "Progress
-// indicator" notes: Enable -> Recovery key intro -> Save/confirm key
-// (save-key and manual-save share one stage) -> Confirm -> Active/complete.
+// Setup-flow step progress, per screen: Enable -> Recovery key intro ->
+// Save/confirm key (save-key and manual-save share one stage) ->
+// Confirm -> Active/complete.
 const SETUP_STEP_COUNT = 5;
 const SETUP_STEP_BY_SCREEN: Partial<Record<Screen, number>> = {
   enable: 0,
@@ -319,7 +319,7 @@ export function SecureBackupsFlowPrototype(props: { readonly initialMockKey?: st
 
   if (state.screen === "inactive") {
     return (
-      <Screen scroll={false} contentClassName="gap-4 py-4" testID="sb-screen-inactive">
+      <StandardScreen scrollable={false} contentClassName="gap-4 py-4" testID="sb-screen-inactive">
         <Section>
           <Typography type="h4" accessibilityRole="header">Backups</Typography>
           <Typography type="body-sm" color="muted">
@@ -345,13 +345,13 @@ export function SecureBackupsFlowPrototype(props: { readonly initialMockKey?: st
           </Typography>
         </Section>
         <LearnMoreSheet isOpen={state.sheet === "learn-more"} onOpenChange={onLearnMoreOpenChange} />
-      </Screen>
+      </StandardScreen>
     );
   }
 
   if (state.screen === "enable") {
     return (
-      <Screen scroll={false} contentClassName="gap-4 py-4" testID="sb-screen-enable">
+      <StandardScreen scrollable={false} contentClassName="gap-4 py-4" testID="sb-screen-enable">
         <Section>
           <Typography type="h4" accessibilityRole="header">Secure Backups</Typography>
           <Typography type="body-sm" color="muted">
@@ -379,13 +379,13 @@ export function SecureBackupsFlowPrototype(props: { readonly initialMockKey?: st
           </Button>
         </Section>
         <LearnMoreSheet isOpen={state.sheet === "learn-more"} onOpenChange={onLearnMoreOpenChange} />
-      </Screen>
+      </StandardScreen>
     );
   }
 
   if (state.screen === "recovery-intro") {
     return (
-      <Screen scroll={false} contentClassName="gap-4 py-4" testID="sb-screen-recovery-intro">
+      <StandardScreen scrollable={false} contentClassName="gap-4 py-4" testID="sb-screen-recovery-intro">
         <Section>
           <Typography type="h4" accessibilityRole="header">Your recovery key</Typography>
           <Typography type="body-sm" color="muted">
@@ -410,13 +410,13 @@ export function SecureBackupsFlowPrototype(props: { readonly initialMockKey?: st
             View recovery key
           </Button>
         </Section>
-      </Screen>
+      </StandardScreen>
     );
   }
 
   if (state.screen === "save-key") {
     return (
-      <Screen scroll={false} contentClassName="gap-4 py-4" testID="sb-screen-save-key">
+      <StandardScreen scrollable={false} contentClassName="gap-4 py-4" testID="sb-screen-save-key">
         <Section>
           <Typography type="h4" accessibilityRole="header">Save your key</Typography>
           <Typography type="body-sm" color="muted">
@@ -447,13 +447,13 @@ export function SecureBackupsFlowPrototype(props: { readonly initialMockKey?: st
           onContinue={() => dispatch({ type: "PASSWORD_MANAGER_CONTINUE" })}
           onCancel={() => dispatch({ type: "PASSWORD_MANAGER_CANCEL" })}
         />
-      </Screen>
+      </StandardScreen>
     );
   }
 
   if (state.screen === "manual-save") {
     return (
-      <Screen scroll={false} contentClassName="gap-4 py-4" testID="sb-screen-manual-save">
+      <StandardScreen scrollable={false} contentClassName="gap-4 py-4" testID="sb-screen-manual-save">
         <Section>
           <Typography type="h4" accessibilityRole="header">Save manually</Typography>
           <Typography type="body-sm" color="muted">
@@ -497,7 +497,7 @@ export function SecureBackupsFlowPrototype(props: { readonly initialMockKey?: st
           onContinue={() => dispatch({ type: "PASSWORD_MANAGER_CONTINUE" })}
           onCancel={() => dispatch({ type: "PASSWORD_MANAGER_CANCEL" })}
         />
-      </Screen>
+      </StandardScreen>
     );
   }
 
@@ -506,7 +506,7 @@ export function SecureBackupsFlowPrototype(props: { readonly initialMockKey?: st
     const hasInput = state.confirmInput.length > 0;
 
     return (
-      <Screen contentClassName="gap-4 py-4" testID="sb-screen-confirm">
+      <StandardScreen contentClassName="gap-4 py-4" testID="sb-screen-confirm">
         <Section>
           <Typography type="h4" accessibilityRole="header">Confirm key</Typography>
           <Typography type="body-sm" color="muted">
@@ -563,13 +563,13 @@ export function SecureBackupsFlowPrototype(props: { readonly initialMockKey?: st
           onContinue={() => dispatch({ type: "FINAL_NOTICE_CONTINUE" })}
           onSeeKeyAgain={() => dispatch({ type: "SEE_KEY_AGAIN" })}
         />
-      </Screen>
+      </StandardScreen>
     );
   }
 
   if (state.screen === "active") {
     return (
-      <Screen scroll={false} contentClassName="gap-4 py-4" testID="sb-screen-active">
+      <StandardScreen scrollable={false} contentClassName="gap-4 py-4" testID="sb-screen-active">
         <Section>
           <Typography type="h4" accessibilityRole="header">Backups</Typography>
           <Typography type="body-sm" color="muted">
@@ -600,7 +600,7 @@ export function SecureBackupsFlowPrototype(props: { readonly initialMockKey?: st
             Stored on this phone outside app internal storage.
           </Typography>
         </Section>
-      </Screen>
+      </StandardScreen>
     );
   }
 

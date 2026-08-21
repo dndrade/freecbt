@@ -1,4 +1,4 @@
-import { Screen, Section, SegmentedProgress } from "@/src/components";
+import { Section, SegmentedProgress, StandardScreen } from "@/src/components";
 import { useDefaultStyle } from "@/src/hooks/use-style";
 import { useTranslate } from "@/src/i18n/use-i18n";
 import {
@@ -121,7 +121,7 @@ export function OnboardingFlowPrototype(props: {
     typeof state.completion === "object" && state.completion.status === "failure";
 
   return (
-    <Screen scroll={false} contentClassName="gap-4 py-4">
+    <StandardScreen scrollable={false} contentClassName="gap-4 py-4">
       <Section>
         <Typography type="h4">Prototype state</Typography>
         <Typography type="body-sm">Slide: {slide}</Typography>
@@ -257,6 +257,6 @@ export function OnboardingFlowPrototype(props: {
           </View>
         </View>
       </Section>
-    </Screen>
+    </StandardScreen>
   );
 }
