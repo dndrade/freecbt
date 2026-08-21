@@ -1,0 +1,92 @@
+{
+  "onboarding_screen": {
+    "previous": "Poprzedni",
+    "skip": "Pomiń",
+    "next": "Dalej",
+    "progress": "Postęp konfiguracji",
+    "progress_step": "Krok %{step} z %{count}",
+    "saving": "Zapisywanie…",
+    "save_failed": "Nie udało się zapisać. Spróbuj ponownie.",
+    "get_started": "Rozpocznij",
+    "auto_thought_ex": "Nie było mnie na imprezie Grześka, na pewno jest na mnie zły.",
+    "challenge_ex": "Grzesiek wie, że nie zawsze da się radę. Nie byłbym zły, gdyby on nie mógł przyjść na moją imprezę.\n\nPowinienem traktować siebie co najmniej tak samo dobrze, jak innych ludzi.",
+    "alt_thought_ex": "To prawda, że nie pojawiłem się na imprezie Grześka, przeproszę, a on najprawdopodobniej przyjmie przeprosiny.",
+    "cog_distortion": {
+      "label": "Czytanie Myśli",
+      "slug": "czytanie-myśli"
+    },
+    "intro": {
+      "line1": "Witaj w",
+      "emphasis1": "FreeCBT",
+      "line2": ", aplikacji do",
+      "emphasis2": "Terapii Poznawczo-Behawioralnej",
+      "line3": "(TPB)."
+    },
+    "crash_course": {
+      "line1": "To mały",
+      "emphasis1": "kurs",
+      "line2": "z TPB, który",
+      "emphasis2": "nie jest alternatywą",
+      "line3": "dla psychoterapeuty."
+    },
+    "mood_thoughts": {
+      "line1": "Po pierwsze:",
+      "emphasis1": "twoje nastroje wynikają z twoich myśli."
+    },
+    "thoughts_arent_thoughts": {
+      "line1": "Po drugie: twoje myśli mogą być",
+      "emphasis1": "automatyczne."
+    },
+    "your_distorted": {
+      "line1": "Po trzecie: automatyczne myśli są często",
+      "emphasis1": "zniekształcone."
+    },
+    "cbt_overview": {
+      "line1": "Celem TPB jest rozpoznanie",
+      "emphasis1": "zniekształconych myśli",
+      "line2": "i",
+      "emphasis2": "zastąpienie ich",
+      "line3": "racjonalnymi myślami."
+    },
+    "ready": {
+      "emphasis1": "Gotowy?",
+      "line1": "Przejdźmy po kolejnych krokach."
+    },
+    "catch": {
+      "line1": "1. Zaczniemy od",
+      "emphasis1": "spisywania",
+      "line2": "automatycznych myśli kiedy tylko się pojawią."
+    },
+    "bad_thought_note": {
+      "line1": "Zwróć uwagę:",
+      "line2": "Nie było mnie na imprezie Grześka, na pewno jest na mnie zły."
+    },
+    "identify_distortions": {
+      "line1": "Szukaj",
+      "emphasis1": "Zniekształceń Poznawczych"
+    },
+    "bad_distortions": {
+      "line1": "Czy jesteśmy pewni, że Grzesiek będzie zły? Jeśli nie, uprawiamy",
+      "emphasis1": "Czytanie Myśli",
+      "line2": "Nie było mnie na imprezie Grześka, na pewno jest na mnie zły."
+    },
+    "challenge_screen": {
+      "line1": "3. Dlaczego ta myśl nie jest realistyczna?",
+      "emphasis1": "Zakwestionuj ją."
+    },
+    "write_challenge": {
+      "line1": "Napiszemy tak:"
+    },
+    "alt_thought": {
+      "line1": "4. Na końcu napiszemy",
+      "emphasis1": "alternatywną, racjonalną myśl."
+    },
+    "show_off": {
+      "line1": "Możesz to odszukać później:"
+    },
+    "got_it": {
+      "line1": "I to wszystko",
+      "btn_title": "Zaczynajmy!"
+    }
+  }
+}

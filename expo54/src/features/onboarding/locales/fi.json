@@ -1,0 +1,92 @@
+{
+  "onboarding_screen": {
+    "previous": "Edellinen",
+    "skip": "Ohita",
+    "next": "Seuraava",
+    "progress": "Asetusten edistyminen",
+    "progress_step": "Vaihe %{step} / %{count}",
+    "saving": "Tallennetaan…",
+    "save_failed": "Tallennus epäonnistui. Yritä uudelleen.",
+    "get_started": "Aloita",
+    "auto_thought_ex": "Unohdin Yrjön juhlat, hän varmasti vihaa minua.",
+    "challenge_ex": "Yrjö tietää, että en voi aina ehtiä. En myöskään olisi vihainen hänelle, jos hän ei pääsisi juhliini.\n\nMinun tulisi kohdella itseäni ainakin yhtä hyvin kuin kohtelen muita.",
+    "alt_thought_ex": "On totta, että unohdin Yrjön juhlat. Voin pyytää anteeksi, ja hän todennäköisesti antaa anteeksi.",
+    "cog_distortion": {
+      "label": "Ajatustenluku",
+      "slug": "mind-reading"
+    },
+    "intro": {
+      "line1": "Tämä on",
+      "emphasis1": "FreeCBT, ",
+      "line2": "applikaatio",
+      "emphasis2": "kognitiiviseen käyttäytymisterapiaan",
+      "line3": ""
+    },
+    "crash_course": {
+      "line1": "Tämä on",
+      "emphasis1": "pikakurssi",
+      "line2": "kognitiiviseen käyttäytymisterapiaan ja",
+      "emphasis2": "ei korvaa",
+      "line3": "koulutettua terapeuttia."
+    },
+    "mood_thoughts": {
+      "line1": "Ajatuksesi",
+      "emphasis1": "aiheuttavat tunteita."
+    },
+    "thoughts_arent_thoughts": {
+      "line1": "Ajatuksesi voivat olla ",
+      "emphasis1": "automaattisia."
+    },
+    "your_distorted": {
+      "line1": "Automaattiset ajatukset ovat usein",
+      "emphasis1": "vinoutuneita."
+    },
+    "cbt_overview": {
+      "line1": "Kognitiivisen käyttäytymisterapian tavoite on huomata",
+      "emphasis1": "vinoutuneet ajatukset,",
+      "line2": "ja",
+      "emphasis2": "korvata ne",
+      "line3": "rationaalisilla."
+    },
+    "ready": {
+      "emphasis1": "Oletko valmis?",
+      "line1": "Käydään vaiheet läpi."
+    },
+    "catch": {
+      "line1": "1. Aloita",
+      "emphasis1": "kirjoittamalla",
+      "line2": "automaattiset ajatukset kun kohtaat ne."
+    },
+    "bad_thought_note": {
+      "line1": "Kirjoita ajatus:",
+      "line2": "Unohdin Yrjön juhlat, hän varmasti vihaa minua."
+    },
+    "identify_distortions": {
+      "line1": "Etsi",
+      "emphasis1": "kognitiivisia vinoumia"
+    },
+    "bad_distortions": {
+      "line1": "Tiedätkö varmasti, että Yrjö vihaa sinua? Jos et, harjoitat",
+      "emphasis1": "ajatustenlukua",
+      "line2": "Unohdin Yrjön juhlat, hän varmasti vihaa minua."
+    },
+    "challenge_screen": {
+      "line1": "3. Miksi tämä ajatus ei ole rationaalinen?",
+      "emphasis1": "Haasta se."
+    },
+    "write_challenge": {
+      "line1": "Kirjoita jotain tähän tapaan:"
+    },
+    "alt_thought": {
+      "line1": "4. Lopuksi, kirjoita",
+      "emphasis1": "vaihtoehtoinen ajatus."
+    },
+    "show_off": {
+      "line1": "Yhteenveto:"
+    },
+    "got_it": {
+      "line1": "Siinä kaikki",
+      "btn_title": "Aloitetaan!"
+    }
+  }
+}

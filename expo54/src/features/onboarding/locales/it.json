@@ -1,0 +1,101 @@
+{
+  "onboarding_screen": {
+    "previous": "Precedente",
+    "skip": "Salta",
+    "next": "Avanti",
+    "progress": "Avanzamento configurazione",
+    "progress_step": "Passaggio %{step} di %{count}",
+    "saving": "Salvataggio…",
+    "save_failed": "Impossibile salvare. Riprova.",
+    "get_started": "Inizia",
+    "header": "FreeCBT Guida",
+    "block1": {
+      "header": "FreeCBT ha bisogno di pratica",
+      "body": "Ci vuole del lavoro, ma FreeCBT puo' aiutarti a sentirti meglio."
+    },
+    "block2": {
+      "header": "Usa FreeCBT sul momento.",
+      "body": "Quando ti senti ansioso, arrabbiato o depresso usa FreeCBT."
+    },
+    "auto_thought_ex": "Ho perso la festa di Giorgio, ora mi odia.",
+    "challenge_ex": "Giorgio sa che non posso farcela ogni volta, non l'odierei se mancerebbe a qualcosa di mio.\n\nDovrei trattare me stesso bene almeno tanto quanto io tratto gli altri",
+    "alt_thought_ex": "È vero che ho perso la festa di Giorgio, ma posso scusarmi così probabilmente mi perdonerà.",
+    "cog_distortion": {
+      "label": "Lettura del pensiero",
+      "slug": "lettura-del-pensiero"
+    },
+    "intro": {
+      "line1": "Benvenuto in",
+      "emphasis1": "FreeCBT",
+      "line2": ", l'app sulla",
+      "emphasis2": "Terapia Cognitivo Comportamentale (TCC)",
+      "line3": "App."
+    },
+    "crash_course": {
+      "line1": "Questo è un",
+      "emphasis1": "corso intensivo",
+      "line2": "di TCC e",
+      "emphasis2": "non un'alternativa",
+      "line3": "ad un professionista specializzato."
+    },
+    "mood_thoughts": {
+      "line1": "Primo:",
+      "emphasis1": "i tuoi pensieri influenzano il tuo stato d'animo."
+    },
+    "thoughts_arent_thoughts": {
+      "line1": "Secondo: i tuoi pensieri possono essere",
+      "emphasis1": "automatici."
+    },
+    "your_distorted": {
+      "line1": "Terzo: i pensieri automatici sono spesso",
+      "emphasis1": "distorti."
+    },
+    "cbt_overview": {
+      "line1": "L'obbiettivo della TCC è riconoscere le proprie",
+      "emphasis1": "distorsioni dei pensieri",
+      "line2": "e",
+      "emphasis2": "rimpiazzarli",
+      "line3": "con pensieri razionali."
+    },
+    "ready": {
+      "emphasis1": "Pronto?",
+      "line1": "Facciamo i primi passi."
+    },
+    "catch": {
+      "line1": "1. Inizieremo",
+      "emphasis1": "scrivendo",
+      "line2": "i pensieri automatici nell'instante in cui ci vengono in mente."
+    },
+    "bad_thought_note": {
+      "line1": "Annota il pensiero:",
+      "line2": "Ho perso la festa di Giorgio, quindi lui mi odia."
+    },
+    "identify_distortions": {
+      "line1": "Cerca le",
+      "emphasis1": "Distorsioni del pensiero"
+    },
+    "bad_distortions": {
+      "line1": "Sappiamo con certezza che Giorgio ci odia? Se non possiamo esserne certi vuol dire che stiamo cercando di",
+      "emphasis1": "🧠 Leggere la mente altrui",
+      "line2": "Ho perso la festa di Giorgio, quindi lui mi odia."
+    },
+    "challenge_screen": {
+      "line1": "3. Perché questo pensiero non era realistico?",
+      "emphasis1": "Sfatalo."
+    },
+    "write_challenge": {
+      "line1": "Scriveremo qualcosa del tipo:"
+    },
+    "alt_thought": {
+      "line1": "4. Infine, scriveremo un",
+      "emphasis1": "pensiero alternativo."
+    },
+    "show_off": {
+      "line1": "Scoprilo più tardi:"
+    },
+    "got_it": {
+      "line1": "Tutto pronto",
+      "btn_title": "Andiamo!"
+    }
+  }
+}

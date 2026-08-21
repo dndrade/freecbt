@@ -1,0 +1,113 @@
+{
+  "onboarding_screen": {
+    "previous": "Zurück",
+    "skip": "Überspringen",
+    "next": "Weiter",
+    "progress": "Einrichtungsfortschritt",
+    "progress_step": "Schritt %{step} von %{count}",
+    "saving": "Speichern…",
+    "save_failed": "Speichern nicht möglich. Versuche es erneut.",
+    "get_started": "Loslegen",
+    "readme": "Lies' das als erstes.",
+    "header": "Der FreeCBT-Guide",
+    "block1": {
+      "header": "FreeCBT ist etwas, was du regelmäßig trainieren musst.",
+      "body": "Es braucht etwas Zeit, doch FreeCBT zu erlernen, kann dir helfen, dich wesentlich besser zu fühlen."
+    },
+    "block2": {
+      "header": "Nutze FreeCBT im Moment.",
+      "body": "Wenn du dich ängstlich, wütend oder traurig fühlst, dann nutze FreeCBT."
+    },
+    "auto_thought_ex": "Ich war nicht auf Georges Party. Dafür hasst er mich bestimmt.",
+    "challenge_ex": "George weiß, dass ich nicht immer Zeit für ihn finden kann. Ich würde ihn nicht dafür hassen, wenn er etwas von mir verpasst.\n\nIch sollte mich selbst mindestens so gut behandeln, wie ich andere behandle.",
+    "alt_thought_ex": "Es stimmt, dass ich Georges Party verpasst habe, doch ich kann mich dafür bei ihm entschuldigen. Er wird mir wahrscheinlich verzeihen.",
+    "cog_distortion": {
+      "label": "Gedankenlesen",
+      "slug": "mind-reading"
+    },
+    "intro": {
+      "line1": "Willkommen bei",
+      "emphasis1": "FreeCBT",
+      "line2": ", der App für",
+      "emphasis2": "kognitive Verhaltenstherapie",
+      "line3": "(CBT)."
+    },
+    "crash_course": {
+      "line1": "Dies ist ein",
+      "emphasis1": "Crashkurs",
+      "line2": "in CBT und",
+      "emphasis2": "kein Ersatz",
+      "line3": "für einen ausgebildeten Therapeuten."
+    },
+    "mood_thoughts": {
+      "line1": "Erstens:",
+      "emphasis1": "Deine Gedanken beeinflussen deine Stimmung."
+    },
+    "thoughts_arent_thoughts": {
+      "line1": "Zweitens: Deine Gedanken können",
+      "emphasis1": "unbewusst angelernt",
+      "line2": "sein."
+    },
+    "your_distorted": {
+      "line1": "Drittens: Angelernte Gedanken können",
+      "emphasis1": "unwahr",
+      "line2": "sein."
+    },
+    "cbt_overview": {
+      "line1": "Ziel von CBT ist das Erkennen von",
+      "emphasis1": "angelernten Gedanken",
+      "line2": "und",
+      "emphasis2": "dem Ersetzen",
+      "line3": "mit rationalen."
+    },
+    "ready": {
+      "emphasis1": "Bereit?",
+      "line1": "Lass' und die Schritte durchgehen."
+    },
+    "catch": {
+      "line1": "1. Wir starten mit",
+      "emphasis1": "dem Aufschreiben",
+      "line2": "der angelernten Gedanken."
+    },
+    "bad_thought_note": {
+      "line1": "Schreiben deinen Gedanken auf:",
+      "line2": "Ich war nicht auf Georges Party, er hasst mich dafür bestimmt."
+    },
+    "identify_distortions": {
+      "line1": "Achte auf eine",
+      "emphasis1": "verzerrte Wahrnehmung."
+    },
+    "bad_distortions": {
+      "line1": "Bist du dir sicher, George dich dafür hasst? Falls nicht, dann übst du dich vermutlich im",
+      "emphasis1": "Gedankenlesen",
+      "line2": "Ich war nicht auf Georges Party, er hasst mich bestimmt."
+    },
+    "challenge_screen": {
+      "line1": "3. Wieso ist dieser Gedanke nicht realistisch?",
+      "emphasis1": "Korrigiere deine Gedanken."
+    },
+    "write_challenge": {
+      "line1": "Schreib' stattdessen:"
+    },
+    "alt_thought": {
+      "line1": "4. Nun verfasse einen",
+      "emphasis1": "alternativen Gedanken."
+    },
+    "show_off": {
+      "line1": "Finde diesen später:"
+    },
+    "got_it": {
+      "line1": "So einfach ist es.",
+      "btn_title": "Lass' uns loslegen!"
+    },
+    "reminders": {
+      "header": "Bevor du gehst: Wir können dir Erinnerung schicken, falls du magst.",
+      "disabled": "Du kannst diese Erinnerungen in den Einstellungen anpassen.",
+      "button": {
+        "yes": "Ja, bitte!",
+        "no": "Ohne Benachrichtigungen fortfahren",
+        "continue": "Weiter"
+      }
+    }
+  }
+}

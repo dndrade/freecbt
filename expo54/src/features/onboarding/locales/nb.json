@@ -1,0 +1,111 @@
+{
+  "onboarding_screen": {
+    "previous": "Forrige",
+    "skip": "Hopp over",
+    "next": "Neste",
+    "progress": "Oppsettfremdrift",
+    "progress_step": "Trinn %{step} av %{count}",
+    "saving": "Lagrer…",
+    "save_failed": "Kunne ikke lagre. Prøv igjen.",
+    "get_started": "Kom i gang",
+    "readme": "Les dette først.",
+    "header": "The FreeCBT Guide",
+    "block1": {
+      "header": "FreeCBT er en øvingssak",
+      "body": "Det krever en innsats, men å lære deg å bruke FreeCBT kan hjelpe deg å få det mye bedre."
+    },
+    "block2": {
+      "header": "Bruk FreeCBT her og nå.",
+      "body": "Bruk FreeCBT når du føler deg nervøs, sint eller deprimert."
+    },
+    "auto_thought_ex": "Jeg gikk glipp av festen til Nikita, hen hater meg sikkert nå.",
+    "challenge_ex": "Nikita vet at sånn livet mitt er nå klarer jeg ikke alltid å delta på sosiale sammenkomster. Jeg hadde ikke hatet hen hvis hen ikke kom på noe jeg arrangerte.\n\nJeg skal ikke være hardere mot meg selv enn jeg hadde vært mot andre.",
+    "alt_thought_ex": "Ja, jeg gikk glipp av festen, men hvis jeg forklarer hvorfor til Nikita, tilgir hen meg sikkert.",
+    "cog_distortion": {
+      "label": "Tankelesing",
+      "slug": "tankelesing"
+    },
+    "intro": {
+      "line1": "Velkommen til",
+      "emphasis1": "FreeCBT",
+      "line2": ", ",
+      "emphasis2": "Kognitiv adferdsterapi (CBT)",
+      "line3": "Appen."
+    },
+    "crash_course": {
+      "line1": "Dette er en",
+      "emphasis1": "rask innføring",
+      "line2": "i kognitiv adferdsterapi, og",
+      "emphasis2": "ikke en erstatning",
+      "line3": "for en kvalifisert behandler."
+    },
+    "mood_thoughts": {
+      "line1": "Først:",
+      "emphasis1": "tankene dine former hvordan du har det."
+    },
+    "thoughts_arent_thoughts": {
+      "line1": "Videre: tankene dine kan være",
+      "emphasis1": "automatiske."
+    },
+    "your_distorted": {
+      "line1": "For det tredje: automatiske tanker er ofte",
+      "emphasis1": "forvrengt."
+    },
+    "cbt_overview": {
+      "line1": "Målet med kognitiv adfersterapi (CBT) er å gjenkjenne de",
+      "emphasis1": "forvrengte tankene",
+      "line2": "og",
+      "emphasis2": "erstatte dem",
+      "line3": "med rasjonelle tanker."
+    },
+    "ready": {
+      "emphasis1": "Klar?",
+      "line1": "La oss gå gjennom det steg for steg."
+    },
+    "catch": {
+      "line1": "Vi starter med å",
+      "emphasis1": "bare skrive ned",
+      "line2": "de automatiske tankene når de dukker opp."
+    },
+    "bad_thought_note": {
+      "line1": "Merk deg tanken:",
+      "line2": "Jeg gikk glipp av festen til Nikita, hen hater meg sikkert nå."
+    },
+    "identify_distortions": {
+      "line1": "Se etter",
+      "emphasis1": "kognitive forvrengninger"
+    },
+    "bad_distortions": {
+      "line1": "Vet vi virkelig at Nikita kommer til å hate oss? Hvis ikke, driver vi med",
+      "emphasis1": "🧠 Tankelesing",
+      "line2": "Jeg gikk glipp av festen til Nikita, hen hater meg sikkert nå."
+    },
+    "challenge_screen": {
+      "line1": "Hvorfor er ikke denne tanken sann?",
+      "emphasis1": "Utfordre den."
+    },
+    "write_challenge": {
+      "line1": "Vi skriver noe som dette:"
+    },
+    "alt_thought": {
+      "line1": "Til slutt skriver vi en",
+      "emphasis1": "alternativ tanke."
+    },
+    "show_off": {
+      "line1": "Finn det senere:"
+    },
+    "got_it": {
+      "line1": "Du er klar!",
+      "btn_title": "Kjør på!"
+    },
+    "reminders": {
+      "header": "Vi kan også sende deg påminnelser om du ønsker det.",
+      "disabled": "Du kan styre påminnelser fra innstillings-menyen",
+      "button": {
+        "yes": "Ja takk!",
+        "no": "Fortsett uten påminnelser",
+        "continue": "Fortsett"
+      }
+    }
+  }
+}

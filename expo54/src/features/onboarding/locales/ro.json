@@ -1,0 +1,92 @@
+{
+  "onboarding_screen": {
+    "previous": "Anterior",
+    "skip": "Omite",
+    "next": "Următorul",
+    "progress": "Progresul configurării",
+    "progress_step": "Pasul %{step} din %{count}",
+    "saving": "Se salvează…",
+    "save_failed": "Nu s-a putut salva. Încearcă din nou.",
+    "get_started": "Începe",
+    "auto_thought_ex": "Am ratat petrecerea lui George. Sigur mă urăște.",
+    "challenge_ex": "George știe că nu pot veni de fiecare dată, iar eu nu l-aș urî dacă ar rata o petrecere de-a mea.\n\nAr trebui să mă tratez cel puțin la fel de bine cum îi tratez pe ceilalți.",
+    "alt_thought_ex": "E adevărat că am ratat petrecerea lui George. Pot să îmi cer scuze și probabil mă va ierta.",
+    "cog_distortion": {
+      "label": "Citirea Gândurilor",
+      "slug": "citirea-gândurilor"
+    },
+    "intro": {
+      "line1": "Bun venit în",
+      "emphasis1": "FreeCBT",
+      "line2": ", aplicația de ",
+      "emphasis2": "Terapie Cognitiv-Comportamentală (TCC).",
+      "line3": ""
+    },
+    "crash_course": {
+      "line1": "Acesta este un",
+      "emphasis1": "curs rapid",
+      "line2": "de TCC, și",
+      "emphasis2": "nu înlocuiește",
+      "line3": "un terapeut profesionist."
+    },
+    "mood_thoughts": {
+      "line1": "Mai întâi,",
+      "emphasis1": "gândurile tale îți determină stările de spirit."
+    },
+    "thoughts_arent_thoughts": {
+      "line1": "În al doilea rând, gândurile tale pot fi",
+      "emphasis1": "automate."
+    },
+    "your_distorted": {
+      "line1": "În al treilea rând, gândurile automate sunt adesea",
+      "emphasis1": "distorsionate."
+    },
+    "cbt_overview": {
+      "line1": "Obiectivul TCC este de a recunoaște",
+      "emphasis1": "gândurile distorsionate",
+      "line2": "și",
+      "emphasis2": "de a le înlocui",
+      "line3": "cu gânduri raționale."
+    },
+    "ready": {
+      "emphasis1": "Ești gata?",
+      "line1": "Să vedem care sunt pașii."
+    },
+    "catch": {
+      "line1": "Vom începe simplu",
+      "emphasis1": "prin a scrie",
+      "line2": "gândurile automate atunci când acestea apar."
+    },
+    "bad_thought_note": {
+      "line1": "Notează gândul:",
+      "line2": "Am ratat petrecerea lui George. Sigur mă urăște."
+    },
+    "identify_distortions": {
+      "line1": "Caută",
+      "emphasis1": "distorsiunile cognitive"
+    },
+    "bad_distortions": {
+      "line1": "Chiar știm că George ne va urî? Dacă nu, doar",
+      "emphasis1": "🧠 citim gânduri",
+      "line2": "Am ratat petrecerea lui George. Sigur mă urăște."
+    },
+    "challenge_screen": {
+      "line1": "De ce nu e realist acest gând?",
+      "emphasis1": "Analizează-l."
+    },
+    "write_challenge": {
+      "line1": "Vom scrie ceva de felul:"
+    },
+    "alt_thought": {
+      "line1": "În cele din urmă, vom scrie un",
+      "emphasis1": "gând alternativ."
+    },
+    "show_off": {
+      "line1": "Recitește-l la final:"
+    },
+    "got_it": {
+      "line1": "Cam asta e tot.",
+      "btn_title": "Să începem!"
+    }
+  }
+}

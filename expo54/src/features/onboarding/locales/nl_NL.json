@@ -1,0 +1,92 @@
+{
+  "onboarding_screen": {
+    "previous": "Vorige",
+    "skip": "Overslaan",
+    "next": "Volgende",
+    "progress": "Voortgang van instelling",
+    "progress_step": "Stap %{step} van %{count}",
+    "saving": "Opslaan…",
+    "save_failed": "Opslaan mislukt. Probeer opnieuw.",
+    "get_started": "Aan de slag",
+    "auto_thought_ex": "Ik heb George's feestje gemist, hij zal me wel haten.",
+    "challenge_ex": "George weet dat ik het niet elke keer kan halen, ik zou hem niet haten als hij iets van mij miste.\n\nIk zou mezelf minstens zo goed moeten behandelen als ik anderen behandel.",
+    "alt_thought_ex": "Het klopt dat ik George's feestje gemist heb, ik kan me verontschuldigen, en hij zal het me waarschijnlijk vergeven.",
+    "cog_distortion": {
+      "label": "Gedachten lezen",
+      "slug": "mind-reading"
+    },
+    "intro": {
+      "line1": "Welkom bij",
+      "emphasis1": "FreeCBT",
+      "line2": ", de",
+      "emphasis2": "cognitieve gedragstherapie (CGT)",
+      "line3": "app."
+    },
+    "crash_course": {
+      "line1": "Dit is een",
+      "emphasis1": "spoedcursus",
+      "line2": "in CGT en",
+      "emphasis2": "geen alternatief",
+      "line3": "voor een getrainde therapeut."
+    },
+    "mood_thoughts": {
+      "line1": "Ten eerste:",
+      "emphasis1": "je gedachten veroorzaken je stemmingen."
+    },
+    "thoughts_arent_thoughts": {
+      "line1": "Ten tweede: je gedachten kunnen",
+      "emphasis1": "automatisch zijn."
+    },
+    "your_distorted": {
+      "line1": "Ten derde: automatische gedachten zijn vaak",
+      "emphasis1": "vervormd."
+    },
+    "cbt_overview": {
+      "line1": "Het doel van CGT is het herkennen van",
+      "emphasis1": "denkfouten",
+      "line2": "en",
+      "emphasis2": "ze te vervangen",
+      "line3": "met rationele gedachten."
+    },
+    "ready": {
+      "emphasis1": "Gereed?",
+      "line1": "Laten we de stappen samen doorlopen."
+    },
+    "catch": {
+      "line1": "1. We beginnen met het",
+      "emphasis1": "gewoon opschrijven",
+      "line2": "van de automatische gedachten wanneer ze plaatsvinden."
+    },
+    "bad_thought_note": {
+      "line1": "Herken de gedachte:",
+      "line2": "Ik heb George's feestje gemist, hij moet me haten."
+    },
+    "identify_distortions": {
+      "line1": "Zoek naar",
+      "emphasis1": "denkfouten"
+    },
+    "bad_distortions": {
+      "line1": "Weten we zeker dat George ons zal haten? Zo niet, dan zijn we",
+      "emphasis1": "gedachten aan het lezen",
+      "line2": "Ik heb George's feestje gemist, hij moet me haten."
+    },
+    "challenge_screen": {
+      "line1": "3. Waarom is deze gedachte niet realistisch?",
+      "emphasis1": "Daag de gedachte uit."
+    },
+    "write_challenge": {
+      "line1": "We schrijven zoiets als dit:"
+    },
+    "alt_thought": {
+      "line1": "4. Uiteindelijk komen we met een",
+      "emphasis1": "alternatieve gedachte."
+    },
+    "show_off": {
+      "line1": "Vind het later:"
+    },
+    "got_it": {
+      "line1": "En dat is alles.",
+      "btn_title": "Laten we beginnen!"
+    }
+  }
+}
