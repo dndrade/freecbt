@@ -101,7 +101,7 @@ const FREECBT_LIGHT_THEME_VARS: Record<string, string> = {
   // color-mix(in oklab, ...), which jsdom/native cannot evaluate at test
   // time (verified empirically — the raw color-mix() text is returned
   // unparsed). Each is precomputed with culori (the same color library
-  // uniwind itself uses to parse/format colors) from the base FreeCBT
+  // uniwind itself uses to parse/format colors) from the Base FreeCBT
   // tokens above, using the exact percentages theme.css declares. This is
   // the full documented HeroUI semantic set (matches useThemeColor's
   // THEME_COLORS list in heroui-native), not an open-ended reproduction of

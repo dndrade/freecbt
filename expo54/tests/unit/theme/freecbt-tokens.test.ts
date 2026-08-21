@@ -30,7 +30,7 @@ describe("design tokens", () => {
     css = readThemeWithoutComments();
   });
 
-  it("exposes the 4px spacing base", () => {
+  it("exposes the 4px spacing Base", () => {
     expect(css).toContain("--spacing: 4px;");
   });
 
