@@ -1,7 +1,6 @@
-import { LoadModel } from "@/src/hooks/use-model";
-import { PinUpdateScreen } from "@/src/features/lock/pin-update-screen";
-import React from "react";
+import { PinUpdateScreen } from "@/features/lock/pin-update-screen";
+import { LoadModel } from "@/hooks/use-model";
 
-export default function Lock(): React.JSX.Element {
+export default function Lock() {
   return <LoadModel ready={PinUpdateScreen} />;
 }

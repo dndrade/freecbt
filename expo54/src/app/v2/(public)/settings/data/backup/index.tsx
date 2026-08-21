@@ -1,6 +1,5 @@
-import { LoadModel } from "@/src/hooks/use-model";
-import { BackupSettingsScreen } from "@/src/features/backup/backup-settings-screen";
-import React from "react";
+import { BackupSettingsScreen } from "@/features/backup/backup-settings-screen";
+import { LoadModel } from "@/hooks/use-model";
 
 export default function Backup() {
   return <LoadModel ready={BackupSettingsScreen} />;
