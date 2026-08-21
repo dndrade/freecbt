@@ -3,7 +3,7 @@ import React from 'react';
 import { Text, StyleSheet, ScrollView } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { Card } from '@/components';
-import { supportedLanguages, SupportedLanguage } from '@/services';
+import { localeTags as supportedLanguages, type LocaleTag as SupportedLanguage } from '@/i18n/use-i18n';
 import { useSettings } from '../hooks/useSettings';
 
 interface LanguagePickerProps {
