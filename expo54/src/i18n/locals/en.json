@@ -194,7 +194,8 @@
       "data": { "label": "Data", "description": "Backup, restore, export" },
       "wellbeing": { "label": "Wellbeing", "description": "Crisis lines, learn about CBT" },
       "support": { "label": "Support", "description": "Help center, contact us, privacy" },
-      "about": { "label": "About" }
+      "about": { "label": "About" },
+      "menu": { "help": "Help" }
     },
     "general": {
       "header": "General",

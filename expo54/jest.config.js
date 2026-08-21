@@ -53,7 +53,7 @@ export default {
   },
 
   transformIgnorePatterns: [
-    "/node_modules/(?!(.pnpm|react-native|@react-native|@react-native-community|expo|@expo|@expo-google-fonts|react-navigation|@react-navigation|@sentry/react-native|native-base|@noble|heroui-native|uniwind))",
+    "/node_modules/(?!(.pnpm|react-native|@react-native|@react-native-community|expo|@expo|@expo-google-fonts|react-navigation|@react-navigation|@sentry/react-native|native-Base|@noble|heroui-native|uniwind))",
     "/node_modules/react-native-reanimated/plugin/",
   ],
 };
