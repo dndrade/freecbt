@@ -4,6 +4,8 @@ import { Text, TouchableOpacity, View } from "react-native";
 import { OnboardingScreen } from "@/src/features/onboarding/screens/OnboardingScreen";
 import { useOnboardingFlow } from "@/src/features/onboarding/store/useOnboardingFlow";
 
+const mockErrorBoundary = jest.fn((props: { children: React.ReactNode }) => props.children);
+
 jest.mock("@/src/components", () => ({
   Section: (props: { children: React.ReactNode }) => React.createElement(View, null, props.children),
   StandardScreen: (props: {
@@ -32,7 +34,10 @@ jest.mock("@/src/components", () => ({
       { accessibilityRole: "button", accessibilityLabel: props.accessibilityLabel, onPress: props.onPress },
       React.createElement(Text, null, props.state === "final" ? props.finalLabel : "Next")
     ),
-  ErrorBoundary: (props: { children: React.ReactNode }) => props.children,
+  ErrorBoundary: (props: { children: React.ReactNode }) => {
+    mockErrorBoundary(props);
+    return props.children;
+  },
 }));
 
 jest.mock("@/src/features/reminders/use-reminders", () => ({
@@ -82,6 +87,7 @@ jest.mock("react-native-reanimated-carousel", () => {
 describe("OnboardingScreen", () => {
   beforeEach(() => {
     useOnboardingFlow.setState({ activeIndex: 0, completion: "idle", reminderChoice: null });
+    mockErrorBoundary.mockClear();
   });
 
   it("renders every step from the registry when the pager has laid out", () => {
@@ -96,11 +102,15 @@ describe("OnboardingScreen", () => {
   });
 
   it("wraps each rendered step in its own ErrorBoundary", () => {
-    const errorBoundary = jest.requireMock("@/src/components").ErrorBoundary;
     render(<OnboardingScreen />);
     fireEvent(screen.getByTestId("onboarding-pager-viewport"), "layout", {
       nativeEvent: { layout: { width: 400, height: 600 } },
     });
-    expect(errorBoundary).toBeDefined();
+    expect(mockErrorBoundary).toHaveBeenCalledTimes(3);
+    for (const [props] of mockErrorBoundary.mock.calls) {
+      expect(props).toEqual(
+        expect.objectContaining({ fallback: null, onError: expect.any(Function) })
+      );
+    }
   });
 });
