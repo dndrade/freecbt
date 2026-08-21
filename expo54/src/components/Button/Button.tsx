@@ -10,13 +10,26 @@ export type ButtonVariant = 'primary' | 'secondary' | 'danger' | 'ghost';
  * useMorphContainerStyle) — HeroUI's underlying Button.Root already supports
  * this at runtime via PressableFeedbackProps extending AnimatedProps. */
 type AnimatedViewStyle = AnimatedProps<ViewProps>['style'];
+type MeaningfulChildren = Exclude<React.ReactNode, boolean | null | undefined>;
 
-export interface AppButtonProps {
-    /** Visible label. Ignored when `children` is provided — still used as
-     * the accessibility-label fallback in that case if `accessibilityLabel`
-     * is omitted, so most `children` callers should pass `accessibilityLabel`
-     * explicitly instead of relying on `title`. */
-    title?: string;
+type ButtonContentProps =
+    | {
+        /** Visible label. Ignored when `children` is provided — still used as
+         * the accessibility-label fallback in that case if `accessibilityLabel`
+         * is omitted, so most `children` callers should pass `accessibilityLabel`
+         * explicitly instead of relying on `title`. */
+        title: string;
+        children?: React.ReactNode;
+    }
+    | {
+        title?: string;
+        /** Custom content, replacing the default title label / loading
+         * spinner. When set, `Button` becomes a plain animatable pressable
+         * shell — the caller owns everything inside. */
+        children: MeaningfulChildren;
+    };
+
+export type AppButtonProps = ButtonContentProps & {
     onPress: () => void;
     variant?: ButtonVariant;
     disabled?: boolean;
@@ -30,11 +43,7 @@ export interface AppButtonProps {
      * neutralize the variant's default padding/radius when `children`
      * fully replaces the default title/spinner content. */
     className?: string;
-    /** Custom content, replacing the default title label / loading
-     * spinner. When set, `Button` becomes a plain animatable pressable
-     * shell — the caller owns everything inside. */
-    children?: React.ReactNode;
-}
+};
 
 const VARIANT_MAP: Record<ButtonVariant, 'primary' | 'secondary' | 'danger' | 'ghost'> = {
     primary: 'primary',
