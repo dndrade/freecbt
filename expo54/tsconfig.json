@@ -2,15 +2,54 @@
   "extends": "expo/tsconfig.base",
   "compilerOptions": {
     "strict": true,
+    "baseUrl": ".",
     "paths": {
       "@/*": [
-        "./*"
+        "src/*",
+        "expo54/src/*"
+      ],
+      "@/src/*": [
+        "src/*",
+        "expo54/src/*"
+      ],
+      "@/src": [
+        "src/index.ts",
+        "expo54/src/index.ts"
+      ],
+      "@/tests/*": [
+        "tests/*",
+        "expo54/tests/*"
+      ],
+      "@test/*": [
+        "tests/*",
+        "expo54/tests/*"
+      ],
+      "@/components": [
+        "src/components/index.ts",
+        "expo54/src/components/index.ts"
+      ],
+      "@/services": [
+        "src/services/index.ts",
+        "expo54/src/services/index.ts"
+      ],
+      "@/features/*": [
+        "src/features/*",
+        "expo54/src/features/*"
+      ],
+      "@/types/*": [
+        "src/types/*",
+        "expo54/src/types/*"
+      ],
+      "@/constants": [
+        "src/constants/index.ts",
+        "expo54/src/constants/index.ts"
       ]
     }
   },
   "include": [
     "**/*.ts",
     "**/*.tsx",
+    "**/*.d.ts",
     ".expo/types/**/*.ts",
     "expo-env.d.ts"
   ]

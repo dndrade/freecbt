@@ -6,7 +6,7 @@
 
     /* ── Spacing ──────────────────────────────────────────────────────────
        Tailwind v4 (and therefore Uniwind) drives the whole spacing scale off
-       a SINGLE base multiplier, not per-step --spacing-1/-2/... tokens: every
+       a SINGLE Base multiplier, not per-step --spacing-1/-2/... tokens: every
        p-* m-* gap-* size-* utility compiles to calc(var(--spacing) * n). So
        one declaration defines the entire grid: p-1 = 4px, p-2 = 8px,
        p-4 = 16px, p-6 = 24px.
@@ -30,7 +30,7 @@
        these tokens (see heroui-native/src/styles/components/text.css):
 
          h1 → 4xl   h2 → 3xl   h3 → 2xl   h4 → xl   h5 → lg
-         h6 → base  body → base  body-sm → sm  body-xs/code → xs/sm
+         h6 → Base  body → Base  body-sm → sm  body-xs/code → xs/sm
 
        heroui-native itself ships no type tokens, so until now the app was
        silently inheriting the Tailwind *web* defaults (h1 36px, body 16px on a
@@ -79,7 +79,7 @@
     --text-4xl--line-height: 40px;
 
     /* Tracking is left at the Tailwind defaults on purpose. heroui headings
-       use var(--tracking-tight) = -0.025em, and Uniwind rescopes its em base
+       use var(--tracking-tight) = -0.025em, and Uniwind rescopes its em Base
        (--uniwind-em) to the font-size of whichever rule declares one, so that
        resolves proportionally: -0.8px on h1, -0.5px on h4. Proportional
        negative tracking on large text is exactly what HIG does and it lands
