@@ -1,30 +1,47 @@
 import { ThoughtListScreen } from "@/features/thoughtRecord/screens/ThoughtListScreen";
 import { ThoughtsLayout } from "@/features/thoughtRecord/screens/ThoughtsLayout";
+import ThoughtListRoute from "@/app/v2/(public)/(tabs)/thoughts";
+import { ThoughtCreateScreen } from "@/features/thoughtRecord/screens/ThoughtCreateScreen";
+import { ThoughtEditScreen } from "@/features/thoughtRecord/screens/ThoughtEditScreen";
 import { ensureThoughtRecordReady } from "@/features/thoughtRecord/services/ensureThoughtRecordReady";
-import { thoughtsService } from "@/features/thoughtRecord/services/thoughtsService";
 import { Thought } from "@/model";
-import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
+import { fireEvent, screen, waitFor } from "@testing-library/react-native";
 import React from "react";
+import { Pressable } from "react-native";
 import { renderWithProviders } from "@/tests/support/render";
 
 const mockReadAll = jest.fn();
+const mockRead = jest.fn();
+const mockWrite = jest.fn();
+const mockReplace = jest.fn();
+const mockRouteContext = React.createContext<"thoughts" | "create" | "edit">("thoughts");
 let mockParams: { idOrKey?: string } = {};
-let focusEffect: (() => void | (() => void)) | null = null;
+let route: "thoughts" | "create" | "edit" = "thoughts";
+let rerenderRoute: () => void = () => undefined;
 
 jest.mock("expo-router", () => ({
   Link: ({ children }: { children: React.ReactNode }) => children,
   Slot: () => null,
   useFocusEffect: (effect: () => void | (() => void)) => {
-    focusEffect = effect;
-    React.useEffect(() => effect(), [effect]);
+    const focusedRoute = React.useContext(mockRouteContext);
+    React.useEffect(() => focusedRoute === "thoughts" ? effect() : undefined, [effect, focusedRoute]);
   },
   useLocalSearchParams: () => mockParams,
+  useRouter: () => ({
+    back: jest.fn(),
+    replace: (href: { params?: { idOrKey?: string } }) => {
+      mockReplace(href);
+      mockParams = { idOrKey: href.params?.idOrKey };
+      route = "thoughts";
+      rerenderRoute();
+    },
+  }),
 }));
 jest.mock("@/features/thoughtRecord/services/ensureThoughtRecordReady", () => ({
   ensureThoughtRecordReady: jest.fn(),
 }));
 jest.mock("@/features/thoughtRecord/services/thoughtsService", () => ({
-  thoughtsService: jest.fn(() => ({ readAll: mockReadAll })),
+  thoughtsService: jest.fn(() => ({ readAll: mockReadAll, read: mockRead, write: mockWrite })),
 }));
 jest.mock("@/i18n/use-i18n", () => ({
   ...jest.requireActual("@/i18n/use-i18n"),
@@ -58,8 +75,11 @@ function history(overrides: Partial<React.ComponentProps<typeof ThoughtListScree
 beforeEach(() => {
   jest.clearAllMocks();
   mockReadAll.mockReset();
+  mockRead.mockReset();
+  mockWrite.mockReset();
   mockParams = {};
-  focusEffect = null;
+  route = "thoughts";
+  rerenderRoute = () => undefined;
 });
 
 test("shows a loading journal", () => {
@@ -91,18 +111,72 @@ test("groups newest journal records by their creation date", () => {
   expect(screen.getByText(oldest.createdAt.toDateString())).toBeTruthy();
 });
 
-test("refreshes the retained journal owner when the tab regains focus", async () => {
-  const record = thought("00000000-0000-4000-8000-000000000003", "fresh after edit", new Date("2026-08-22T12:00:00Z"));
+test("leaves history ownership to the retained layout", async () => {
+  ready.mockResolvedValue({} as never);
+  mockReadAll.mockResolvedValueOnce([]);
+  renderWithProviders(<ThoughtListRoute />);
+  await waitFor(() => expect(screen.queryByTestId("thought-list-loading")).toBeNull());
+  expect(screen.queryByText("cbt_list.empty")).toBeNull();
+});
+
+function NavigationHarness() {
+  const [, setVersion] = React.useState(0);
+  rerenderRoute = () => setVersion((version) => version + 1);
+  return (
+    <mockRouteContext.Provider value={route}>
+      <ThoughtsLayout />
+      <Pressable testID="open-create" onPress={() => { route = "create"; rerenderRoute(); }} />
+      <Pressable testID="open-edit" onPress={() => { route = "edit"; mockParams = { idOrKey: "00000000-0000-4000-8000-000000000004" }; rerenderRoute(); }} />
+      {route === "create" ? <ThoughtCreateScreen /> : null}
+      {route === "edit" ? <ThoughtEditScreen /> : null}
+    </mockRouteContext.Provider>
+  );
+}
+
+function save() {
+  fireEvent.press(screen.getByTestId("thought-entry-next"));
+  fireEvent.press(screen.getByTestId("thought-entry-next"));
+  fireEvent.press(screen.getByTestId("thought-entry-next"));
+  fireEvent.press(screen.getByTestId("thought-entry-save"));
+}
+
+function showWideJournal() {
+  fireEvent(screen.getByTestId("adaptive-thoughts-layout"), "layout", {
+    nativeEvent: { layout: { width: 1000, height: 700 } },
+  });
+}
+
+test("refreshes the retained journal after a create returns to the selected thought", async () => {
+  const record = thought("00000000-0000-4000-8000-000000000003", "fresh after create", new Date("2026-08-22T12:00:00Z"));
   ready.mockResolvedValue({} as never);
   mockReadAll.mockResolvedValueOnce([]).mockResolvedValueOnce([record]);
-  renderWithProviders(<ThoughtsLayout />);
+  mockWrite.mockResolvedValueOnce(undefined);
+  renderWithProviders(<NavigationHarness />);
 
   await waitFor(() => expect(screen.getByText("cbt_list.empty")).toBeTruthy());
-  expect(focusEffect).not.toBeNull();
-  await act(async () => {
-    focusEffect?.();
-  });
+  fireEvent.press(screen.getByTestId("open-create"));
+  fireEvent.changeText(screen.getByTestId("automatic-thought-input"), "fresh after create");
+  save();
+  showWideJournal();
 
-  await waitFor(() => expect(screen.getByText("fresh after edit")).toBeTruthy());
-  expect(thoughtsService).toHaveBeenCalledTimes(2);
+  await waitFor(() => expect(screen.getByText("fresh after create")).toBeTruthy());
+});
+
+test("refreshes the retained journal after an edit returns to the selected thought", async () => {
+  const before = thought("00000000-0000-4000-8000-000000000004", "before edit", new Date("2026-08-22T12:00:00Z"));
+  const after = thought(before.uuid, "after edit", before.createdAt);
+  ready.mockResolvedValue({} as never);
+  mockReadAll.mockResolvedValueOnce([before]).mockResolvedValueOnce([after]);
+  mockRead.mockResolvedValueOnce(before);
+  mockWrite.mockResolvedValueOnce(undefined);
+  renderWithProviders(<NavigationHarness />);
+
+  await waitFor(() => expect(screen.getByText("before edit")).toBeTruthy());
+  fireEvent.press(screen.getByTestId("open-edit"));
+  await waitFor(() => expect(screen.getByTestId("automatic-thought-input")).toBeTruthy());
+  fireEvent.changeText(screen.getByTestId("automatic-thought-input"), "after edit");
+  save();
+  showWideJournal();
+
+  await waitFor(() => expect(screen.getByText("after edit")).toBeTruthy());
 });

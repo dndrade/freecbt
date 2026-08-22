@@ -6,16 +6,16 @@ import { Link, useLocalSearchParams } from "expo-router";
 import { Button, Typography, cn, useThemeColor } from "heroui-native";
 import React from "react";
 import { ActivityIndicator, SectionList, TouchableOpacity, View } from "react-native";
-import { useThoughtHistory } from "../hooks/useThoughtHistory";
 
-export type ThoughtHistory = ReturnType<typeof useThoughtHistory>;
+export type ThoughtHistory = {
+  thoughts: readonly Thought.Thought[];
+  isLoading: boolean;
+  error: Error | null;
+  refresh(): Promise<void>;
+};
 
 export function ThoughtListScreen({ history }: { history: ThoughtHistory }) {
   return <ThoughtList history={history} />;
-}
-
-export function ThoughtListRoute() {
-  return <ThoughtList history={useThoughtHistory()} />;
 }
 
 function ThoughtList({ history }: { history: ThoughtHistory }) {
