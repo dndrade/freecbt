@@ -278,25 +278,31 @@ function DistortionRow(props: {
   onToggle: () => void;
 }) {
   const { distortion: d, translate: t, isSelected } = props;
-  const label = `${Distortion.emoji(d)} ${t(d.labelKey)}`;
+  const name = t(d.labelKey);
   return (
     <Pressable
       testID={`distortion-${d.slug}`}
       className="w-full"
       accessibilityRole="checkbox"
-      accessibilityLabel={label}
+      accessibilityLabel={name}
       accessibilityState={{ checked: isSelected }}
       onPress={props.onToggle}
     >
-      <Card className="w-full">
-        <Card.Body className="flex-row items-start gap-3">
-          <Checkbox
-            isSelected={isSelected}
-            onSelectedChange={props.onToggle}
-            accessibilityLabel={label}
-          />
-          <View className="flex-1 gap-2">
-            <Card.Title>{label}</Card.Title>
+      <Card
+        testID={`distortion-card-${d.slug}`}
+        className={`w-full ${isSelected ? "border-accent bg-surface-tertiary" : ""}`}
+      >
+        <Card.Body
+          className={`flex-row items-start ${props.showDetails ? "gap-3" : "gap-2"}`}
+        >
+          <View
+            accessible={false}
+            className="h-10 w-10 items-center justify-center rounded-lg bg-surface-secondary"
+          >
+            <Typography type="h4">{Distortion.emoji(d)}</Typography>
+          </View>
+          <View className={`flex-1 ${props.showDetails ? "gap-2" : "gap-1"}`}>
+            <Card.Title>{name}</Card.Title>
             {props.showDetails ? (
               <>
                 <Card.Description>
@@ -313,6 +319,13 @@ function DistortionRow(props: {
               <Card.Description>{t(d.descriptionKey)}</Card.Description>
             )}
           </View>
+          <Checkbox
+            isSelected={isSelected}
+            pointerEvents="none"
+            accessible={false}
+            accessibilityElementsHidden
+            importantForAccessibility="no-hide-descendants"
+          />
         </Card.Body>
       </Card>
     </Pressable>

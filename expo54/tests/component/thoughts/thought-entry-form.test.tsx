@@ -1,7 +1,7 @@
 import { fireEvent, screen } from "@testing-library/react-native";
 import { BottomTabBarHeightContext } from "@react-navigation/bottom-tabs";
 import React from "react";
-import { View } from "react-native";
+import { Pressable, View } from "react-native";
 import { useThoughtEntryForm, type ThoughtEntryFormProps } from "@/src/features/thoughts/thought-entry-form";
 import { StandardScreen } from "@/components/Layout/StandardScreen";
 import { Distortion, DistortionData, Thought } from "@/src/model";
@@ -32,6 +32,24 @@ function Harness(
     <>
       {body}
       {actions}
+    </>
+  );
+}
+
+function MountedEditRouteHarness() {
+  const [slide, setSlide] = React.useState<Thought.SlideName>("challenge");
+
+  return (
+    <>
+      <Pressable
+        testID="edit-route-distortions"
+        onPress={() => setSlide("distortions")}
+      />
+      <Harness
+        route="compatibility"
+        slide={slide}
+        resetKey={`thought-123:${slide}`}
+      />
     </>
   );
 }
@@ -158,6 +176,26 @@ describe("ThoughtEntryForm", () => {
     ).toMatchObject({ checked: false });
   });
 
+  test("selects a distortion through its only accessible checkbox card", () => {
+    const distortion = DistortionData.list[0];
+    const name = translate(distortion.labelKey);
+    render(<Harness />);
+
+    next();
+    const card = screen.getByTestId(`distortion-${distortion.slug}`);
+    fireEvent.press(card);
+
+    expect(card.props.accessibilityState).toMatchObject({ checked: true });
+    expect(card.props.accessibilityLabel).toBe(name);
+    expect(screen.getAllByRole("checkbox", { name })).toHaveLength(1);
+    expect(
+      screen.getByTestId(`distortion-card-${distortion.slug}`).props.className
+    ).toEqual(expect.stringContaining("border-accent"));
+    expect(
+      screen.getByTestId(`distortion-card-${distortion.slug}`).props.className
+    ).toEqual(expect.stringContaining("bg-surface-tertiary"));
+  });
+
   test("labels its fields and controls", () => {
     render(<Harness />);
 
@@ -240,6 +278,16 @@ describe("ThoughtEntryForm", () => {
     expect(screen.getByRole("progressbar").props.accessibilityValue).toMatchObject({
       now: 3,
     });
+  });
+
+  test("resets a mounted edit form when its record-and-slide key changes", () => {
+    render(<MountedEditRouteHarness />);
+
+    expect(screen.getByTestId("challenge-input")).toBeTruthy();
+
+    fireEvent.press(screen.getByTestId("edit-route-distortions"));
+
+    expect(screen.getByTestId("distortions-step")).toBeTruthy();
   });
 
   test("surfaces a save failure with a Retry the wrapper owns", () => {
