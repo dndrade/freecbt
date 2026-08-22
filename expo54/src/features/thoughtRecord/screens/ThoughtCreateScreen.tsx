@@ -15,9 +15,17 @@ export function ThoughtCreateScreen() {
   const [isSaving, setIsSaving] = React.useState(false);
   const [saveError, setSaveError] = React.useState<string | null>(null);
   const saving = React.useRef(false);
+  const mounted = React.useRef(false);
+
+  React.useEffect(() => {
+    mounted.current = true;
+    return () => {
+      mounted.current = false;
+    };
+  }, []);
 
   const save = React.useCallback(async () => {
-    if (saving.current) return;
+    if (saving.current || !Thought.isMeaningfulSpec(value)) return;
     saving.current = true;
     setIsSaving(true);
     setSaveError(null);
@@ -25,12 +33,12 @@ export function ThoughtCreateScreen() {
       const db = await ensureThoughtRecordReady();
       const thought = Thought.create(value, new Date());
       await thoughtsService(DistortionData, db).write(thought);
-      router.replace(Routes.thoughtViewV2(thought.uuid));
+      if (mounted.current) router.replace(Routes.thoughtViewV2(thought.uuid));
     } catch {
-      setSaveError(t("cbt_form.thought_save_failed"));
+      if (mounted.current) setSaveError(t("cbt_form.thought_save_failed"));
     } finally {
       saving.current = false;
-      setIsSaving(false);
+      if (mounted.current) setIsSaving(false);
     }
   }, [router, t, value]);
 

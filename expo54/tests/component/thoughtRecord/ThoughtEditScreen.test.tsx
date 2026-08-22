@@ -183,3 +183,26 @@ test("preserves identity while updating and replaces after save", async () => {
   );
   expect(mockWrite.mock.calls[0][0].updatedAt).not.toEqual(record.updatedAt);
 });
+
+test("does not replace after a successful write resolves after unmount", async () => {
+  const record = thought("00000000-0000-4000-8000-000000000008", "before");
+  mockParams = { idOrKey: record.uuid };
+  ready.mockResolvedValueOnce({} as never);
+  mockRead.mockResolvedValueOnce(record);
+  let resolveWrite: () => void = () => undefined;
+  mockWrite.mockReturnValueOnce(
+    new Promise<void>((resolve) => {
+      resolveWrite = resolve;
+    })
+  );
+  const view = render();
+
+  await waitFor(() => expect(screen.getByTestId("automatic-thought-input")).toBeTruthy());
+  fireEvent.changeText(screen.getByTestId("automatic-thought-input"), "after");
+  save();
+  await waitFor(() => expect(mockWrite).toHaveBeenCalledTimes(1));
+  view.unmount();
+  await act(async () => resolveWrite());
+
+  expect(mockReplace).not.toHaveBeenCalled();
+});

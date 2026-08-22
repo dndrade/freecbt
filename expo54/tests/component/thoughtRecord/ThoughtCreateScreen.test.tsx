@@ -2,7 +2,7 @@ import { Routes } from "@/src";
 import { ThoughtCreateScreen } from "@/features/thoughtRecord/screens/ThoughtCreateScreen";
 import { ensureThoughtRecordReady } from "@/features/thoughtRecord/services/ensureThoughtRecordReady";
 import { thoughtsService } from "@/features/thoughtRecord/services/thoughtsService";
-import { fireEvent, screen, waitFor } from "@testing-library/react-native";
+import { act, cleanup, fireEvent, screen, waitFor } from "@testing-library/react-native";
 import React from "react";
 import { renderWithProviders } from "@/tests/support/render";
 
@@ -47,6 +47,8 @@ beforeEach(() => {
   jest.clearAllMocks();
 });
 
+afterEach(cleanup);
+
 test("writes the local form and replaces with its saved thought", async () => {
   ready.mockResolvedValueOnce({} as never);
   mockWrite.mockResolvedValueOnce(undefined);
@@ -60,6 +62,38 @@ test("writes the local form and replaces with its saved thought", async () => {
   expect(service).toHaveBeenCalledTimes(1);
   expect(thought.automaticThought).toBe("Keep this thought");
   expect(mockReplace).toHaveBeenCalledWith(Routes.thoughtViewV2(thought.uuid));
+});
+
+test("does not write an empty standalone thought", () => {
+  render();
+
+  save();
+
+  expect(ready).not.toHaveBeenCalled();
+  expect(mockWrite).not.toHaveBeenCalled();
+  expect(mockReplace).not.toHaveBeenCalled();
+  expect(screen.getByTestId("thought-entry-save").props.accessibilityState).toMatchObject({
+    disabled: false,
+  });
+});
+
+test("does not replace after a successful write resolves after unmount", async () => {
+  ready.mockResolvedValueOnce({} as never);
+  let resolveWrite: () => void = () => undefined;
+  mockWrite.mockReturnValueOnce(
+    new Promise<void>((resolve) => {
+      resolveWrite = resolve;
+    })
+  );
+  const view = render();
+
+  enterAutomaticThought();
+  save();
+  await waitFor(() => expect(mockWrite).toHaveBeenCalledTimes(1));
+  view.unmount();
+  await act(async () => resolveWrite());
+
+  expect(mockReplace).not.toHaveBeenCalled();
 });
 
 test("retains input and retries a failed write inline", async () => {

@@ -30,6 +30,14 @@ export function ThoughtEditScreen() {
   const [isSaving, setIsSaving] = React.useState(false);
   const [saveError, setSaveError] = React.useState<string | null>(null);
   const saving = React.useRef(false);
+  const mounted = React.useRef(false);
+
+  React.useEffect(() => {
+    mounted.current = true;
+    return () => {
+      mounted.current = false;
+    };
+  }, []);
 
   React.useEffect(() => {
     let current = true;
@@ -75,12 +83,12 @@ export function ThoughtEditScreen() {
         updatedAt: new Date(),
       };
       await loaded.service.write(thought);
-      router.replace(Routes.thoughtViewV2(thought.uuid));
+      if (mounted.current) router.replace(Routes.thoughtViewV2(thought.uuid));
     } catch {
-      setSaveError(t("cbt_form.thought_save_failed"));
+      if (mounted.current) setSaveError(t("cbt_form.thought_save_failed"));
     } finally {
       saving.current = false;
-      setIsSaving(false);
+      if (mounted.current) setIsSaving(false);
     }
   }, [loaded, router, t, value]);
 
