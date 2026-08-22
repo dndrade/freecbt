@@ -49,6 +49,18 @@ test("retains a readiness error without throwing during mount", async () => {
   expect(result.current).toMatchObject({ thoughts: [], error: failure });
 });
 
+test("retains a read error after readiness resolves", async () => {
+  const failure = new Error("read failed");
+  ready.mockResolvedValueOnce({} as never);
+  readAll.mockRejectedValueOnce(failure);
+
+  const { result } = renderHook(useThoughtHistory);
+
+  await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+  expect(result.current).toMatchObject({ thoughts: [], error: failure });
+});
+
 test("refresh retries a failed readiness check and clears the error", async () => {
   const failure = new Error("import failed");
   ready.mockRejectedValueOnce(failure).mockResolvedValueOnce({} as never);
