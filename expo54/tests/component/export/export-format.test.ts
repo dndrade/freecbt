@@ -14,7 +14,7 @@ jest.mock("@/src/platform/sharing/download-or-share", () => ({
   },
 }));
 
-jest.mock("@/src/components", () => ({
+jest.mock("@/shared/components", () => ({
   Screen: ({ children }: { children: React.ReactNode }) =>
     React.createElement(View, null, children),
 }));

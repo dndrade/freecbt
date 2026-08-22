@@ -1,5 +1,5 @@
 import { Routes } from "@/src";
-import { StandardScreen } from "@/src/components";
+import { StandardScreen } from "@/shared/components";
 import { ModelLoadedProps } from "@/src/hooks/use-model";
 import { Action, Model, Thought } from "@/src/model";
 import { Feather } from "@expo/vector-icons";

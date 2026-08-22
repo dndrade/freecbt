@@ -1,4 +1,4 @@
-import { StandardScreen, backHeaderAction } from "@/src/components";
+import { StandardScreen, backHeaderAction } from "@/shared/components";
 import { ModelLoadedProps } from "@/src/hooks/use-model";
 import { backupFlags } from "./backup-flags";
 import { EncryptedBackupExport } from "./encrypted-backup-export";

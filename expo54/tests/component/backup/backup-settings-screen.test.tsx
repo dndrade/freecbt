@@ -7,7 +7,7 @@ import { renderWithProviders } from "@/tests/support/render";
 
 const backupFlagsMock = backupFlags as { encryptedBackup: boolean };
 
-jest.mock("@/src/components", () => ({
+jest.mock("@/shared/components", () => ({
   Screen: (props: { children: React.ReactNode }) =>
     React.createElement(View, null, props.children),
 }));

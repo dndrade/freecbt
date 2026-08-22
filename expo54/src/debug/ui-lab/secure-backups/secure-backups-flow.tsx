@@ -1,7 +1,7 @@
 import { generateMockRecoveryKey } from "./fixtures";
 import * as Clipboard from "expo-clipboard";
 import React from "react";
-import { Section, SegmentedProgress, StandardScreen } from "@/src/components";
+import { Section, SegmentedProgress, StandardScreen } from "@/shared/components";
 import { BottomSheet, Button, Label, TextArea, TextField, Typography } from "heroui-native";
 import { ActivityIndicator, Pressable, View } from "react-native";
 

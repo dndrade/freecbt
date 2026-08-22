@@ -14,7 +14,7 @@ import {
 } from "@/src/debug/ui-lab/onboarding/fixtures";
 import { OnboardingFlowPrototype, useOnboardingFlow } from "@/src/debug/ui-lab/onboarding/onboarding-flow";
 
-jest.mock("@/src/components", () => ({
+jest.mock("@/shared/components", () => ({
   Screen: (props: { children: React.ReactNode }) =>
     React.createElement(View, null, props.children),
   Section: (props: { children: React.ReactNode }) =>

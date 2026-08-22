@@ -6,7 +6,7 @@ import { renderWithProviders } from "@/tests/support/render";
 
 const mockDispatch = jest.fn();
 
-jest.mock("@/src/components", () => {
+jest.mock("@/shared/components", () => {
   const React = jest.requireActual("react");
   const { Text, View } = jest.requireActual("react-native");
 

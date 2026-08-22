@@ -1,5 +1,5 @@
 import { Routes } from "@/src";
-import { StandardScreen, backHeaderAction } from "@/src/components";
+import { StandardScreen, backHeaderAction } from "@/shared/components";
 import { HomeThoughtRecovery } from "./home-thought-recovery";
 import { useThoughtEntryForm } from "./thought-entry-form";
 import type { ModelLoadedProps } from "@/src/hooks/use-model";

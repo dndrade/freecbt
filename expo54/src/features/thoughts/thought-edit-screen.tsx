@@ -1,4 +1,4 @@
-import { StandardScreen, backHeaderAction } from "@/src/components";
+import { StandardScreen, backHeaderAction } from "@/shared/components";
 import { useThoughtEntryForm } from "./thought-entry-form";
 import { ModelLoadedProps } from "@/src/hooks/use-model";
 import { Action, Thought } from "@/src/model";

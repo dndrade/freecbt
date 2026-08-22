@@ -1,4 +1,4 @@
-import { StandardScreen, backHeaderAction } from "@/src/components";
+import { StandardScreen, backHeaderAction } from "@/shared/components";
 import { ModelLoadedProps } from "@/src/hooks/use-model";
 import { Archive, Model } from "@/src/model";
 import { DownloadOrShareLink } from "@/src/platform/sharing/download-or-share";

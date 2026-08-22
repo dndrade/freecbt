@@ -1,5 +1,5 @@
 import * as ImagePath from "@/src/assets/image-path";
-import { SegmentedProgress } from "@/src/components/segmented-progress";
+import { SegmentedProgress } from "@/shared/components/segmented-progress";
 import type { TranslateFn } from "@/src/i18n/use-i18n";
 import { Distortion, Thought } from "@/src/model";
 import { Image } from "expo-image";

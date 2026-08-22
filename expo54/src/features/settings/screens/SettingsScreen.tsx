@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { StyleSheet, ScrollView, Modal, Text, Linking } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import Constants from 'expo-constants';
-import { StandardScreen } from '@/components';
+import { StandardScreen } from '@/shared/components';
 import { useSettings } from '../hooks/useSettings';
 import { SettingRow } from '../components/SettingRow';
 import { LanguagePicker } from '../components/LanguagePicker';

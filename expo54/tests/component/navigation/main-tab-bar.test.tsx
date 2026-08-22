@@ -1,4 +1,4 @@
-import { MainTabBar } from "@/src/components/navigation/main-tab-bar";
+import { MainTabBar } from "@/shared/components/navigation/main-tab-bar";
 import { I18nProvider } from "@/src/i18n/use-i18n";
 import { renderWithProviders } from "@/tests/support/render";
 import { BottomTabBarHeightCallbackContext } from "@react-navigation/bottom-tabs";

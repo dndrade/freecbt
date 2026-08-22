@@ -3,7 +3,7 @@ import { BottomTabBarHeightContext } from "@react-navigation/bottom-tabs";
 import React from "react";
 import { Pressable, View } from "react-native";
 import { useThoughtEntryForm, type ThoughtEntryFormProps } from "@/src/features/thoughts/thought-entry-form";
-import { StandardScreen } from "@/components/Layout/StandardScreen";
+import { StandardScreen } from "@/shared/components/Layout/StandardScreen";
 import { Distortion, DistortionData, Thought } from "@/src/model";
 import { renderWithProviders } from "@/tests/support/render";
 

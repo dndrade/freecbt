@@ -1,7 +1,7 @@
 import React from "react";
 import { render, screen } from "@testing-library/react-native";
 import { Text } from "react-native";
-import { ErrorBoundary } from "@/src/components/ErrorBoundary";
+import { ErrorBoundary } from "@/shared/components/ErrorBoundary";
 
 function Bomb(): React.ReactNode {
   throw new Error("boom");

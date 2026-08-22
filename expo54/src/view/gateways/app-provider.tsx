@@ -10,7 +10,7 @@ import { Model } from "../../model";
 import { AuthGateway } from "@/src/features/lock/auth-gateway";
 import { OnboardingGateway } from "./onboarding-gateway"
 import { registerDevMenu } from "@/src/debug/register-dev-menu";
-import { ThemeSync } from "@/src/theme/theme-sync";
+import { ThemeSync } from "@/shared/theme/theme-sync";
 
 export function ModelI18nProvider(props: { children: React.ReactNode }) {
   const [m] = useModel();

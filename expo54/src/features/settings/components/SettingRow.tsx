@@ -1,8 +1,8 @@
 // src/features/settings/components/SettingRow.tsx
 import React from 'react';
 import { View, Text, StyleSheet, Switch } from 'react-native';
-import { Icon, Card } from '@/components';
-import type { SemanticIconName } from '@/components/Icon/Icon.types';
+import { Icon, Card } from '@/shared/components';
+import type { SemanticIconName } from '@/shared/components/Icon/Icon.types';
 
 type SettingRowProps =
     | {

@@ -1,4 +1,4 @@
-import { Card, Section, StandardScreen } from "@/src/components";
+import { Card, Section, StandardScreen } from "@/shared/components";
 import { LoadModel, ModelLoadedProps } from "@/src/hooks/use-model";
 import { Action } from "@/src/model";
 import { Button, Typography } from "heroui-native";

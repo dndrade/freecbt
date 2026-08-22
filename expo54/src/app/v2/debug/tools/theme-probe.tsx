@@ -1,4 +1,4 @@
-import { Section, StandardScreen } from "@/src/components";
+import { Section, StandardScreen } from "@/shared/components";
 import { Button, Typography } from "heroui-native";
 
 export default function ThemeProbe() {

@@ -1,4 +1,4 @@
-import { Section, SegmentedProgress, StandardScreen } from "@/src/components";
+import { Section, SegmentedProgress, StandardScreen } from "@/shared/components";
 import { useDefaultStyle } from "@/src/hooks/use-style";
 import { useTranslate } from "@/src/i18n/use-i18n";
 import {

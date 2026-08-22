@@ -1,4 +1,4 @@
-import { ErrorBoundary } from "@/src/components/ErrorBoundary";
+import { ErrorBoundary } from "@/shared/components/ErrorBoundary";
 import { useSettings } from "@/src/features/settings/hooks/useSettings";
 import { usePathname, useRouter } from "expo-router";
 import React, { useEffect, useRef } from "react";

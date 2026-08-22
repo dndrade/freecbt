@@ -11,7 +11,7 @@ import Carousel, { ICarouselInstance } from 'react-native-reanimated-carousel';
 import { useRouter } from 'expo-router';
 import { Typography, useThemeColor } from 'heroui-native';
 
-import { ErrorBoundary, FlowAction, FlowProgress, StandardScreen, backHeaderAction } from '@/components';
+import { ErrorBoundary, FlowAction, FlowProgress, StandardScreen, backHeaderAction } from '@/shared/components';
 import { useReminders } from '@/features/reminders/use-reminders';
 import { useI18n } from '@/i18n/use-i18n';
 import { useOnboardingFlow } from '../store/useOnboardingFlow';

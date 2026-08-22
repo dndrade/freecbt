@@ -6,7 +6,7 @@ import { useOnboardingFlow } from "@/src/features/onboarding/store/useOnboarding
 
 const mockErrorBoundary = jest.fn((props: { children: React.ReactNode }) => props.children);
 
-jest.mock("@/src/components", () => ({
+jest.mock("@/shared/components", () => ({
   Section: (props: { children: React.ReactNode }) => React.createElement(View, null, props.children),
   StandardScreen: (props: {
     children: React.ReactNode;

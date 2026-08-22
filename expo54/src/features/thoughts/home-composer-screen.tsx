@@ -1,4 +1,4 @@
-import { StandardScreen } from "@/src/components";
+import { StandardScreen } from "@/shared/components";
 import { HomeThoughtRecovery } from "./home-thought-recovery";
 import { useThoughtEntryForm } from "./thought-entry-form";
 import { useHomeThoughtDraft } from "./use-home-thought-draft";

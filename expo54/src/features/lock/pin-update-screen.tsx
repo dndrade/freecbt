@@ -1,4 +1,4 @@
-import { Section, StandardScreen, backHeaderAction } from "@/src/components";
+import { Section, StandardScreen, backHeaderAction } from "@/shared/components";
 import { PinInput } from "./ui/pin-input";
 import { ModelLoadedProps } from "@/src/hooks/use-model";
 import { Action } from "@/src/model";

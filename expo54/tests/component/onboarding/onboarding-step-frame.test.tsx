@@ -3,7 +3,7 @@ import { render, screen } from "@testing-library/react-native";
 import { ScrollView, Text, View } from "react-native";
 import { OnboardingStepFrame } from "@/src/features/onboarding/components/OnboardingStepFrame";
 
-jest.mock("@/src/components", () => ({
+jest.mock("@/shared/components", () => ({
   Section: (props: { children: React.ReactNode; className?: string }) =>
     React.createElement(View, { className: props.className }, props.children),
 }));

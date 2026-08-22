@@ -1,7 +1,7 @@
 import React, { ReactNode } from 'react';
 import { Image, ImageSourcePropType, ScrollView } from 'react-native';
 import { Typography } from 'heroui-native';
-import { Section } from '@/components';
+import { Section } from '@/shared/components';
 import type { TranslateFn } from '@/i18n/use-i18n';
 
 export type OnboardingStepFrameProps = {

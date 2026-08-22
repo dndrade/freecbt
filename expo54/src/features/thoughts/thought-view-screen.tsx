@@ -1,5 +1,5 @@
 import { Routes } from "@/src";
-import { StandardScreen, backHeaderAction } from "@/src/components";
+import { StandardScreen, backHeaderAction } from "@/shared/components";
 import { ModelLoadedProps } from "@/src/hooks/use-model";
 import { Distortion, Thought } from "@/src/model";
 import * as ImagePath from "@/src/assets/image-path";
