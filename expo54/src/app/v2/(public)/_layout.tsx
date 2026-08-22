@@ -10,8 +10,6 @@ function Nav(_: ModelLoadedProps) {
   return (
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Screen name="(tabs)" />
-      <Stack.Screen name="thoughts/create" />
-      <Stack.Screen name="thoughts/[idOrKey]/edit" />
       <Stack.Screen name="help/index" />
       <Stack.Screen name="help/intro" />
     </Stack>
