@@ -13,6 +13,7 @@ import { renderWithProviders } from "@/tests/support/render";
 const mockReadAll = jest.fn();
 const mockRead = jest.fn();
 const mockWrite = jest.fn();
+const mockRemove = jest.fn();
 const mockReplace = jest.fn();
 const mockRouteContext = React.createContext<"thoughts" | "create" | "edit">("thoughts");
 let mockParams: { idOrKey?: string } = {};
@@ -41,7 +42,7 @@ jest.mock("@/features/thoughtRecord/services/ensureThoughtRecordReady", () => ({
   ensureThoughtRecordReady: jest.fn(),
 }));
 jest.mock("@/features/thoughtRecord/services/thoughtsService", () => ({
-  thoughtsService: jest.fn(() => ({ readAll: mockReadAll, read: mockRead, write: mockWrite })),
+  thoughtsService: jest.fn(() => ({ readAll: mockReadAll, read: mockRead, write: mockWrite, remove: mockRemove })),
 }));
 jest.mock("@/i18n/use-i18n", () => ({
   ...jest.requireActual("@/i18n/use-i18n"),
@@ -77,6 +78,7 @@ beforeEach(() => {
   mockReadAll.mockReset();
   mockRead.mockReset();
   mockWrite.mockReset();
+  mockRemove.mockReset();
   mockParams = {};
   route = "thoughts";
   rerenderRoute = () => undefined;
@@ -109,6 +111,70 @@ test("groups newest journal records by their creation date", () => {
   expect(screen.getByText("oldest")).toBeTruthy();
   expect(screen.getByText(newest.createdAt.toDateString())).toBeTruthy();
   expect(screen.getByText(oldest.createdAt.toDateString())).toBeTruthy();
+});
+
+test("confirms a journal deletion and lets it be cancelled", () => {
+  const record = thought("00000000-0000-4000-8000-000000000005", "keep this", new Date("2026-08-22T12:00:00Z"));
+  renderWithProviders(<ThoughtListScreen history={history({ thoughts: [record] })} />);
+
+  fireEvent.press(screen.getByLabelText("accessibility.delete_thought_button"));
+  expect(screen.getByTestId(`thought-delete-confirmation-${record.uuid}`)).toBeTruthy();
+  fireEvent.press(screen.getByTestId(`thought-delete-cancel-${record.uuid}`));
+
+  expect(screen.queryByTestId(`thought-delete-confirmation-${record.uuid}`)).toBeNull();
+  expect(screen.getByText("keep this")).toBeTruthy();
+  expect(mockRemove).not.toHaveBeenCalled();
+});
+
+test("removes a confirmed journal record and refreshes the shared history", async () => {
+  const record = thought("00000000-0000-4000-8000-000000000006", "remove this", new Date("2026-08-22T12:00:00Z"));
+  let resolveRemove: () => void = () => undefined;
+  mockRemove.mockReturnValueOnce(new Promise<void>((resolve) => { resolveRemove = resolve; }));
+  const refresh = jest.fn().mockResolvedValue(undefined);
+  renderWithProviders(<ThoughtListScreen history={history({ thoughts: [record], refresh })} />);
+
+  fireEvent.press(screen.getByLabelText("accessibility.delete_thought_button"));
+  fireEvent.press(screen.getByTestId(`thought-delete-confirm-${record.uuid}`));
+
+  expect(screen.getByTestId(`thought-delete-confirm-${record.uuid}`).props.accessibilityState).toMatchObject({ disabled: true });
+  expect(screen.getByTestId(`thought-delete-cancel-${record.uuid}`).props.accessibilityState).toMatchObject({ disabled: true });
+  resolveRemove();
+
+  await waitFor(() => expect(mockRemove).toHaveBeenCalledWith(record.uuid));
+  await waitFor(() => expect(refresh).toHaveBeenCalledTimes(1));
+});
+
+test("keeps a journal record and offers Retry when deletion fails", async () => {
+  const record = thought("00000000-0000-4000-8000-000000000007", "retry this", new Date("2026-08-22T12:00:00Z"));
+  mockRemove.mockRejectedValueOnce(new Error("offline")).mockResolvedValueOnce(undefined);
+  const refresh = jest.fn().mockResolvedValue(undefined);
+  renderWithProviders(<ThoughtListScreen history={history({ thoughts: [record], refresh })} />);
+
+  fireEvent.press(screen.getByLabelText("accessibility.delete_thought_button"));
+  fireEvent.press(screen.getByTestId(`thought-delete-confirm-${record.uuid}`));
+
+  await waitFor(() => expect(screen.getByTestId(`thought-delete-retry-${record.uuid}`)).toBeTruthy());
+  expect(screen.getByText("retry this")).toBeTruthy();
+  fireEvent.press(screen.getByTestId(`thought-delete-retry-${record.uuid}`));
+
+  await waitFor(() => expect(mockRemove).toHaveBeenCalledTimes(2));
+  await waitFor(() => expect(refresh).toHaveBeenCalledTimes(1));
+});
+
+function LastRowHarness({ record }: { record: Thought.Thought }) {
+  const [thoughts, setThoughts] = React.useState<readonly Thought.Thought[]>([record]);
+  return <ThoughtListScreen history={history({ thoughts, refresh: async () => setThoughts([]) })} />;
+}
+
+test("shows the empty journal after its last record is removed", async () => {
+  const record = thought("00000000-0000-4000-8000-000000000008", "last record", new Date("2026-08-22T12:00:00Z"));
+  mockRemove.mockResolvedValueOnce(undefined);
+  renderWithProviders(<LastRowHarness record={record} />);
+
+  fireEvent.press(screen.getByLabelText("accessibility.delete_thought_button"));
+  fireEvent.press(screen.getByTestId(`thought-delete-confirm-${record.uuid}`));
+
+  await waitFor(() => expect(screen.getByText("cbt_list.empty")).toBeTruthy());
 });
 
 test("leaves history ownership to the retained layout", async () => {
