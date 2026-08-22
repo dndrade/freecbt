@@ -1,6 +1,5 @@
-import { HomeComposerScreen } from "@/src/features/thoughts/home-composer-screen";
-import { LoadModel } from "@/src/hooks/use-model";
+import { ThoughtHomeComposerScreen } from "@/features/thoughtRecord/screens/ThoughtHomeComposerScreen";
 
 export default function Index() {
-  return <LoadModel ready={HomeComposerScreen} />;
+  return <ThoughtHomeComposerScreen />;
 }
