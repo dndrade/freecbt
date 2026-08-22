@@ -316,5 +316,11 @@
     "json": {
       "button": "Eksporter som JSON"
     }
+  },
+  "thought_delete": {
+    "confirm": "Slette denne tanken? Dette kan ikke angres.",
+    "failed": "Kunne ikke slette denne tanken.",
+    "delete": "Slett",
+    "cancel": "Avbryt"
   }
 }

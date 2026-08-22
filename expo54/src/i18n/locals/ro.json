@@ -11,7 +11,10 @@
     "auto_thought_ex": "Am ratat petrecerea lui George. Sigur mă urăște.",
     "challenge_ex": "George știe că nu pot veni de fiecare dată, iar eu nu l-aș urî dacă ar rata o petrecere de-a mea.\n\nAr trebui să mă tratez cel puțin la fel de bine cum îi tratez pe ceilalți.",
     "alt_thought_ex": "E adevărat că am ratat petrecerea lui George. Pot să îmi cer scuze și probabil mă va ierta.",
-    "cog_distortion": { "label": "Citirea Gândurilor", "slug": "citirea-gândurilor" },
+    "cog_distortion": {
+      "label": "Citirea Gândurilor",
+      "slug": "citirea-gândurilor"
+    },
     "intro": {
       "line1": "Bun venit în",
       "emphasis1": "FreeCBT",
@@ -145,5 +148,11 @@
     "new_thought_button": "gând nou",
     "settings_button": "setări",
     "delete_thought_button": "șterge gând"
+  },
+  "thought_delete": {
+    "confirm": "Ștergeți acest gând? Această acțiune nu poate fi anulată.",
+    "failed": "Acest gând nu a putut fi șters.",
+    "delete": "Șterge",
+    "cancel": "Anulează"
   }
 }

@@ -138,5 +138,11 @@
   "should_statements": "'Zou moeten'-denken",
   "should_statements_explanation_1": "Als je mensen (inclusief jezelf) vaardigheden toeschrijft die ze niet hebben, dan maak je de denkfout van het 'zou moeten'-denken. Als je bijvoorbeeld bang bent om te vliegen en tegen jezelf zegt: \"Ik moet hier niet bang voor zijn, er is niets mis met het vliegtuig\". Maar hiermee leg je een te zware last op jezelf. Het is normaal dat mensen met vliegangst bang zijn om te vliegen!",
   "should_statements_explanation_2": "Mochten deze 'zou moeten'-uitspraken je onzinnig klinken, dat is het punt! Ze zijn onlogisch!",
-  "should_statements_thought": "Ik ben een volwassene, ik zou deze mentale problemen niet moeten hebben."
+  "should_statements_thought": "Ik ben een volwassene, ik zou deze mentale problemen niet moeten hebben.",
+  "thought_delete": {
+    "confirm": "Deze gedachte verwijderen? Dit kan niet ongedaan worden gemaakt.",
+    "failed": "Deze gedachte kon niet worden verwijderd.",
+    "delete": "Verwijderen",
+    "cancel": "Annuleren"
+  }
 }

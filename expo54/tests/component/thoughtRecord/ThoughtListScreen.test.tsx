@@ -7,7 +7,7 @@ import { ensureThoughtRecordReady } from "@/features/thoughtRecord/services/ensu
 import { Thought } from "@/model";
 import { fireEvent, screen, waitFor } from "@testing-library/react-native";
 import React from "react";
-import { Pressable } from "react-native";
+import { Pressable, Text } from "react-native";
 import { renderWithProviders } from "@/tests/support/render";
 
 const mockReadAll = jest.fn();
@@ -15,24 +15,33 @@ const mockRead = jest.fn();
 const mockWrite = jest.fn();
 const mockRemove = jest.fn();
 const mockReplace = jest.fn();
-const mockRouteContext = React.createContext<"thoughts" | "create" | "edit">("thoughts");
+const mockRouteContext = React.createContext<"thoughts" | "create" | "edit">(
+  "thoughts",
+);
 let mockParams: { idOrKey?: string } = {};
 let route: "thoughts" | "create" | "edit" = "thoughts";
 let rerenderRoute: () => void = () => undefined;
 
 jest.mock("expo-router", () => ({
   Link: ({ children }: { children: React.ReactNode }) => children,
-  Slot: () => null,
+  Slot: () => (
+    <Text testID="selected-thought-detail">selected thought detail</Text>
+  ),
   useFocusEffect: (effect: () => void | (() => void)) => {
     const focusedRoute = React.useContext(mockRouteContext);
-    React.useEffect(() => focusedRoute === "thoughts" ? effect() : undefined, [effect, focusedRoute]);
+    React.useEffect(
+      () => (focusedRoute === "thoughts" ? effect() : undefined),
+      [effect, focusedRoute],
+    );
   },
   useLocalSearchParams: () => mockParams,
   useRouter: () => ({
     back: jest.fn(),
-    replace: (href: { params?: { idOrKey?: string } }) => {
+    replace: (href: string | { params?: { idOrKey?: string } }) => {
       mockReplace(href);
-      mockParams = { idOrKey: href.params?.idOrKey };
+      mockParams = {
+        idOrKey: typeof href === "string" ? undefined : href.params?.idOrKey,
+      };
       route = "thoughts";
       rerenderRoute();
     },
@@ -42,16 +51,27 @@ jest.mock("@/features/thoughtRecord/services/ensureThoughtRecordReady", () => ({
   ensureThoughtRecordReady: jest.fn(),
 }));
 jest.mock("@/features/thoughtRecord/services/thoughtsService", () => ({
-  thoughtsService: jest.fn(() => ({ readAll: mockReadAll, read: mockRead, write: mockWrite, remove: mockRemove })),
+  thoughtsService: jest.fn(() => ({
+    readAll: mockReadAll,
+    read: mockRead,
+    write: mockWrite,
+    remove: mockRemove,
+  })),
 }));
 jest.mock("@/i18n/use-i18n", () => ({
   ...jest.requireActual("@/i18n/use-i18n"),
   useTranslate: () => (key: string) => key,
 }));
 
-const ready = ensureThoughtRecordReady as jest.MockedFunction<typeof ensureThoughtRecordReady>;
+const ready = ensureThoughtRecordReady as jest.MockedFunction<
+  typeof ensureThoughtRecordReady
+>;
 
-function thought(uuid: string, automaticThought: string, createdAt: Date): Thought.Thought {
+function thought(
+  uuid: string,
+  automaticThought: string,
+  createdAt: Date,
+): Thought.Thought {
   return Thought.Thought.decode({
     uuid,
     automaticThought,
@@ -63,7 +83,11 @@ function thought(uuid: string, automaticThought: string, createdAt: Date): Thoug
   });
 }
 
-function history(overrides: Partial<React.ComponentProps<typeof ThoughtListScreen>["history"]> = {}) {
+function history(
+  overrides: Partial<
+    React.ComponentProps<typeof ThoughtListScreen>["history"]
+  > = {},
+) {
   return {
     thoughts: [],
     isLoading: false,
@@ -85,13 +109,19 @@ beforeEach(() => {
 });
 
 test("shows a loading journal", () => {
-  renderWithProviders(<ThoughtListScreen history={history({ isLoading: true })} />);
+  renderWithProviders(
+    <ThoughtListScreen history={history({ isLoading: true })} />,
+  );
   expect(screen.getByTestId("thought-list-loading")).toBeTruthy();
 });
 
 test("shows a retryable journal error", () => {
   const retry = jest.fn().mockResolvedValue(undefined);
-  renderWithProviders(<ThoughtListScreen history={history({ error: new Error("offline"), refresh: retry })} />);
+  renderWithProviders(
+    <ThoughtListScreen
+      history={history({ error: new Error("offline"), refresh: retry })}
+    />,
+  );
   expect(screen.getByTestId("thought-list-error")).toBeTruthy();
   fireEvent.press(screen.getByTestId("thought-list-retry"));
   expect(retry).toHaveBeenCalledTimes(1);
@@ -103,9 +133,19 @@ test("shows an empty journal", () => {
 });
 
 test("groups newest journal records by their creation date", () => {
-  const newest = thought("00000000-0000-4000-8000-000000000001", "newest", new Date("2026-08-21T12:00:00Z"));
-  const oldest = thought("00000000-0000-4000-8000-000000000002", "oldest", new Date("2026-08-20T12:00:00Z"));
-  renderWithProviders(<ThoughtListScreen history={history({ thoughts: [oldest, newest] })} />);
+  const newest = thought(
+    "00000000-0000-4000-8000-000000000001",
+    "newest",
+    new Date("2026-08-21T12:00:00Z"),
+  );
+  const oldest = thought(
+    "00000000-0000-4000-8000-000000000002",
+    "oldest",
+    new Date("2026-08-20T12:00:00Z"),
+  );
+  renderWithProviders(
+    <ThoughtListScreen history={history({ thoughts: [oldest, newest] })} />,
+  );
 
   expect(screen.getByText("newest")).toBeTruthy();
   expect(screen.getByText("oldest")).toBeTruthy();
@@ -114,30 +154,59 @@ test("groups newest journal records by their creation date", () => {
 });
 
 test("confirms a journal deletion and lets it be cancelled", () => {
-  const record = thought("00000000-0000-4000-8000-000000000005", "keep this", new Date("2026-08-22T12:00:00Z"));
-  renderWithProviders(<ThoughtListScreen history={history({ thoughts: [record] })} />);
+  const record = thought(
+    "00000000-0000-4000-8000-000000000005",
+    "keep this",
+    new Date("2026-08-22T12:00:00Z"),
+  );
+  renderWithProviders(
+    <ThoughtListScreen history={history({ thoughts: [record] })} />,
+  );
 
   fireEvent.press(screen.getByLabelText("accessibility.delete_thought_button"));
-  expect(screen.getByTestId(`thought-delete-confirmation-${record.uuid}`)).toBeTruthy();
+  expect(
+    screen.getByTestId(`thought-delete-confirmation-${record.uuid}`),
+  ).toBeTruthy();
+  expect(screen.getByText("thought_delete.confirm")).toBeTruthy();
+  expect(screen.getByText("thought_delete.delete")).toBeTruthy();
+  expect(screen.getByText("thought_delete.cancel")).toBeTruthy();
   fireEvent.press(screen.getByTestId(`thought-delete-cancel-${record.uuid}`));
 
-  expect(screen.queryByTestId(`thought-delete-confirmation-${record.uuid}`)).toBeNull();
+  expect(
+    screen.queryByTestId(`thought-delete-confirmation-${record.uuid}`),
+  ).toBeNull();
   expect(screen.getByText("keep this")).toBeTruthy();
   expect(mockRemove).not.toHaveBeenCalled();
 });
 
 test("removes a confirmed journal record and refreshes the shared history", async () => {
-  const record = thought("00000000-0000-4000-8000-000000000006", "remove this", new Date("2026-08-22T12:00:00Z"));
+  const record = thought(
+    "00000000-0000-4000-8000-000000000006",
+    "remove this",
+    new Date("2026-08-22T12:00:00Z"),
+  );
   let resolveRemove: () => void = () => undefined;
-  mockRemove.mockReturnValueOnce(new Promise<void>((resolve) => { resolveRemove = resolve; }));
+  mockRemove.mockReturnValueOnce(
+    new Promise<void>((resolve) => {
+      resolveRemove = resolve;
+    }),
+  );
   const refresh = jest.fn().mockResolvedValue(undefined);
-  renderWithProviders(<ThoughtListScreen history={history({ thoughts: [record], refresh })} />);
+  renderWithProviders(
+    <ThoughtListScreen history={history({ thoughts: [record], refresh })} />,
+  );
 
   fireEvent.press(screen.getByLabelText("accessibility.delete_thought_button"));
   fireEvent.press(screen.getByTestId(`thought-delete-confirm-${record.uuid}`));
 
-  expect(screen.getByTestId(`thought-delete-confirm-${record.uuid}`).props.accessibilityState).toMatchObject({ disabled: true });
-  expect(screen.getByTestId(`thought-delete-cancel-${record.uuid}`).props.accessibilityState).toMatchObject({ disabled: true });
+  expect(
+    screen.getByTestId(`thought-delete-confirm-${record.uuid}`).props
+      .accessibilityState,
+  ).toMatchObject({ disabled: true });
+  expect(
+    screen.getByTestId(`thought-delete-cancel-${record.uuid}`).props
+      .accessibilityState,
+  ).toMatchObject({ disabled: true });
   resolveRemove();
 
   await waitFor(() => expect(mockRemove).toHaveBeenCalledWith(record.uuid));
@@ -145,15 +214,29 @@ test("removes a confirmed journal record and refreshes the shared history", asyn
 });
 
 test("keeps a journal record and offers Retry when deletion fails", async () => {
-  const record = thought("00000000-0000-4000-8000-000000000007", "retry this", new Date("2026-08-22T12:00:00Z"));
-  mockRemove.mockRejectedValueOnce(new Error("offline")).mockResolvedValueOnce(undefined);
+  const record = thought(
+    "00000000-0000-4000-8000-000000000007",
+    "retry this",
+    new Date("2026-08-22T12:00:00Z"),
+  );
+  mockRemove
+    .mockRejectedValueOnce(new Error("offline"))
+    .mockResolvedValueOnce(undefined);
   const refresh = jest.fn().mockResolvedValue(undefined);
-  renderWithProviders(<ThoughtListScreen history={history({ thoughts: [record], refresh })} />);
+  renderWithProviders(
+    <ThoughtListScreen history={history({ thoughts: [record], refresh })} />,
+  );
 
   fireEvent.press(screen.getByLabelText("accessibility.delete_thought_button"));
   fireEvent.press(screen.getByTestId(`thought-delete-confirm-${record.uuid}`));
 
-  await waitFor(() => expect(screen.getByTestId(`thought-delete-retry-${record.uuid}`)).toBeTruthy());
+  await waitFor(() =>
+    expect(
+      screen.getByTestId(`thought-delete-retry-${record.uuid}`),
+    ).toBeTruthy(),
+  );
+  expect(screen.getByText("thought_delete.failed")).toBeTruthy();
+  expect(screen.getByText("cbt_form.retry")).toBeTruthy();
   expect(screen.getByText("retry this")).toBeTruthy();
   fireEvent.press(screen.getByTestId(`thought-delete-retry-${record.uuid}`));
 
@@ -162,12 +245,22 @@ test("keeps a journal record and offers Retry when deletion fails", async () => 
 });
 
 function LastRowHarness({ record }: { record: Thought.Thought }) {
-  const [thoughts, setThoughts] = React.useState<readonly Thought.Thought[]>([record]);
-  return <ThoughtListScreen history={history({ thoughts, refresh: async () => setThoughts([]) })} />;
+  const [thoughts, setThoughts] = React.useState<readonly Thought.Thought[]>([
+    record,
+  ]);
+  return (
+    <ThoughtListScreen
+      history={history({ thoughts, refresh: async () => setThoughts([]) })}
+    />
+  );
 }
 
 test("shows the empty journal after its last record is removed", async () => {
-  const record = thought("00000000-0000-4000-8000-000000000008", "last record", new Date("2026-08-22T12:00:00Z"));
+  const record = thought(
+    "00000000-0000-4000-8000-000000000008",
+    "last record",
+    new Date("2026-08-22T12:00:00Z"),
+  );
   mockRemove.mockResolvedValueOnce(undefined);
   renderWithProviders(<LastRowHarness record={record} />);
 
@@ -177,11 +270,37 @@ test("shows the empty journal after its last record is removed", async () => {
   await waitFor(() => expect(screen.getByText("cbt_list.empty")).toBeTruthy());
 });
 
+test("clears a selected wide-pane detail after deleting its thought", async () => {
+  const record = thought(
+    "00000000-0000-4000-8000-000000000009",
+    "selected record",
+    new Date("2026-08-22T12:00:00Z"),
+  );
+  ready.mockResolvedValue({} as never);
+  mockReadAll.mockResolvedValueOnce([record]).mockResolvedValueOnce([]);
+  mockRemove.mockResolvedValueOnce(undefined);
+  mockParams = { idOrKey: record.uuid };
+  renderWithProviders(<NavigationHarness />);
+
+  showWideJournal();
+  await waitFor(() => expect(screen.getByText("selected record")).toBeTruthy());
+  expect(screen.getByTestId("selected-thought-detail")).toBeTruthy();
+  fireEvent.press(screen.getByLabelText("accessibility.delete_thought_button"));
+  fireEvent.press(screen.getByTestId(`thought-delete-confirm-${record.uuid}`));
+
+  await waitFor(() =>
+    expect(screen.queryByTestId("selected-thought-detail")).toBeNull(),
+  );
+  expect(screen.getByText("cbt_list.empty")).toBeTruthy();
+});
+
 test("leaves history ownership to the retained layout", async () => {
   ready.mockResolvedValue({} as never);
   mockReadAll.mockResolvedValueOnce([]);
   renderWithProviders(<ThoughtListRoute />);
-  await waitFor(() => expect(screen.queryByTestId("thought-list-loading")).toBeNull());
+  await waitFor(() =>
+    expect(screen.queryByTestId("thought-list-loading")).toBeNull(),
+  );
   expect(screen.queryByText("cbt_list.empty")).toBeNull();
 });
 
@@ -191,8 +310,21 @@ function NavigationHarness() {
   return (
     <mockRouteContext.Provider value={route}>
       <ThoughtsLayout />
-      <Pressable testID="open-create" onPress={() => { route = "create"; rerenderRoute(); }} />
-      <Pressable testID="open-edit" onPress={() => { route = "edit"; mockParams = { idOrKey: "00000000-0000-4000-8000-000000000004" }; rerenderRoute(); }} />
+      <Pressable
+        testID="open-create"
+        onPress={() => {
+          route = "create";
+          rerenderRoute();
+        }}
+      />
+      <Pressable
+        testID="open-edit"
+        onPress={() => {
+          route = "edit";
+          mockParams = { idOrKey: "00000000-0000-4000-8000-000000000004" };
+          rerenderRoute();
+        }}
+      />
       {route === "create" ? <ThoughtCreateScreen /> : null}
       {route === "edit" ? <ThoughtEditScreen /> : null}
     </mockRouteContext.Provider>
@@ -213,7 +345,11 @@ function showWideJournal() {
 }
 
 test("refreshes the retained journal after a create returns to the selected thought", async () => {
-  const record = thought("00000000-0000-4000-8000-000000000003", "fresh after create", new Date("2026-08-22T12:00:00Z"));
+  const record = thought(
+    "00000000-0000-4000-8000-000000000003",
+    "fresh after create",
+    new Date("2026-08-22T12:00:00Z"),
+  );
   ready.mockResolvedValue({} as never);
   mockReadAll.mockResolvedValueOnce([]).mockResolvedValueOnce([record]);
   mockWrite.mockResolvedValueOnce(undefined);
@@ -221,15 +357,24 @@ test("refreshes the retained journal after a create returns to the selected thou
 
   await waitFor(() => expect(screen.getByText("cbt_list.empty")).toBeTruthy());
   fireEvent.press(screen.getByTestId("open-create"));
-  fireEvent.changeText(screen.getByTestId("automatic-thought-input"), "fresh after create");
+  fireEvent.changeText(
+    screen.getByTestId("automatic-thought-input"),
+    "fresh after create",
+  );
   save();
   showWideJournal();
 
-  await waitFor(() => expect(screen.getByText("fresh after create")).toBeTruthy());
+  await waitFor(() =>
+    expect(screen.getByText("fresh after create")).toBeTruthy(),
+  );
 });
 
 test("refreshes the retained journal after an edit returns to the selected thought", async () => {
-  const before = thought("00000000-0000-4000-8000-000000000004", "before edit", new Date("2026-08-22T12:00:00Z"));
+  const before = thought(
+    "00000000-0000-4000-8000-000000000004",
+    "before edit",
+    new Date("2026-08-22T12:00:00Z"),
+  );
   const after = thought(before.uuid, "after edit", before.createdAt);
   ready.mockResolvedValue({} as never);
   mockReadAll.mockResolvedValueOnce([before]).mockResolvedValueOnce([after]);
@@ -239,8 +384,13 @@ test("refreshes the retained journal after an edit returns to the selected thoug
 
   await waitFor(() => expect(screen.getByText("before edit")).toBeTruthy());
   fireEvent.press(screen.getByTestId("open-edit"));
-  await waitFor(() => expect(screen.getByTestId("automatic-thought-input")).toBeTruthy());
-  fireEvent.changeText(screen.getByTestId("automatic-thought-input"), "after edit");
+  await waitFor(() =>
+    expect(screen.getByTestId("automatic-thought-input")).toBeTruthy(),
+  );
+  fireEvent.changeText(
+    screen.getByTestId("automatic-thought-input"),
+    "after edit",
+  );
   save();
   showWideJournal();
 

@@ -24,7 +24,7 @@ test("reports initial loading until readiness and reading finish", async () => {
   ready.mockReturnValueOnce(
     new Promise((resolve) => {
       resolveReady = resolve as (value: never) => void;
-    })
+    }),
   );
   readAll.mockResolvedValueOnce([]);
 
@@ -89,4 +89,42 @@ test("reads once for one mounted history owner", async () => {
 
   expect(ready).toHaveBeenCalledTimes(1);
   expect(readAll).toHaveBeenCalledTimes(1);
+});
+
+test("keeps the newest refresh result when an older read resolves last", async () => {
+  let resolveOlder: (thoughts: unknown[]) => void = () => undefined;
+  let resolveNewer: (thoughts: unknown[]) => void = () => undefined;
+  ready.mockResolvedValue({} as never);
+  readAll
+    .mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          resolveOlder = resolve;
+        }),
+    )
+    .mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          resolveNewer = resolve;
+        }),
+    );
+  const { result } = renderHook(useThoughtHistory);
+
+  await waitFor(() => expect(readAll).toHaveBeenCalledTimes(1));
+  act(() => {
+    void result.current.refresh();
+  });
+  await waitFor(() => expect(readAll).toHaveBeenCalledTimes(2));
+
+  await act(async () => {
+    resolveNewer([{ automaticThought: "newer" }]);
+  });
+  await waitFor(() =>
+    expect(result.current.thoughts).toEqual([{ automaticThought: "newer" }]),
+  );
+  await act(async () => {
+    resolveOlder([{ automaticThought: "older" }]);
+  });
+
+  expect(result.current.thoughts).toEqual([{ automaticThought: "newer" }]);
 });

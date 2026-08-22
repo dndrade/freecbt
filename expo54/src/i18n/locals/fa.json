@@ -317,5 +317,11 @@
     "json": {
       "button": "Export as JSON"
     }
+  },
+  "thought_delete": {
+    "confirm": "این فکر حذف شود؟ این کار قابل بازگشت نیست.",
+    "failed": "این فکر حذف نشد.",
+    "delete": "حذف",
+    "cancel": "لغو"
   }
 }

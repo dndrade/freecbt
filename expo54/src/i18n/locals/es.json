@@ -11,7 +11,10 @@
     "auto_thought_ex": "Me perdí la fiesta de Jorge, apuesto a que me odia.",
     "challenge_ex": "Jorge sabe que no siempre puedo acudir, yo no le odiaría si faltara a algún evento mío.\n\nDebería tratarme a mí mismo por lo menos tan bien como trato a los demás.",
     "alt_thought_ex": "Es verdad que falté a la fiesta de Jorge, puedo disculparme y seguramente me perdonará por ello.",
-    "cog_distortion": { "label": "Lectura del pensamiento", "slug": "lectura-pensamiento" },
+    "cog_distortion": {
+      "label": "Lectura del pensamiento",
+      "slug": "lectura-pensamiento"
+    },
     "intro": {
       "line1": "Bienvenido a",
       "emphasis1": "FreeCBT",
@@ -138,5 +141,11 @@
   "should_statements": "Los deberías",
   "should_statements_explanation_1": "Si le estás asignando a alguien las habilidades que no tiene, estás usando declaraciones de \"deberías\" defectuosas. Por ejemplo, si tienes miedo de volar y te dices a ti mismo \"¡No debería tener miedo de esto, no hay nada de malo en el avión!\", te estás imponiendo una carga excesiva. ¡Tienes miedo de volar! ¡Es normal que las personas que temen volar tengan miedo de volar!",
   "should_statements_explanation_2": "Este tipo de afirmaciones pueden parecer absurdas cuando se dicen en voz alta; ¡ese es el punto! ¡Son ilógicas!",
-  "should_statements_thought": "Soy un adulto, no debería tener estos problemas mentales."
+  "should_statements_thought": "Soy un adulto, no debería tener estos problemas mentales.",
+  "thought_delete": {
+    "confirm": "¿Eliminar este pensamiento? Esta acción no se puede deshacer.",
+    "failed": "No se pudo eliminar este pensamiento.",
+    "delete": "Eliminar",
+    "cancel": "Cancelar"
+  }
 }

@@ -144,5 +144,11 @@
   "should_statements_thought": "我是一个成年人，我肯定不会有这些心理问题。",
   "payment": {
     "ios_explanation": "在确认购买时，将从您的Apple ID帐户中收取付款。除非在当前期间结束前至少24小时取消，否则订阅会自动续订。您的帐户将在当前期间结束前24小时内收取续订费用。您可以在购买后转到App Store帐户设置来管理和取消订阅。"
+  },
+  "thought_delete": {
+    "confirm": "要删除此想法吗？此操作无法撤销。",
+    "failed": "无法删除此想法。",
+    "delete": "删除",
+    "cancel": "取消"
   }
 }

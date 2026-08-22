@@ -11,7 +11,10 @@
     "auto_thought_ex": "J'ai raté la fête de George, il doit me détester.",
     "challenge_ex": "Georges sait que je ne peux pas venir à chaque fois et je ne le détesterais pas s'il manquait un de mes évènements.\n\nJe devrais me traiter aussi bien que je traite les autres.",
     "alt_thought_ex": "C'est vrai que j'ai raté la fête de Georges, mais je peux m'excuser et il me pardonnera probablement.",
-    "cog_distortion": { "label": "Lire dans les pensées", "slug": "mind-reading" },
+    "cog_distortion": {
+      "label": "Lire dans les pensées",
+      "slug": "mind-reading"
+    },
     "intro": {
       "line1": "Bienvenue sur",
       "emphasis1": "FreeCBT, ",
@@ -145,5 +148,11 @@
     "new_thought_button": "nouvelle pensée",
     "settings_button": "réglages",
     "delete_thought_button": "effacer la pensée"
+  },
+  "thought_delete": {
+    "confirm": "Supprimer cette pensée ? Cette action est irréversible.",
+    "failed": "Cette pensée n’a pas pu être supprimée.",
+    "delete": "Supprimer",
+    "cancel": "Annuler"
   }
 }
