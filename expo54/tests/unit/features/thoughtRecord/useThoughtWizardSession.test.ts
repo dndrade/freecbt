@@ -100,6 +100,26 @@ test("saveRecord ignores a duplicate call while a write is pending", async () =>
   await first;
 });
 
+test("saveRecord preserves edits made while its write is pending", async () => {
+  let resolveWrite: () => void = () => undefined;
+  ready.mockResolvedValueOnce({} as never);
+  write.mockImplementationOnce(
+    () => new Promise<void>((resolve) => { resolveWrite = resolve; })
+  );
+  useThoughtWizardSession.getState().setAutomaticThought("first draft");
+
+  const saving = useThoughtWizardSession.getState().saveRecord();
+  await waitFor(() => expect(useThoughtWizardSession.getState().isSaving).toBe(true));
+  useThoughtWizardSession.getState().setAutomaticThought("next draft");
+  resolveWrite();
+
+  await expect(saving).resolves.toMatchObject({status: "saved"});
+  expect(useThoughtWizardSession.getState()).toMatchObject({
+    automaticThought: "next draft",
+    isSaving: false,
+  });
+});
+
 test("rehydrates an imported Home draft before a consumer renders", async () => {
   values.set(
     "thoughtRecord:wizard-session:v1",
