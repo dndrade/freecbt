@@ -1,11 +1,11 @@
 import { create } from "zustand";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as SecureStore from "expo-secure-store";
-import { Storage } from "@/src";
+import { settings } from "../data/settingsStorage";
 import type { Settings } from "@/model/settings";
 import { existingUserKey } from "@/model/settings";
 
-const settingsStorage = Storage.settings(AsyncStorage, SecureStore);
+const settingsStorage = settings(AsyncStorage, SecureStore);
 
 export interface SettingsState {
   settings: Settings | null;

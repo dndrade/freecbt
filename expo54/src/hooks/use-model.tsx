@@ -10,6 +10,7 @@ import { ActivityIndicator, Appearance } from "react-native";
 import { createElmArch, useElmArch } from "./use-elm-arch";
 import { defaultLocale, TranslateFn, useTranslate } from "@/src/i18n/use-i18n";
 import { Style, useStyle } from "./use-style";
+import { settings } from "@/src/features/settings/data/settingsStorage";
 
 const Ctx = createElmArch<Model.Model, Action.Action, Cmd.Cmd>();
 
@@ -53,7 +54,7 @@ export interface ModelLoadedProps {
 export type ModelLoadedComponent = (props: ModelLoadedProps) => React.ReactNode;
 
 function useCmdRunner(data: Distortion.Data, storage: AsyncStorageStatic) {
-  const s = Storage.settings(storage, SecureStore);
+  const s = settings(storage, SecureStore);
   const t = Storage.thoughts(data, storage);
   const drafts = Storage.homeThoughtDraft(data, storage);
   const outbox = Storage.thoughtSaveOutbox(data, storage);
@@ -63,7 +64,7 @@ function useCmdRunner(data: Distortion.Data, storage: AsyncStorageStatic) {
 
   useEffect(() => {
     const l = Appearance.addChangeListener((prefs) =>
-      dispatch(Action.setDeviceColorScheme(prefs.colorScheme ?? null))
+      dispatch(Action.setDeviceColorScheme(prefs.colorScheme ?? null)),
     );
     return () => l.remove();
   }, []);
@@ -132,8 +133,8 @@ function useCmdRunner(data: Distortion.Data, storage: AsyncStorageStatic) {
                     c.cleanup.record,
                     c.cleanup.outboxSubmissionId,
                     error,
-                    new Date()
-                  )
+                    new Date(),
+                  ),
             );
           }
           return;
@@ -141,13 +142,18 @@ function useCmdRunner(data: Distortion.Data, storage: AsyncStorageStatic) {
         case "insert-thought-save-outbox": {
           try {
             await outbox.insert(c.value);
-            dispatch(Action.thoughtSaveOutboxInsertionSucceeded(c.value.submissionId, new Date()));
+            dispatch(
+              Action.thoughtSaveOutboxInsertionSucceeded(
+                c.value.submissionId,
+                new Date(),
+              ),
+            );
           } catch (error) {
             dispatch(
               Action.thoughtSaveOutboxInsertionFailed(
                 c.value.submissionId,
-                error
-              )
+                error,
+              ),
             );
           }
           return;
@@ -165,8 +171,8 @@ function useCmdRunner(data: Distortion.Data, storage: AsyncStorageStatic) {
               Action.thoughtSaveWriteFailed(
                 c.value.submissionId,
                 error,
-                new Date()
-              )
+                new Date(),
+              ),
             );
           }
           return;
@@ -176,16 +182,22 @@ function useCmdRunner(data: Distortion.Data, storage: AsyncStorageStatic) {
             await outbox.remove(c.value);
             dispatch(Action.thoughtSaveOutboxRemoved(c.value, new Date()));
           } catch (error) {
-            dispatch(Action.thoughtSaveOutboxRemovalFailed(c.value, error, new Date()));
+            dispatch(
+              Action.thoughtSaveOutboxRemovalFailed(c.value, error, new Date()),
+            );
           }
           return;
         }
         case "write-submitted-thought": {
           try {
             await t.persistSubmittedThought(c.submissionId, c.thought);
-            dispatch(Action.thoughtSaveWriteSucceeded(c.submissionId, c.thought));
+            dispatch(
+              Action.thoughtSaveWriteSucceeded(c.submissionId, c.thought),
+            );
           } catch (error) {
-            dispatch(Action.thoughtSaveWriteFailed(c.submissionId, error, new Date()));
+            dispatch(
+              Action.thoughtSaveWriteFailed(c.submissionId, error, new Date()),
+            );
           }
           return;
         }
