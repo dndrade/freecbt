@@ -1,7 +1,7 @@
 import { Routes } from "@/src";
 import { StandardScreen, backHeaderAction } from "@/src/components";
 import { ModelLoadedProps } from "@/src/hooks/use-model";
-import { Distortion } from "@/src/model";
+import { Distortion, Thought } from "@/src/model";
 import * as ImagePath from "@/src/assets/image-path";
 import { Link, useRouter } from "expo-router";
 import { Typography } from "heroui-native";
@@ -16,16 +16,6 @@ export function ThoughtViewScreen({ model, translate: t }: ModelLoadedProps) {
   const router = useRouter();
   if (res.status === "error") return res.error;
   const thought = res.value;
-  const slugs = new Set(
-    Array.from(thought.cognitiveDistortions).map((d) => d.slug)
-  );
-  const distortions = model.distortionData.list.filter((d) =>
-    slugs.has(d.slug)
-  );
-  const notSet = t("accessibility.thought_field_not_set");
-  const distortionsSummary = distortions.length
-    ? distortions.map((d) => t(d.labelKey)).join(", ")
-    : notSet;
 
   return (
     <StandardScreen
@@ -33,6 +23,27 @@ export function ThoughtViewScreen({ model, translate: t }: ModelLoadedProps) {
       leftAction={backHeaderAction(() => router.back())}
       contentClassName="flex-1 gap-4"
     >
+      <ThoughtFieldCards thought={thought} distortions={model.distortionData.list} translate={t} />
+    </StandardScreen>
+  );
+}
+
+export function ThoughtFieldCards({
+  thought,
+  distortions: availableDistortions,
+  translate: t,
+}: {
+  thought: Thought.Thought;
+  distortions: readonly Distortion.Distortion[];
+  translate: ModelLoadedProps["translate"];
+}) {
+  const slugs = new Set(Array.from(thought.cognitiveDistortions).map((d) => d.slug));
+  const distortions = availableDistortions.filter((d) => slugs.has(d.slug));
+  const notSet = t("accessibility.thought_field_not_set");
+  const distortionsSummary = distortions.length ? distortions.map((d) => t(d.labelKey)).join(", ") : notSet;
+
+  return (
+    <>
       <View testID="view-thought-screen" className="gap-1">
         <Typography type="h4">{t("auto_thought")}</Typography>
         <Link
@@ -116,6 +127,6 @@ export function ThoughtViewScreen({ model, translate: t }: ModelLoadedProps) {
           </View>
         </Link>
       </View>
-    </StandardScreen>
+    </>
   );
 }

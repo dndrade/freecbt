@@ -1,6 +1,5 @@
-import { ThoughtViewScreen } from "@/src/features/thoughts/thought-view-screen";
-import { LoadModel } from "@/src/hooks/use-model";
+import { ThoughtViewScreen } from "@/features/thoughtRecord/screens/ThoughtViewScreen";
 
 export default function Show() {
-  return <LoadModel ready={ThoughtViewScreen} />;
+  return <ThoughtViewScreen />;
 }

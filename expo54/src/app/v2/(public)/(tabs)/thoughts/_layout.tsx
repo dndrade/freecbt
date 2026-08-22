@@ -1,24 +1,5 @@
-import { AdaptiveThoughtsLayout } from "@/src/features/thoughts/adaptive-thoughts-layout";
-import { ThoughtListScreen } from "@/src/features/thoughts/thought-list-screen";
-import { LoadModel, ModelLoadedProps } from "@/src/hooks/use-model";
-import { Slot, useLocalSearchParams } from "expo-router";
-import React from "react";
+import { ThoughtsLayout } from "@/features/thoughtRecord/screens/ThoughtsLayout";
 
 export default function Layout() {
-  return <LoadModel ready={ThoughtsLayout} />;
-}
-
-function ThoughtsLayout(props: ModelLoadedProps) {
-  const { idOrKey } = useLocalSearchParams<{ idOrKey?: string }>();
-  const selectedId = typeof idOrKey === "string" ? idOrKey : null;
-
-  return (
-    <AdaptiveThoughtsLayout
-      list={<ThoughtListScreen {...props} />}
-      detail={<Slot />}
-      selectedId={selectedId}
-      hasThoughts={props.model.thoughts.size > 0}
-      selectThoughtText={props.translate("cbt_list.select_thought")}
-    />
-  );
+  return <ThoughtsLayout />;
 }
