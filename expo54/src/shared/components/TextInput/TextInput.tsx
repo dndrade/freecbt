@@ -10,7 +10,7 @@ import {
     TouchableOpacity,
     TextInputProps as RNTextInputProps,
 } from 'react-native';
-import { Icon } from '@/components/Icon';
+import { Icon } from '@/shared/components/Icon';
 
 export interface AppTextInputProps extends Omit<RNTextInputProps, 'style'> {
     value: string;

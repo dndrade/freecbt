@@ -1,4 +1,4 @@
-export { Section } from "@/components/Layout/section";
+export { Section } from "@/shared/components/Layout/section";
 export { SegmentedProgress } from "./segmented-progress";
 export { DotsProgress } from "./dots-progress";
 export { FlowAction } from "./flow/flow-action";

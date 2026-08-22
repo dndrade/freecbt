@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { Uniwind } from "uniwind";
-import { useModel } from "@/src/hooks/use-model";
+import { useModel } from "@/hooks/use-model";
 
 export function ThemeSync() {
     const [model] = useModel();

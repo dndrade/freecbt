@@ -2,7 +2,7 @@
 import React from 'react';
 import { I18nManager, StyleSheet, TouchableOpacity, View, ViewStyle } from 'react-native';
 import { Typography, useThemeColor } from 'heroui-native';
-import { Icon, SemanticIconName } from '@/src/components/Icon';
+import { Icon, SemanticIconName } from '@/shared/components/Icon';
 
 export interface HeaderAction {
     icon: SemanticIconName;

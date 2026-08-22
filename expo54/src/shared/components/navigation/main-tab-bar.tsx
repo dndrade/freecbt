@@ -14,8 +14,8 @@ import Animated, {
   useSharedValue,
   withTiming,
 } from "react-native-reanimated";
-import { useTranslate } from "@/src/i18n/use-i18n";
-import { TAB_CONFIG } from "@/src/constants/tabs-config";
+import { useTranslate } from "@/i18n/use-i18n";
+import { TAB_CONFIG } from "@/constants/tabs-config";
 
 // Matches the icon size already used for other interactive controls in this
 // app (TopBar back chevron, FlowAction icon) rather than inventing a
