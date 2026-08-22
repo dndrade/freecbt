@@ -2,7 +2,7 @@ import { Routes } from "@/src";
 import { ThoughtEditScreen } from "@/features/thoughtRecord/screens/ThoughtEditScreen";
 import { ensureThoughtRecordReady } from "@/features/thoughtRecord/services/ensureThoughtRecordReady";
 import { Thought } from "@/model";
-import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
+import { act, cleanup, fireEvent, screen, waitFor } from "@testing-library/react-native";
 import React from "react";
 import { Pressable } from "react-native";
 import { renderWithProviders } from "@/tests/support/render";
@@ -65,16 +65,28 @@ function save() {
 
 beforeEach(() => {
   jest.clearAllMocks();
+  ready.mockReset();
+  mockRead.mockReset();
+  mockWrite.mockReset();
   mockParams = {};
 });
+
+afterEach(cleanup);
 
 test("loads a valid route ID only after readiness", async () => {
   const record = thought("00000000-0000-4000-8000-000000000001", "loaded");
   mockParams = { idOrKey: record.uuid };
-  ready.mockResolvedValueOnce({} as never);
+  let resolveReady: (value: never) => void = () => undefined;
+  ready.mockReturnValueOnce(
+    new Promise((resolve) => {
+      resolveReady = resolve as (value: never) => void;
+    })
+  );
   mockRead.mockResolvedValueOnce(record);
   render();
 
+  expect(mockRead).not.toHaveBeenCalled();
+  await act(async () => resolveReady({} as never));
   await waitFor(() => expect(screen.getByTestId("automatic-thought-input").props.value).toBe("loaded"));
   expect(mockRead).toHaveBeenCalledWith(record.uuid);
 });
@@ -89,6 +101,7 @@ test("retries a missing or unreadable record", async () => {
   render();
 
   await waitFor(() => expect(screen.getByTestId("thought-edit-error")).toBeTruthy());
+  expect(screen.getByText("cbt_form.thought_load_failed")).toBeTruthy();
   fireEvent.press(screen.getByTestId("thought-edit-retry"));
 
   await waitFor(() => expect(screen.getByTestId("automatic-thought-input").props.value).toBe("recovered"));
@@ -114,6 +127,24 @@ test("ignores a stale read after the route ID changes", async () => {
 
   await waitFor(() => expect(screen.getByTestId("automatic-thought-input").props.value).toBe("current"));
   expect(screen.queryByDisplayValue("stale")).toBeNull();
+});
+
+test("does not start a read when readiness resolves after unmount", async () => {
+  const record = thought("00000000-0000-4000-8000-000000000007", "hidden");
+  let resolveReady: (value: never) => void = () => undefined;
+  mockParams = { idOrKey: record.uuid };
+  ready.mockReturnValueOnce(
+    new Promise((resolve) => {
+      resolveReady = resolve as (value: never) => void;
+    })
+  );
+  mockRead.mockResolvedValueOnce(record);
+  const view = render();
+
+  view.unmount();
+  await act(async () => resolveReady({} as never));
+
+  expect(mockRead).not.toHaveBeenCalled();
 });
 
 test("resets a loaded edit form when its requested slide changes", async () => {

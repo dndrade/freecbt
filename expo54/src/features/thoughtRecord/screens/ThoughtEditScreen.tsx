@@ -45,6 +45,7 @@ export function ThoughtEditScreen() {
     void (async () => {
       try {
         const db = await ensureThoughtRecordReady();
+        if (!current) return;
         const service = thoughtsService(DistortionData, db);
         const thought = await service.read(id);
         if (!current) return;
@@ -107,7 +108,7 @@ export function ThoughtEditScreen() {
     >
       {loadError !== null ? (
         <View testID="thought-edit-error" accessibilityRole="alert" className="gap-2">
-          <Typography type="body-sm">{t("cbt_form.thought_save_failed")}</Typography>
+          <Typography type="body-sm">{t("cbt_form.thought_load_failed")}</Typography>
           <Button testID="thought-edit-retry" variant="secondary" onPress={() => setRetryKey((key) => key + 1)}>
             {t("cbt_form.retry")}
           </Button>
