@@ -24,10 +24,6 @@
         "tests/*",
         "expo54/tests/*"
       ],
-      "@/components": [
-        "src/components/index.ts",
-        "expo54/src/components/index.ts"
-      ],
       "@/services": [
         "src/services/index.ts",
         "expo54/src/services/index.ts"

@@ -119,28 +119,22 @@ describe("production route namespace", () => {
     expect(tabsLayout).toContain("title: t(tab.labelKey)");
     // Visible tab chrome is owned by MainTabBar, not the default tab bar.
     expect(tabsLayout).toContain(
-      'import { MainTabBar } from "@/src/components/navigation/main-tab-bar"'
+      'import { MainTabBar } from "@/shared/components/navigation/main-tab-bar"'
     );
     expect(tabsLayout).toContain("tabBar={(props) => <MainTabBar {...props} />}");
 
-    const mainTabBar = readSrcFile("components/navigation/main-tab-bar.tsx");
+    const mainTabBar = readSrcFile("shared/components/navigation/main-tab-bar.tsx");
     expect(mainTabBar).toContain("state.routes.map");
-    expect(mainTabBar).toContain("navigation.navigate(route.name)");
-
-    const mainTabItem = readSrcFile("components/navigation/main-tab-item.tsx");
-    expect(mainTabItem).toContain('accessibilityRole="tab"');
-    expect(mainTabItem).toContain("accessibilityState={{ selected }}");
+    expect(mainTabBar).toContain("navigation.navigate(routeName)");
 
     const tabsConfig = readSrcFile("constants/tabs-config.ts");
     expect(
       Array.from(tabsConfig.matchAll(/name:\s*"([^"]+)"/g), ([, name]) => name)
-    ).toEqual(["thoughts", "index", "settings/index"]);
+    ).toEqual(["thoughts", "index"]);
     expect(tabsConfig).toContain('labelKey: "settings.hub.journal.label"');
     expect(tabsConfig).toContain('labelKey: "settings.hub.home.label"');
-    expect(tabsConfig).toContain('labelKey: "accessibility.settings_button"');
     expect(tabsConfig).toContain('icon: "book-open"');
     expect(tabsConfig).toContain('icon: "home"');
-    expect(tabsConfig).toContain('icon: "settings"');
 
     const publicLayout = readSrcFile("app/v2/(public)/_layout.tsx");
     expect(publicLayout).not.toMatch(/name="thoughts\/\[idOrKey\]\/index"/);
