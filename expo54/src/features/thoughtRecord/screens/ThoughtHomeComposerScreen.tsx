@@ -53,9 +53,10 @@ function ReadyThoughtHomeComposerScreen() {
   const t = useTranslate();
   const session = useThoughtWizardSession();
   const { toast } = useToast();
-  const [step, setStep] = React.useState(0);
+  const initialStep = Math.max(0, Thought.SlideName.options.indexOf(session.currentSlide));
+  const [step, setStep] = React.useState(initialStep);
   const [entryKey, setEntryKey] = React.useState(0);
-  const [paused, setPaused] = React.useState(true);
+  const [paused, setPaused] = React.useState(initialStep === 0);
   const [discarding, setDiscarding] = React.useState(false);
   const saving = React.useRef(false);
   const value = React.useMemo(

@@ -4,6 +4,7 @@ import { thoughtsService } from "@/features/thoughtRecord/services/thoughtsServi
 import { useThoughtWizardSession } from "@/features/thoughtRecord/store/useThoughtWizardSession";
 import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
 import React from "react";
+import { BackHandler } from "react-native";
 import { renderWithProviders } from "@/tests/support/render";
 
 const setOptions = jest.fn();
@@ -82,6 +83,30 @@ test("waits for readiness before rehydrating the Home session", async () => {
 
   await waitFor(() => expect(screen.getByTestId("automatic-thought-input")).toBeTruthy());
   expect(rehydrate).toHaveBeenCalledTimes(1);
+});
+
+test("keeps a restored later slide focused until staged Back pauses Home", async () => {
+  const handlers: (() => boolean)[] = [];
+  jest.spyOn(BackHandler, "addEventListener").mockImplementation((_event, handler) => {
+    handlers.push(handler as () => boolean);
+    return { remove: jest.fn() } as never;
+  });
+  act(() => useThoughtWizardSession.setState({
+    currentSlide: "challenge",
+    automaticThought: "I made a mistake",
+    challenge: "One moment does not define me",
+  }));
+
+  render();
+
+  await waitFor(() => expect(screen.getByTestId("challenge-input")).toBeTruthy());
+  expect(setOptions.mock.calls.at(-1)?.[0].tabBarStyle).toEqual({ display: "none" });
+  let handled = false;
+  act(() => {
+    handled = handlers.at(-1)?.() ?? false;
+  });
+  expect(handled).toBe(true);
+  await waitFor(() => expect(setOptions.mock.calls.at(-1)?.[0].tabBarStyle).toBeUndefined());
 });
 
 test("shows a success toast and resets Home after a direct save", async () => {
