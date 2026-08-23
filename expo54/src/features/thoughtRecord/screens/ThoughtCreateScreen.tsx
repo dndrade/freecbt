@@ -1,20 +1,16 @@
 import { Routes } from "@/src";
 import { useTranslate } from "@/i18n/use-i18n";
-import { DistortionData, Thought } from "@/model";
+import { Distortion, DistortionData, Thought } from "@/model";
 import { StandardScreen, backHeaderAction } from "@/shared/components";
 import { useThoughtEntryForm } from "@/features/thoughts/thought-entry-form";
-import { ensureThoughtRecordReady } from "../services/ensureThoughtRecordReady";
-import { thoughtsService } from "../services/thoughtsService";
+import { useThoughtWizardSession } from "../store/useThoughtWizardSession";
 import { useRouter } from "expo-router";
 import React from "react";
 
 export function ThoughtCreateScreen() {
   const t = useTranslate();
   const router = useRouter();
-  const [value, setValue] = React.useState(Thought.emptySpec);
-  const [isSaving, setIsSaving] = React.useState(false);
-  const [saveError, setSaveError] = React.useState<string | null>(null);
-  const saving = React.useRef(false);
+  const session = useThoughtWizardSession();
   const mounted = React.useRef(false);
 
   React.useEffect(() => {
@@ -24,34 +20,60 @@ export function ThoughtCreateScreen() {
     };
   }, []);
 
+  const value = React.useMemo(
+    () => ({
+      automaticThought: session.automaticThought,
+      cognitiveDistortions: Distortion.createParsers(
+        DistortionData,
+      ).fromSlugSet.decode(new Set(session.selectedDistortionSlugs)),
+      challenge: session.challenge,
+      alternativeThought: session.alternativeThought,
+    }),
+    [
+      session.alternativeThought,
+      session.automaticThought,
+      session.challenge,
+      session.selectedDistortionSlugs,
+    ],
+  );
+
+  const change = React.useCallback(
+    (next: Thought.Spec) => {
+      session.setAutomaticThought(next.automaticThought);
+      session.setChallenge(next.challenge);
+      session.setAlternativeThought(next.alternativeThought);
+      const selected = new Set<string>(
+        [...next.cognitiveDistortions].map((distortion) => distortion.slug),
+      );
+      for (const slug of session.selectedDistortionSlugs) {
+        if (!selected.has(slug)) session.toggleDistortion(slug);
+      }
+      for (const slug of selected) {
+        if (!session.selectedDistortionSlugs.includes(slug))
+          session.toggleDistortion(slug);
+      }
+    },
+    [session],
+  );
+
   const save = React.useCallback(async () => {
-    if (saving.current || !Thought.isMeaningfulSpec(value)) return;
-    saving.current = true;
-    setIsSaving(true);
-    setSaveError(null);
-    try {
-      const db = await ensureThoughtRecordReady();
-      const thought = Thought.create(value, new Date());
-      await thoughtsService(DistortionData, db).write(thought);
-      if (mounted.current) router.replace(Routes.thoughtViewV2(thought.uuid));
-    } catch {
-      if (mounted.current) setSaveError(t("cbt_form.thought_save_failed"));
-    } finally {
-      saving.current = false;
-      if (mounted.current) setIsSaving(false);
+    const result = await session.saveRecord();
+    if (result.status === "saved" && mounted.current) {
+      router.replace(Routes.thoughtViewV2(result.thought.uuid));
     }
-  }, [router, t, value]);
+  }, [router, session]);
 
   const { body, actions } = useThoughtEntryForm({
     route: "compatibility",
     translate: t,
     distortions: DistortionData.list,
     value,
-    onChange: setValue,
+    onChange: change,
     onSave: save,
     onRetry: save,
-    isSaving,
-    saveError,
+    isSaving: session.isSaving,
+    saveError:
+      session.error === null ? null : t("cbt_form.thought_save_failed"),
   });
 
   return (

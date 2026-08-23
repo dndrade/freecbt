@@ -47,6 +47,13 @@ jest.mock("expo-router", () => ({
     },
   }),
 }));
+jest.mock("@/services/storage/zustandStorage", () => ({
+  zustandMmkvStorage: {
+    getItem: () => null,
+    setItem: () => undefined,
+    removeItem: () => undefined,
+  },
+}));
 jest.mock("@/features/thoughtRecord/services/ensureThoughtRecordReady", () => ({
   ensureThoughtRecordReady: jest.fn(),
 }));

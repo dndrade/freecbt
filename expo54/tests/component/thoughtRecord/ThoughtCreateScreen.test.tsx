@@ -2,15 +2,30 @@ import { Routes } from "@/src";
 import { ThoughtCreateScreen } from "@/features/thoughtRecord/screens/ThoughtCreateScreen";
 import { ensureThoughtRecordReady } from "@/features/thoughtRecord/services/ensureThoughtRecordReady";
 import { thoughtsService } from "@/features/thoughtRecord/services/thoughtsService";
-import { act, cleanup, fireEvent, screen, waitFor } from "@testing-library/react-native";
+import { useThoughtWizardSession } from "@/features/thoughtRecord/store/useThoughtWizardSession";
+import {
+  act,
+  cleanup,
+  fireEvent,
+  screen,
+  waitFor,
+} from "@testing-library/react-native";
 import React from "react";
 import { renderWithProviders } from "@/tests/support/render";
 
 const mockReplace = jest.fn();
 const mockWrite = jest.fn();
+const values = new Map<string, string>();
 
 jest.mock("expo-router", () => ({
   useRouter: () => ({ back: jest.fn(), replace: mockReplace }),
+}));
+jest.mock("@/services/storage/zustandStorage", () => ({
+  zustandMmkvStorage: {
+    getItem: (key: string) => values.get(key) ?? null,
+    setItem: (key: string, value: string) => values.set(key, value),
+    removeItem: (key: string) => values.delete(key),
+  },
 }));
 jest.mock("@/features/thoughtRecord/services/ensureThoughtRecordReady", () => ({
   ensureThoughtRecordReady: jest.fn(),
@@ -45,11 +60,15 @@ function save() {
 
 beforeEach(() => {
   jest.clearAllMocks();
+  act(() => useThoughtWizardSession.getState().reset());
 });
 
-afterEach(cleanup);
+afterEach(() => {
+  values.clear();
+  cleanup();
+});
 
-test("writes the local form and replaces with its saved thought", async () => {
+test("writes the session draft and replaces with its saved thought", async () => {
   ready.mockResolvedValueOnce({} as never);
   mockWrite.mockResolvedValueOnce(undefined);
   render();
@@ -62,6 +81,7 @@ test("writes the local form and replaces with its saved thought", async () => {
   expect(service).toHaveBeenCalledTimes(1);
   expect(thought.automaticThought).toBe("Keep this thought");
   expect(mockReplace).toHaveBeenCalledWith(Routes.thoughtViewV2(thought.uuid));
+  expect(useThoughtWizardSession.getState().automaticThought).toBe("");
 });
 
 test("does not write an empty standalone thought", () => {
@@ -72,7 +92,9 @@ test("does not write an empty standalone thought", () => {
   expect(ready).not.toHaveBeenCalled();
   expect(mockWrite).not.toHaveBeenCalled();
   expect(mockReplace).not.toHaveBeenCalled();
-  expect(screen.getByTestId("thought-entry-save").props.accessibilityState).toMatchObject({
+  expect(
+    screen.getByTestId("thought-entry-save").props.accessibilityState,
+  ).toMatchObject({
     disabled: false,
   });
 });
@@ -83,7 +105,7 @@ test("does not replace after a successful write resolves after unmount", async (
   mockWrite.mockReturnValueOnce(
     new Promise<void>((resolve) => {
       resolveWrite = resolve;
-    })
+    }),
   );
   const view = render();
 
@@ -105,12 +127,14 @@ test("retains input and retries a failed write inline", async () => {
   enterAutomaticThought("Do not lose this");
   save();
 
-  await waitFor(() => expect(screen.getByTestId("thought-entry-save-error")).toBeTruthy());
+  await waitFor(() =>
+    expect(screen.getByTestId("thought-entry-save-error")).toBeTruthy(),
+  );
   fireEvent.press(screen.getByTestId("thought-entry-previous"));
   fireEvent.press(screen.getByTestId("thought-entry-previous"));
   fireEvent.press(screen.getByTestId("thought-entry-previous"));
   expect(screen.getByTestId("automatic-thought-input").props.value).toBe(
-    "Do not lose this"
+    "Do not lose this",
   );
 
   fireEvent.press(screen.getByTestId("thought-entry-next"));
@@ -119,4 +143,20 @@ test("retains input and retries a failed write inline", async () => {
   fireEvent.press(screen.getByTestId("thought-entry-retry"));
 
   await waitFor(() => expect(mockReplace).toHaveBeenCalledTimes(1));
+});
+
+test("resumes a draft already present in the session after remount", () => {
+  act(() =>
+    useThoughtWizardSession
+      .getState()
+      .setAutomaticThought("Resumed after restart"),
+  );
+
+  const view = render();
+  view.unmount();
+  render();
+
+  expect(screen.getByTestId("automatic-thought-input").props.value).toBe(
+    "Resumed after restart",
+  );
 });
