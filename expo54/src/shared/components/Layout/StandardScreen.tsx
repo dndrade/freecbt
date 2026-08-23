@@ -11,7 +11,8 @@ import {
 } from 'react-native';
 import { BottomTabBarHeightContext } from '@react-navigation/bottom-tabs';
 import { cn, useThemeColor } from 'heroui-native';
-import { ScreenContainer, ScreenHeader, HeaderAction } from './Base';
+import { ScreenContainer, ScreenHeader } from './Base';
+import type { HeaderAction } from './Base/ScreenHeader';
 
 export interface StandardScreenProps extends AccessibilityProps {
     title?: string;

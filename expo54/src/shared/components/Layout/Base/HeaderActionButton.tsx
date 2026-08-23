@@ -26,14 +26,14 @@ export interface HeaderAction {
 export function backHeaderAction(
   onPress: () => void,
   opts?: { accessibilityLabel?: string; testID?: string },
-): HeaderAction {
+) {
   return {
     icon: I18nManager.isRTL ? "chevron-right" : "chevron-left",
     onPress,
     accessibilityLabel: opts?.accessibilityLabel ?? "Back",
     accessibilityHint: "Navigates to previous screen",
     testID: opts?.testID,
-  };
+  } satisfies HeaderAction;
 }
 
 export interface HeaderActionButtonProps extends Omit<
