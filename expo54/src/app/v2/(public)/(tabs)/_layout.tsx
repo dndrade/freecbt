@@ -2,16 +2,24 @@
 
 import { Tabs } from "expo-router";
 import React from "react";
+import { useThemeColor } from "heroui-native";
 import { useTranslate } from "@/src/i18n/use-i18n";
 import { TAB_CONFIG } from "@/src/constants/tabs-config";
 import { MainTabBar } from "@/shared/components/navigation/main-tab-bar";
 
 export default function Layout() {
   const t = useTranslate();
+  const background = useThemeColor("background");
+  const foreground = useThemeColor("foreground");
 
   return (
     <Tabs
-      screenOptions={{ headerShown: false }}
+      screenOptions={{
+        headerStyle: { backgroundColor: background },
+        headerTintColor: foreground,
+        headerTitleStyle: { color: foreground, fontWeight: "600" },
+        headerShadowVisible: false,
+      }}
       tabBar={(props) => <MainTabBar {...props} />}
     >
       {TAB_CONFIG.map((tab) => (
