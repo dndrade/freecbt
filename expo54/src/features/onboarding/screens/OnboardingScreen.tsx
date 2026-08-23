@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState } from "react";
 import {
   AccessibilityInfo,
   Keyboard,
@@ -6,58 +6,62 @@ import {
   Platform,
   Pressable,
   View,
-} from 'react-native';
-import Carousel, { ICarouselInstance } from 'react-native-reanimated-carousel';
-import { useRouter } from 'expo-router';
-import { Typography, useThemeColor } from 'heroui-native';
+} from "react-native";
+import Carousel, { ICarouselInstance } from "react-native-reanimated-carousel";
+import { Typography, useThemeColor } from "heroui-native";
 
-import { ErrorBoundary, FlowAction, FlowProgress, StandardScreen, backHeaderAction } from '@/shared/components';
-import { useReminders } from '@/features/reminders/use-reminders';
-import { useI18n } from '@/i18n/use-i18n';
-import { useOnboardingFlow } from '../store/useOnboardingFlow';
-import { buildOnboardingSteps, type OnboardingStepDefinition } from '../steps';
+import {
+  ErrorBoundary,
+  FlowAction,
+  FlowProgress,
+  StandardScreen,
+  backHeaderAction,
+} from "@/shared/components";
+import { useReminders } from "@/features/reminders/use-reminders";
+import { useI18n } from "@/i18n/use-i18n";
+import { useOnboardingFlow } from "../store/useOnboardingFlow";
+import { buildOnboardingSteps, type OnboardingStepDefinition } from "../steps";
 
 export type OnboardingScreenProps = {
-  onSkip?: () => void | Promise<void>;
-  onComplete?: () => void | Promise<void>;
+  onSkip: () => void | Promise<void>;
+  onComplete: () => void | Promise<void>;
 };
 
-export function OnboardingScreen({ onSkip, onComplete }: OnboardingScreenProps) {
+export function OnboardingScreen({
+  onSkip,
+  onComplete,
+}: OnboardingScreenProps) {
   const ref = useRef<ICarouselInstance>(null);
   const transitionPending = useRef(false);
   const announcedIndex = useRef(0);
-  const [pagerSize, setPagerSize] = useState<{ width: number; height: number }>();
+  const [pagerSize, setPagerSize] = useState<{
+    width: number;
+    height: number;
+  }>();
 
-  const router = useRouter();
   const i18n = useI18n();
   const t = (key: string, opts?: any) => i18n.t(key, opts);
   const reminders = useReminders();
-  const accent = useThemeColor('accent');
+  const accent = useThemeColor("accent");
 
   const activeIndex = useOnboardingFlow((s) => s.activeIndex);
   const setActiveIndex = useOnboardingFlow((s) => s.setActiveIndex);
   const finish = useOnboardingFlow((s) => s.finish);
 
-  const slides = buildOnboardingSteps({ includeReminders: reminders.isSupported() });
+  const slides = buildOnboardingSteps({
+    includeReminders: reminders.isSupported(),
+  });
   const isFinal = activeIndex === slides.length - 1;
 
-  const handleFinish = async () => {
+  const complete = async (callback: () => void | Promise<void>) => {
     await finish();
-    if (onComplete) {
-      await onComplete();
-    } else {
-      router.replace('/v2/thoughts/create');
+    if (useOnboardingFlow.getState().completion === "idle") {
+      await callback();
     }
   };
 
-  const handleSkip = async () => {
-    await finish();
-    if (onSkip) {
-      await onSkip();
-    } else {
-      router.replace('/v2/thoughts/create');
-    }
-  };
+  const handleFinish = () => complete(onComplete);
+  const handleSkip = () => complete(onSkip);
 
   function onPressStep(count: -1 | 1) {
     if (
@@ -78,7 +82,9 @@ export function OnboardingScreen({ onSkip, onComplete }: OnboardingScreenProps) 
     if (width === 0 || height === 0) return;
 
     setPagerSize((current) =>
-      current?.width === width && current.height === height ? current : { width, height }
+      current?.width === width && current.height === height
+        ? current
+        : { width, height },
     );
   }
 
@@ -88,20 +94,22 @@ export function OnboardingScreen({ onSkip, onComplete }: OnboardingScreenProps) 
         variant="dots"
         currentIndex={activeIndex}
         count={slides.length}
-        accessibilityLabel={t('onboarding_screen.progress')}
-        accessibilityValueText={t('onboarding_screen.progress_step', {
+        accessibilityLabel={t("onboarding_screen.progress")}
+        accessibilityValueText={t("onboarding_screen.progress_step", {
           step: activeIndex + 1,
           count: slides.length,
         })}
       />
       <View className="h-12 w-48 items-center">
         <FlowAction
-          state={isFinal ? 'final' : 'next'}
+          state={isFinal ? "final" : "next"}
           onPress={isFinal ? handleFinish : () => onPressStep(1)}
           accessibilityLabel={
-            isFinal ? t('onboarding_screen.get_started') : t('onboarding_screen.next')
+            isFinal
+              ? t("onboarding_screen.get_started")
+              : t("onboarding_screen.next")
           }
-          finalLabel={t('onboarding_screen.get_started')}
+          finalLabel={t("onboarding_screen.get_started")}
         />
       </View>
     </View>
@@ -112,20 +120,20 @@ export function OnboardingScreen({ onSkip, onComplete }: OnboardingScreenProps) 
       leftAction={
         activeIndex > 0
           ? backHeaderAction(() => onPressStep(-1), {
-              accessibilityLabel: t('onboarding_screen.previous'),
+              accessibilityLabel: t("onboarding_screen.previous"),
             })
           : undefined
       }
       right={
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel={t('onboarding_screen.skip')}
+          accessibilityLabel={t("onboarding_screen.skip")}
           className="items-center justify-center"
           style={{ minWidth: 44, height: 44, paddingHorizontal: 8 }}
           onPress={handleSkip}
         >
           <Typography type="body-sm" style={{ color: accent }}>
-            {t('onboarding_screen.skip')}
+            {t("onboarding_screen.skip")}
           </Typography>
         </Pressable>
       }
@@ -142,26 +150,39 @@ export function OnboardingScreen({ onSkip, onComplete }: OnboardingScreenProps) 
           <Carousel
             ref={ref}
             data={slides}
-            renderItem={({ item, index }: { item: OnboardingStepDefinition; index: number }) => {
+            renderItem={({
+              item,
+              index,
+            }: {
+              item: OnboardingStepDefinition;
+              index: number;
+            }) => {
               const isActive = index === activeIndex;
               return (
                 <View
                   testID={`onboarding-page-${item.id}`}
                   accessibilityElementsHidden={!isActive}
                   aria-hidden={!isActive}
-                  importantForAccessibility={isActive ? 'auto' : 'no-hide-descendants'}
+                  importantForAccessibility={
+                    isActive ? "auto" : "no-hide-descendants"
+                  }
                   focusable={isActive ? undefined : false}
                   tabIndex={isActive ? undefined : -1}
-                  {...(Platform.OS === 'web' && !isActive
-                    ? ({ inert: true } as unknown as React.ComponentProps<typeof View>)
+                  {...(Platform.OS === "web" && !isActive
+                    ? ({ inert: true } as unknown as React.ComponentProps<
+                        typeof View
+                      >)
                     : {})}
-                  style={{ width: '100%', flex: 1 }}
+                  style={{ width: "100%", flex: 1 }}
                 >
                   <ErrorBoundary
                     fallback={null}
                     onError={(err) => {
                       if (__DEV__) {
-                        console.warn(`onboarding step "${item.id}" failed to render:`, err);
+                        console.warn(
+                          `onboarding step "${item.id}" failed to render:`,
+                          err,
+                        );
                       }
                     }}
                   >
@@ -184,7 +205,7 @@ export function OnboardingScreen({ onSkip, onComplete }: OnboardingScreenProps) 
               Keyboard.dismiss();
             }}
             onConfigurePanGesture={(gesture) => {
-              'worklet';
+              "worklet";
               gesture.activeOffsetX([-10, 10]);
             }}
           />
