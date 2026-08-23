@@ -1,5 +1,5 @@
 // src/features/settings/screens/SettingsScreen.tsx
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { StyleSheet, ScrollView, Modal, Text, Linking } from "react-native";
 import { Typography } from "heroui-native";
 import { useTranslation } from "react-i18next";
@@ -21,12 +21,8 @@ export const SettingsScreen: React.FC = () => {
   const { t } = useTranslation(["common"]);
   const [isLanguageModalOpen, setIsLanguageModalOpen] = useState(false);
 
-  const { settings, initialize, setReminders } = useSettings();
+  const { settings, setReminders } = useSettings();
   const appVersion = Constants.expoConfig?.version ?? "1.0.0";
-
-  useEffect(() => {
-    void initialize();
-  }, [initialize]);
 
   useScreenHeader({ title: t("settings.header", "Settings") });
 
