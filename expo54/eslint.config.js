@@ -106,6 +106,30 @@ module.exports = defineConfig([
     },
   },
   {
+    files: ["src/view/screens/**/*.{ts,tsx}"],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            {
+              group: [
+                "@/src/features/**",
+                "**/features/**",
+                "@/src/model/**",
+                "**/model/**",
+                "@/model",
+                "@/model/**",
+              ],
+              message:
+                "view/ screens must stay feature-agnostic; use shared/ primitives and platform-level hooks only, not feature or model internals.",
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
     files: ["src/app/**/*.{ts,tsx}"],
     ignores: ["src/app/v2/debug/**", "**/*.test.ts", "**/*.test.tsx"],
     rules: {

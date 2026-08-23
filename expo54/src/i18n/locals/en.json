@@ -271,6 +271,7 @@
     "header": "FreeCBT",
     "edit": "Edit",
     "new": "New",
+    "new_thought": "New Thought",
     "save": "Save",
     "submit": "Save & Finish",
     "// auto_thought_placeholder_UNUSED": "ex: \"The plane might crash\"",

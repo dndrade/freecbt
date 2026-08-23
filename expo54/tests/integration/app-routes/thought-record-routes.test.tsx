@@ -1,12 +1,10 @@
 import Create from "@/app/v2/(public)/thoughts/create";
 import Edit from "@/app/v2/(public)/thoughts/[idOrKey]/edit";
-import Home from "@/app/v2/(public)/(tabs)/index";
 import List from "@/app/v2/(public)/(tabs)/thoughts";
 import ThoughtsLayoutRoute from "@/app/v2/(public)/(tabs)/thoughts/_layout";
 import View from "@/app/v2/(public)/(tabs)/thoughts/[idOrKey]";
 import { ThoughtCreateScreen } from "@/features/thoughtRecord/screens/ThoughtCreateScreen";
 import { ThoughtEditScreen } from "@/features/thoughtRecord/screens/ThoughtEditScreen";
-import { ThoughtHomeComposerScreen } from "@/features/thoughtRecord/screens/ThoughtHomeComposerScreen";
 import { ThoughtViewScreen } from "@/features/thoughtRecord/screens/ThoughtViewScreen";
 import { ensureThoughtRecordReady } from "@/features/thoughtRecord/services/ensureThoughtRecordReady";
 import { I18nProvider } from "@/i18n/use-i18n";
@@ -19,9 +17,6 @@ jest.mock("@/features/thoughtRecord/screens/ThoughtCreateScreen", () => ({
 }));
 jest.mock("@/features/thoughtRecord/screens/ThoughtEditScreen", () => ({
   ThoughtEditScreen: jest.fn(() => null),
-}));
-jest.mock("@/features/thoughtRecord/screens/ThoughtHomeComposerScreen", () => ({
-  ThoughtHomeComposerScreen: jest.fn(() => null),
 }));
 jest.mock("@/features/thoughtRecord/screens/ThoughtViewScreen", () => ({
   ThoughtViewScreen: jest.fn(() => null),
@@ -53,7 +48,6 @@ beforeEach(() => {
 test.each([
   ["create", Create, ThoughtCreateScreen],
   ["edit", Edit, ThoughtEditScreen],
-  ["home", Home, ThoughtHomeComposerScreen],
   ["view", View, ThoughtViewScreen],
 ])("wires the %s route to its screen", (_name, Route, Screen) => {
   render(<Route />);

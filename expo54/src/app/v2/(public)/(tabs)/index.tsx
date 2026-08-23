@@ -1,5 +1,5 @@
-import { ThoughtHomeComposerScreen } from "@/features/thoughtRecord/screens/ThoughtHomeComposerScreen";
+import { HomeScreen } from "@/view/screens/HomeScreen";
 
 export default function Index() {
-  return <ThoughtHomeComposerScreen />;
+  return <HomeScreen />;
 }
