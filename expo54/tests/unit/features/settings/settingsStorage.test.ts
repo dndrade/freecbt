@@ -1,6 +1,7 @@
 import { Settings } from "@/src/model";
 import {
   settings,
+  readLegacyPublicSettings,
   type SettingsSecureStoreLike,
 } from "@/src/features/settings/data/settingsStorage";
 import { createFakeAsyncStorage as fakeAsyncStorage } from "@/tests/support/async-storage";
@@ -92,4 +93,34 @@ test("clear: removes the pincode from SecureStore and other keys from AsyncStora
   await s.clear();
   expect(await secure.getItemAsync(Settings.pincodeSecureKey)).toBe(null);
   expect(await async.getItem(Settings.themeKey)).toBe(null);
+});
+
+test("readLegacyPublicSettings reads only locale, reminders, and existingUser, ignoring pincode", async () => {
+  const async = fakeAsyncStorage({
+    [Settings.localeKey]: "es",
+    [Settings.remindersKey]: "1",
+    [Settings.existingUserKey]: "1",
+    [Settings.pincodeKey]: "1234",
+  });
+  const result = await readLegacyPublicSettings(async);
+  expect(result).toEqual({ locale: "es", reminders: true, existingUser: true });
+});
+
+test("readLegacyPublicSettings defaults missing keys the same way read() does", async () => {
+  const async = fakeAsyncStorage();
+  const result = await readLegacyPublicSettings(async);
+  expect(result).toEqual({
+    locale: null,
+    reminders: false,
+    existingUser: false,
+  });
+});
+
+test("readLegacyPublicSettings never writes to AsyncStorage", async () => {
+  const async = fakeAsyncStorage({ [Settings.pincodeKey]: "1234" });
+  const setItemSpy = jest.spyOn(async, "setItem");
+  const removeItemSpy = jest.spyOn(async, "removeItem");
+  await readLegacyPublicSettings(async);
+  expect(setItemSpy).not.toHaveBeenCalled();
+  expect(removeItemSpy).not.toHaveBeenCalled();
 });
