@@ -14,6 +14,7 @@ jest.mock("@/shared/components", () => ({
 
 jest.mock("expo-router", () => ({
   useRouter: () => ({ back: jest.fn() }),
+  useNavigation: () => ({ setOptions: jest.fn() }),
 }));
 
 jest.mock("@/src/features/backup/backup-flags", () => ({
@@ -21,11 +22,13 @@ jest.mock("@/src/features/backup/backup-flags", () => ({
 }));
 
 jest.mock("@/src/features/backup/encrypted-backup-export", () => ({
-  EncryptedBackupExport: () => React.createElement(Text, null, "encrypted-export"),
+  EncryptedBackupExport: () =>
+    React.createElement(Text, null, "encrypted-export"),
 }));
 
 jest.mock("@/src/features/backup/encrypted-backup-import", () => ({
-  EncryptedBackupImport: () => React.createElement(Text, null, "encrypted-import"),
+  EncryptedBackupImport: () =>
+    React.createElement(Text, null, "encrypted-import"),
 }));
 
 jest.mock("@/src/features/backup/legacy-backup-export", () => ({
@@ -53,7 +56,7 @@ function renderScreen() {
         } as never
       }
       translate={(key: string) => key}
-    />
+    />,
   );
 }
 

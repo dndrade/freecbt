@@ -11,14 +11,19 @@ jest.mock("@/shared/components", () => {
   const { Text, View } = jest.requireActual("react-native");
 
   return {
-    Screen: ({ children }: { children: React.ReactNode }) => <View>{children}</View>,
-    Section: ({ children }: { children: React.ReactNode }) => <View>{children}</View>,
+    Screen: ({ children }: { children: React.ReactNode }) => (
+      <View>{children}</View>
+    ),
+    Section: ({ children }: { children: React.ReactNode }) => (
+      <View>{children}</View>
+    ),
   };
 });
 
 jest.mock("@/src/features/lock/ui/pin-input", () => {
   const React = jest.requireActual("react");
-  const { Pressable, Text, TextInput, View } = jest.requireActual("react-native");
+  const { Pressable, Text, TextInput, View } =
+    jest.requireActual("react-native");
 
   return {
     PinInput: ({
@@ -49,6 +54,7 @@ jest.mock("expo-router", () => {
       <Text testID="redirect">{href}</Text>
     ),
     useRouter: () => ({ back: jest.fn() }),
+    useNavigation: () => ({ setOptions: jest.fn() }),
   };
 });
 
@@ -57,7 +63,7 @@ function renderPinUpdateScreen() {
     <PinUpdateScreen
       dispatch={mockDispatch}
       translate={(key: string) => key}
-    />
+    />,
   );
 }
 

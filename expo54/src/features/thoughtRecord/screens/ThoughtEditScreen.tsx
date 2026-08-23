@@ -1,10 +1,17 @@
 import { Routes } from "@/src";
 import { useTranslate } from "@/i18n/use-i18n";
 import { DistortionData, Thought } from "@/model";
-import { StandardScreen, backHeaderAction } from "@/shared/components";
+import {
+  StandardScreen,
+  backHeaderAction,
+  useScreenHeader,
+} from "@/shared/components";
 import { useThoughtEntryForm } from "@/features/thoughts/thought-entry-form";
 import { ensureThoughtRecordReady } from "../services/ensureThoughtRecordReady";
-import { thoughtsService, type ThoughtsService } from "../services/thoughtsService";
+import {
+  thoughtsService,
+  type ThoughtsService,
+} from "../services/thoughtsService";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Button, Typography } from "heroui-native";
 import React from "react";
@@ -61,7 +68,11 @@ export function ThoughtEditScreen() {
         setLoaded({ thought, service });
       } catch (error) {
         if (current) {
-          setLoadError(error instanceof Error ? error : new Error("could not load thought"));
+          setLoadError(
+            error instanceof Error
+              ? error
+              : new Error("could not load thought"),
+          );
         }
       }
     })();
@@ -106,18 +117,31 @@ export function ThoughtEditScreen() {
     saveError,
   });
 
+  useScreenHeader({
+    title: t("cbt_form.edit"),
+    leftAction: backHeaderAction(() => router.back()),
+  });
+
   return (
     <StandardScreen
-      title={t("cbt_form.edit")}
-      leftAction={backHeaderAction(() => router.back())}
       scrollable={false}
       contentClassName="flex-1 gap-3"
       footer={loaded === null ? undefined : actions}
     >
       {loadError !== null ? (
-        <View testID="thought-edit-error" accessibilityRole="alert" className="gap-2">
-          <Typography type="body-sm">{t("cbt_form.thought_load_failed")}</Typography>
-          <Button testID="thought-edit-retry" variant="secondary" onPress={() => setRetryKey((key) => key + 1)}>
+        <View
+          testID="thought-edit-error"
+          accessibilityRole="alert"
+          className="gap-2"
+        >
+          <Typography type="body-sm">
+            {t("cbt_form.thought_load_failed")}
+          </Typography>
+          <Button
+            testID="thought-edit-retry"
+            variant="secondary"
+            onPress={() => setRetryKey((key) => key + 1)}
+          >
             {t("cbt_form.retry")}
           </Button>
         </View>

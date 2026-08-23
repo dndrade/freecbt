@@ -1,4 +1,8 @@
-import { StandardScreen, backHeaderAction } from "@/shared/components";
+import {
+  StandardScreen,
+  backHeaderAction,
+  useScreenHeader,
+} from "@/shared/components";
 import { useThoughtEntryForm } from "./thought-entry-form";
 import { ModelLoadedProps } from "@/src/hooks/use-model";
 import { Action, Thought } from "@/src/model";
@@ -6,13 +10,17 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useState } from "react";
 import { useThoughtFromParams } from "./use-thought-from-route";
 
-export function ThoughtEditScreen({ model, dispatch, translate: t }: ModelLoadedProps) {
+export function ThoughtEditScreen({
+  model,
+  dispatch,
+  translate: t,
+}: ModelLoadedProps) {
   const res = useThoughtFromParams(model);
   const router = useRouter();
   const params = useLocalSearchParams<{ slide?: string }>();
   const slide = Thought.SlideName.safeParse(params.slide);
   const [value, setValue] = useState<Thought.Spec>(
-    res.status === "success" ? res.value : Thought.emptySpec()
+    res.status === "success" ? res.value : Thought.emptySpec(),
   );
   const { body, actions } = useThoughtEntryForm({
     route: "compatibility",
@@ -28,19 +36,19 @@ export function ThoughtEditScreen({ model, dispatch, translate: t }: ModelLoaded
           ...res.value,
           // strip extra fields, just in case they somehow end up here
           ...Thought.Spec.decode(value),
-        })
+        }),
       );
     },
   });
 
+  useScreenHeader({
+    title: t("cbt_form.edit"),
+    leftAction: backHeaderAction(() => router.back()),
+  });
+
   if (res.status === "error") return res.error;
   return (
-    <StandardScreen
-      title={t("cbt_form.edit")}
-      leftAction={backHeaderAction(() => router.back())}
-      scrollable={false}
-      contentClassName="flex-1"
-    >
+    <StandardScreen scrollable={false} contentClassName="flex-1">
       {body}
       {actions}
     </StandardScreen>

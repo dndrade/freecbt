@@ -1,6 +1,10 @@
 import { DistortionData, Thought } from "@/model";
 import { useTranslate } from "@/i18n/use-i18n";
-import { StandardScreen, backHeaderAction } from "@/shared/components";
+import {
+  StandardScreen,
+  HeaderActionButton,
+  backHeaderAction,
+} from "@/shared/components";
 import { ThoughtFieldCards } from "@/features/thoughts/thought-view-screen";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Button, Typography } from "heroui-native";
@@ -36,7 +40,12 @@ export function ThoughtViewScreen() {
         const thought = await thoughtsService(DistortionData, db).read(id);
         if (current) setThought(thought);
       } catch (error) {
-        if (current) setError(error instanceof Error ? error : new Error("could not load thought"));
+        if (current)
+          setError(
+            error instanceof Error
+              ? error
+              : new Error("could not load thought"),
+          );
       }
     })();
     return () => {
@@ -45,18 +54,33 @@ export function ThoughtViewScreen() {
   }, [id, retryKey]);
 
   return (
-    <StandardScreen title={t("cbt_view.header")} leftAction={backHeaderAction(() => router.back())} contentClassName="flex-1 gap-4">
+    <StandardScreen contentClassName="flex-1 gap-4">
+      <HeaderActionButton action={backHeaderAction(() => router.back())} />
       {error !== null ? (
-        <View testID="thought-view-error" accessibilityRole="alert" className="gap-2">
-          <Typography type="body-sm">{t("cbt_form.thought_load_failed")}</Typography>
-          <Button testID="thought-view-retry" variant="secondary" onPress={() => setRetryKey((key) => key + 1)}>
+        <View
+          testID="thought-view-error"
+          accessibilityRole="alert"
+          className="gap-2"
+        >
+          <Typography type="body-sm">
+            {t("cbt_form.thought_load_failed")}
+          </Typography>
+          <Button
+            testID="thought-view-retry"
+            variant="secondary"
+            onPress={() => setRetryKey((key) => key + 1)}
+          >
             {t("cbt_form.retry")}
           </Button>
         </View>
       ) : thought === null ? (
         <ActivityIndicator testID="thought-view-loading" />
       ) : (
-        <ThoughtFieldCards thought={thought} distortions={DistortionData.list} translate={t} />
+        <ThoughtFieldCards
+          thought={thought}
+          distortions={DistortionData.list}
+          translate={t}
+        />
       )}
     </StandardScreen>
   );

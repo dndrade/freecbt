@@ -37,11 +37,11 @@ const style = {
 const translate = ((k: string) => {
   const translations: Record<string, string> = {
     "accessibility.thought_field_not_set": "Not set",
-    "auto_thought": "auto_thought",
-    "challenge": "challenge",
-    "cog_distortion": "cog_distortion",
-    "alt_thought": "alt_thought",
-    "all_or_nothing_thinking": "all_or_nothing_thinking",
+    auto_thought: "auto_thought",
+    challenge: "challenge",
+    cog_distortion: "cog_distortion",
+    alt_thought: "alt_thought",
+    all_or_nothing_thinking: "all_or_nothing_thinking",
   };
   return translations[k] ?? k;
 }) as any;
@@ -65,25 +65,33 @@ jest.mock("expo-router", () => {
       }
       return React.createElement(Pressable, { ref, ...rest });
     }),
-    Redirect: ({ href }: { href: string }) => React.createElement(View, { testID: "redirect" }),
+    Redirect: ({ href }: { href: string }) =>
+      React.createElement(View, { testID: "redirect" }),
     Unmatched: () => React.createElement(View, { testID: "unmatched" }),
   };
 });
 
 describe("ThoughtViewScreen", () => {
-  it("renders a header and value-aware accessible labels for each field", () => {
+  it("renders inline back navigation and value-aware accessible labels for each field", () => {
     mockUseLocalSearchParams.mockReturnValue({ idOrKey: thought.uuid });
 
     renderWithProviders(
-      <ThoughtViewScreen model={model} translate={translate} dispatch={jest.fn()} style={style} />
+      <ThoughtViewScreen
+        model={model}
+        translate={translate}
+        dispatch={jest.fn()}
+        style={style}
+      />,
     );
 
-    expect(screen.getByText("cbt_view.header")).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Back" })).toBeTruthy();
     expect(
-      screen.getByRole("link", { name: /auto_thought.*I'll never finish this/ })
+      screen.getByRole("link", {
+        name: /auto_thought.*I'll never finish this/,
+      }),
     ).toBeTruthy();
     expect(
-      screen.getByRole("link", { name: /challenge.*Not set/ })
+      screen.getByRole("link", { name: /challenge.*Not set/ }),
     ).toBeTruthy();
   });
 });

@@ -1,7 +1,11 @@
 import { Routes } from "@/src";
 import { useTranslate } from "@/i18n/use-i18n";
 import { Distortion, DistortionData, Thought } from "@/model";
-import { StandardScreen, backHeaderAction } from "@/shared/components";
+import {
+  StandardScreen,
+  backHeaderAction,
+  useScreenHeader,
+} from "@/shared/components";
 import { useThoughtEntryForm } from "@/features/thoughts/thought-entry-form";
 import { useThoughtWizardSession } from "../store/useThoughtWizardSession";
 import { useRouter } from "expo-router";
@@ -76,10 +80,13 @@ export function ThoughtCreateScreen() {
       session.error === null ? null : t("cbt_form.thought_save_failed"),
   });
 
+  useScreenHeader({
+    title: t("cbt_form.new"),
+    leftAction: backHeaderAction(() => router.back()),
+  });
+
   return (
     <StandardScreen
-      title={t("cbt_form.new")}
-      leftAction={backHeaderAction(() => router.back())}
       scrollable={false}
       contentClassName="flex-1 gap-3"
       footer={actions}

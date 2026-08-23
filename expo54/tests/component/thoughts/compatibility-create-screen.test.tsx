@@ -23,9 +23,11 @@ const style = {
 } as any;
 
 const translate = ((k: string) => k) as any;
+const mockSetOptions = jest.fn();
 
 jest.mock("expo-router", () => ({
   useRouter: () => ({ back: jest.fn(), push: jest.fn() }),
+  useNavigation: () => ({ setOptions: mockSetOptions }),
   useFocusEffect: (cb: () => void) => {
     React.useEffect(() => {
       cb();
@@ -34,12 +36,19 @@ jest.mock("expo-router", () => ({
 }));
 
 describe("CompatibilityCreateScreen", () => {
-  it("renders a header above the entry form", () => {
+  it("sets the native header above the entry form", () => {
     renderWithProviders(
-      <CompatibilityCreateScreen model={model} translate={translate} dispatch={jest.fn()} style={style} />
+      <CompatibilityCreateScreen
+        model={model}
+        translate={translate}
+        dispatch={jest.fn()}
+        style={style}
+      />,
     );
 
-    expect(screen.getByText("cbt_form.new")).toBeTruthy();
+    expect(mockSetOptions).toHaveBeenCalledWith(
+      expect.objectContaining({ headerTitle: "cbt_form.new" }),
+    );
     expect(screen.getByTestId("automatic-thought-input")).toBeTruthy();
   });
 });

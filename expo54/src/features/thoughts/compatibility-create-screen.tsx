@@ -1,5 +1,9 @@
 import { Routes } from "@/src";
-import { StandardScreen, backHeaderAction } from "@/shared/components";
+import {
+  StandardScreen,
+  backHeaderAction,
+  useScreenHeader,
+} from "@/shared/components";
 import { HomeThoughtRecovery } from "./home-thought-recovery";
 import { useThoughtEntryForm } from "./thought-entry-form";
 import type { ModelLoadedProps } from "@/src/hooks/use-model";
@@ -13,7 +17,11 @@ import React, { useEffect, useRef, useState } from "react";
  * writes Home's durable draft - and it only navigates to the saved Thought once
  * that Thought is confirmed persisted.
  */
-export function CompatibilityCreateScreen({ model, dispatch, translate: t }: ModelLoadedProps) {
+export function CompatibilityCreateScreen({
+  model,
+  dispatch,
+  translate: t,
+}: ModelLoadedProps) {
   const [value, setValue] = useState(Thought.emptySpec());
   const router = useRouter();
   // the submission this screen started, by id: every screen shares one model,
@@ -28,7 +36,7 @@ export function CompatibilityCreateScreen({ model, dispatch, translate: t }: Mod
   const isSaving =
     awaiting !== null ||
     model.thoughtSaveOutbox.some(
-      (record) => record.status === "insertion-pending"
+      (record) => record.status === "insertion-pending",
     );
   // a rejection this screen caused: the text stays put and says why
   const rejected =
@@ -45,7 +53,7 @@ export function CompatibilityCreateScreen({ model, dispatch, translate: t }: Mod
       if (
         model.thoughtSaveOutbox.some(
           (record) =>
-            record.submissionId === id && record.status === "insertion-pending"
+            record.submissionId === id && record.status === "insertion-pending",
         )
       ) {
         setAwaiting(id);
@@ -64,7 +72,7 @@ export function CompatibilityCreateScreen({ model, dispatch, translate: t }: Mod
     // still on its way, or done for: a dropped or failed record stays here with
     // the input intact and Save usable again, recovery surfaced above.
     const record = model.thoughtSaveOutbox.find(
-      (candidate) => candidate.submissionId === awaiting
+      (candidate) => candidate.submissionId === awaiting,
     );
     const inFlight =
       record?.status === "insertion-pending" ||
@@ -91,7 +99,7 @@ export function CompatibilityCreateScreen({ model, dispatch, translate: t }: Mod
         : t(
             rejected.stage === "capacity"
               ? "cbt_form.thought_save_capacity"
-              : "cbt_form.thought_save_failed"
+              : "cbt_form.thought_save_failed",
           ),
     onChange: setValue,
     onSave: () => {
@@ -104,10 +112,13 @@ export function CompatibilityCreateScreen({ model, dispatch, translate: t }: Mod
     },
   });
 
+  useScreenHeader({
+    title: t("cbt_form.new"),
+    leftAction: backHeaderAction(() => router.back()),
+  });
+
   return (
     <StandardScreen
-      title={t("cbt_form.new")}
-      leftAction={backHeaderAction(() => router.back())}
       scrollable={false}
       contentClassName="flex-1 gap-3"
       footer={actions}

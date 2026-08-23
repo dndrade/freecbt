@@ -1,5 +1,9 @@
 import { Routes } from "@/src";
-import { StandardScreen, backHeaderAction } from "@/shared/components";
+import {
+  StandardScreen,
+  HeaderActionButton,
+  backHeaderAction,
+} from "@/shared/components";
 import { ModelLoadedProps } from "@/src/hooks/use-model";
 import { Distortion, Thought } from "@/src/model";
 import * as ImagePath from "@/src/assets/image-path";
@@ -18,11 +22,8 @@ export function ThoughtViewScreen({ model, translate: t }: ModelLoadedProps) {
   const thought = res.value;
 
   return (
-    <StandardScreen
-      title={t("cbt_view.header")}
-      leftAction={backHeaderAction(() => router.back())}
-      contentClassName="flex-1 gap-4"
-    >
+    <StandardScreen contentClassName="flex-1 gap-4">
+      <HeaderActionButton action={backHeaderAction(() => router.back())} />
       <ThoughtFieldCards
         thought={thought}
         distortions={model.distortionData.list}

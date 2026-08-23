@@ -35,6 +35,7 @@ jest.mock("expo-router", () => ({
     );
   },
   useLocalSearchParams: () => mockParams,
+  useNavigation: () => ({ setOptions: jest.fn() }),
   useRouter: () => ({
     back: jest.fn(),
     replace: (href: string | { params?: { idOrKey?: string } }) => {

@@ -40,34 +40,51 @@ const translate = ((k: string) => k) as any;
 // can't close over `key`, so route params go through a mock function set
 // up after `key` is computed.
 const mockUseLocalSearchParams = jest.fn();
+const mockSetOptions = jest.fn();
 jest.mock("expo-router", () => {
   const React = require("react");
   const { View, Pressable } = require("react-native");
   return {
     useRouter: () => ({ back: jest.fn() }),
+    useNavigation: () => ({ setOptions: mockSetOptions }),
     useLocalSearchParams: () => mockUseLocalSearchParams(),
     Link: React.forwardRef((props: any, ref: any) => {
       const { href, asChild, ...rest } = props;
       // If asChild is true, render children with the props
       if (asChild && props.children) {
-        return React.cloneElement(props.children, { ref, accessible: true, ...rest });
+        return React.cloneElement(props.children, {
+          ref,
+          accessible: true,
+          ...rest,
+        });
       }
       return React.createElement(Pressable, { ref, ...rest });
     }),
-    Redirect: ({ href }: { href: string }) => React.createElement(View, { testID: "redirect" }),
+    Redirect: ({ href }: { href: string }) =>
+      React.createElement(View, { testID: "redirect" }),
     Unmatched: () => React.createElement(View, { testID: "unmatched" }),
   };
 });
 
 describe("ThoughtEditScreen", () => {
-  it("renders a header above the entry form", () => {
-    mockUseLocalSearchParams.mockReturnValue({ idOrKey: thought.uuid, slide: undefined });
+  it("sets the native header above the entry form", () => {
+    mockUseLocalSearchParams.mockReturnValue({
+      idOrKey: thought.uuid,
+      slide: undefined,
+    });
 
     renderWithProviders(
-      <ThoughtEditScreen model={model} translate={translate} dispatch={jest.fn()} style={style} />
+      <ThoughtEditScreen
+        model={model}
+        translate={translate}
+        dispatch={jest.fn()}
+        style={style}
+      />,
     );
 
-    expect(screen.getByText("cbt_form.edit")).toBeTruthy();
+    expect(mockSetOptions).toHaveBeenCalledWith(
+      expect.objectContaining({ headerTitle: "cbt_form.edit" }),
+    );
     expect(screen.getByTestId("automatic-thought-input")).toBeTruthy();
   });
 });

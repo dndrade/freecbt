@@ -1,7 +1,7 @@
 import { Routes } from "@/src";
 import { useTranslate } from "@/i18n/use-i18n";
 import { DistortionData, Thought } from "@/model";
-import { StandardScreen } from "@/shared/components";
+import { StandardScreen, useScreenHeader } from "@/shared/components";
 import { Feather } from "@expo/vector-icons";
 import { Link, useLocalSearchParams, useRouter } from "expo-router";
 import { Button, Typography, cn, useThemeColor } from "heroui-native";
@@ -32,12 +32,10 @@ function ThoughtList({ history }: { history: ThoughtHistory }) {
   const selectedId = Thought.Id.safeParse(idOrKey).data ?? null;
   const sections = thoughtSections(history.thoughts, t("cbt_list.today"));
 
+  useScreenHeader({ title: t("settings.journal.header") });
+
   return (
-    <StandardScreen
-      title={t("settings.journal.header")}
-      scrollable={false}
-      contentClassName="flex-1"
-    >
+    <StandardScreen scrollable={false} contentClassName="flex-1">
       {history.isLoading ? (
         <ActivityIndicator testID="thought-list-loading" />
       ) : history.error !== null ? (

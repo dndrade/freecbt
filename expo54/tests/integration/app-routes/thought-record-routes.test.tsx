@@ -27,6 +27,7 @@ jest.mock("expo-router", () => ({
   useFocusEffect: (effect: () => void | (() => void)) =>
     React.useEffect(effect, []),
   useLocalSearchParams: () => ({}),
+  useNavigation: () => ({ setOptions: jest.fn() }),
 }));
 const readAll = jest.fn();
 jest.mock("@/features/thoughtRecord/services/ensureThoughtRecordReady", () => ({

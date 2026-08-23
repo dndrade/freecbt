@@ -2,7 +2,13 @@ import { Routes } from "@/src";
 import { ThoughtEditScreen } from "@/features/thoughtRecord/screens/ThoughtEditScreen";
 import { ensureThoughtRecordReady } from "@/features/thoughtRecord/services/ensureThoughtRecordReady";
 import { Thought } from "@/model";
-import { act, cleanup, fireEvent, screen, waitFor } from "@testing-library/react-native";
+import {
+  act,
+  cleanup,
+  fireEvent,
+  screen,
+  waitFor,
+} from "@testing-library/react-native";
 import React from "react";
 import { Pressable } from "react-native";
 import { renderWithProviders } from "@/tests/support/render";
@@ -15,6 +21,7 @@ let mockParams: { idOrKey?: string; slide?: string } = {};
 jest.mock("expo-router", () => ({
   useRouter: () => ({ back: jest.fn(), replace: mockReplace }),
   useLocalSearchParams: () => mockParams,
+  useNavigation: () => ({ setOptions: jest.fn() }),
 }));
 jest.mock("@/features/thoughtRecord/services/ensureThoughtRecordReady", () => ({
   ensureThoughtRecordReady: jest.fn(),
@@ -48,7 +55,10 @@ function render() {
     const [, forceRender] = React.useState(0);
     return (
       <>
-        <Pressable testID="refresh-route" onPress={() => forceRender((n) => n + 1)} />
+        <Pressable
+          testID="refresh-route"
+          onPress={() => forceRender((n) => n + 1)}
+        />
         <ThoughtEditScreen />
       </>
     );
@@ -80,14 +90,18 @@ test("loads a valid route ID only after readiness", async () => {
   ready.mockReturnValueOnce(
     new Promise((resolve) => {
       resolveReady = resolve as (value: never) => void;
-    })
+    }),
   );
   mockRead.mockResolvedValueOnce(record);
   render();
 
   expect(mockRead).not.toHaveBeenCalled();
   await act(async () => resolveReady({} as never));
-  await waitFor(() => expect(screen.getByTestId("automatic-thought-input").props.value).toBe("loaded"));
+  await waitFor(() =>
+    expect(screen.getByTestId("automatic-thought-input").props.value).toBe(
+      "loaded",
+    ),
+  );
   expect(mockRead).toHaveBeenCalledWith(record.uuid);
 });
 
@@ -100,11 +114,17 @@ test("retries a missing or unreadable record", async () => {
     .mockResolvedValueOnce(thought(id, "recovered"));
   render();
 
-  await waitFor(() => expect(screen.getByTestId("thought-edit-error")).toBeTruthy());
+  await waitFor(() =>
+    expect(screen.getByTestId("thought-edit-error")).toBeTruthy(),
+  );
   expect(screen.getByText("cbt_form.thought_load_failed")).toBeTruthy();
   fireEvent.press(screen.getByTestId("thought-edit-retry"));
 
-  await waitFor(() => expect(screen.getByTestId("automatic-thought-input").props.value).toBe("recovered"));
+  await waitFor(() =>
+    expect(screen.getByTestId("automatic-thought-input").props.value).toBe(
+      "recovered",
+    ),
+  );
 });
 
 test("ignores a stale read after the route ID changes", async () => {
@@ -116,7 +136,9 @@ test("ignores a stale read after the route ID changes", async () => {
   });
   mockParams = { idOrKey: first.uuid };
   ready.mockResolvedValue({} as never);
-  mockRead.mockImplementationOnce(() => firstRead).mockResolvedValueOnce(second);
+  mockRead
+    .mockImplementationOnce(() => firstRead)
+    .mockResolvedValueOnce(second);
   render();
 
   await waitFor(() => expect(mockRead).toHaveBeenCalledTimes(1));
@@ -125,7 +147,11 @@ test("ignores a stale read after the route ID changes", async () => {
   await waitFor(() => expect(mockRead).toHaveBeenCalledTimes(2));
   await act(async () => resolveFirst(first));
 
-  await waitFor(() => expect(screen.getByTestId("automatic-thought-input").props.value).toBe("current"));
+  await waitFor(() =>
+    expect(screen.getByTestId("automatic-thought-input").props.value).toBe(
+      "current",
+    ),
+  );
   expect(screen.queryByDisplayValue("stale")).toBeNull();
 });
 
@@ -136,7 +162,7 @@ test("does not start a read when readiness resolves after unmount", async () => 
   ready.mockReturnValueOnce(
     new Promise((resolve) => {
       resolveReady = resolve as (value: never) => void;
-    })
+    }),
   );
   mockRead.mockResolvedValueOnce(record);
   const view = render();
@@ -154,11 +180,15 @@ test("resets a loaded edit form when its requested slide changes", async () => {
   mockRead.mockResolvedValueOnce(record);
   render();
 
-  await waitFor(() => expect(screen.getByTestId("challenge-input")).toBeTruthy());
+  await waitFor(() =>
+    expect(screen.getByTestId("challenge-input")).toBeTruthy(),
+  );
   mockParams = { idOrKey: record.uuid, slide: "distortions" };
   fireEvent.press(screen.getByTestId("refresh-route"));
 
-  await waitFor(() => expect(screen.getByTestId("distortions-step")).toBeTruthy());
+  await waitFor(() =>
+    expect(screen.getByTestId("distortions-step")).toBeTruthy(),
+  );
 });
 
 test("preserves identity while updating and replaces after save", async () => {
@@ -169,17 +199,21 @@ test("preserves identity while updating and replaces after save", async () => {
   mockWrite.mockResolvedValueOnce(undefined);
   render();
 
-  await waitFor(() => expect(screen.getByTestId("automatic-thought-input")).toBeTruthy());
+  await waitFor(() =>
+    expect(screen.getByTestId("automatic-thought-input")).toBeTruthy(),
+  );
   fireEvent.changeText(screen.getByTestId("automatic-thought-input"), "after");
   save();
 
-  await waitFor(() => expect(mockReplace).toHaveBeenCalledWith(Routes.thoughtViewV2(record.uuid)));
+  await waitFor(() =>
+    expect(mockReplace).toHaveBeenCalledWith(Routes.thoughtViewV2(record.uuid)),
+  );
   expect(mockWrite).toHaveBeenCalledWith(
     expect.objectContaining({
       uuid: record.uuid,
       createdAt: record.createdAt,
       automaticThought: "after",
-    })
+    }),
   );
   expect(mockWrite.mock.calls[0][0].updatedAt).not.toEqual(record.updatedAt);
 });
@@ -193,11 +227,13 @@ test("does not replace after a successful write resolves after unmount", async (
   mockWrite.mockReturnValueOnce(
     new Promise<void>((resolve) => {
       resolveWrite = resolve;
-    })
+    }),
   );
   const view = render();
 
-  await waitFor(() => expect(screen.getByTestId("automatic-thought-input")).toBeTruthy());
+  await waitFor(() =>
+    expect(screen.getByTestId("automatic-thought-input")).toBeTruthy(),
+  );
   fireEvent.changeText(screen.getByTestId("automatic-thought-input"), "after");
   save();
   await waitFor(() => expect(mockWrite).toHaveBeenCalledTimes(1));

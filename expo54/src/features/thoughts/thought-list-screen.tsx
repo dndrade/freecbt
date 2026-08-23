@@ -1,5 +1,5 @@
 import { Routes } from "@/src";
-import { StandardScreen } from "@/shared/components";
+import { StandardScreen, useScreenHeader } from "@/shared/components";
 import { ModelLoadedProps } from "@/src/hooks/use-model";
 import { Action, Model, Thought } from "@/src/model";
 import { Feather } from "@expo/vector-icons";
@@ -19,8 +19,10 @@ export function ThoughtListScreen(props: ModelLoadedProps) {
     data: thoughts,
   }));
 
+  useScreenHeader({ title: t("settings.journal.header") });
+
   return (
-    <StandardScreen title={t("settings.journal.header")} scrollable={false} contentClassName="flex-1">
+    <StandardScreen scrollable={false} contentClassName="flex-1">
       {sections.length === 0 ? (
         <Typography type="body">{t("cbt_list.empty")}</Typography>
       ) : (
@@ -57,7 +59,7 @@ function ThoughtRow(
   props: Pick<ModelLoadedProps, "model" | "dispatch" | "translate"> & {
     thought: Thought.Thought;
     selected: boolean;
-  }
+  },
 ) {
   const { model, thought, dispatch, translate: t, selected } = props;
   const accent = useThemeColor("accent");
@@ -74,7 +76,7 @@ function ThoughtRow(
           accessibilityState={{ selected }}
           className={cn(
             "flex-1 flex-col gap-1 rounded-lg border border-border bg-surface-secondary p-3 shadow-sm",
-            selected && "border-accent bg-surface-tertiary"
+            selected && "border-accent bg-surface-tertiary",
           )}
           style={selected ? { borderColor: accent, borderWidth: 2 } : undefined}
         >
@@ -82,7 +84,10 @@ function ThoughtRow(
             {label}
           </Typography>
           {emojis ? (
-            <Typography type="body" className="self-start rounded-md bg-surface-tertiary px-2 py-1">
+            <Typography
+              type="body"
+              className="self-start rounded-md bg-surface-tertiary px-2 py-1"
+            >
               {emojis}
             </Typography>
           ) : null}

@@ -16,6 +16,7 @@ const mockErrorBoundary = jest.fn(
 const onSkip = jest.fn();
 const onComplete = jest.fn();
 const defaultFinish = useOnboardingFlow.getState().finish;
+let mockHeaderRightElement: React.ReactNode;
 
 function renderScreen() {
   return render(<OnboardingScreen onSkip={onSkip} onComplete={onComplete} />);
@@ -27,16 +28,18 @@ jest.mock("@/shared/components", () => ({
   StandardScreen: (props: {
     children: React.ReactNode;
     footer?: React.ReactNode;
-    right?: React.ReactNode;
   }) =>
     React.createElement(
       View,
       null,
-      props.right ?? null,
+      mockHeaderRightElement ?? null,
       React.createElement(View, null, props.children),
       props.footer ? React.createElement(View, null, props.footer) : null,
     ),
   backHeaderAction: (onPress: () => void) => ({ onPress }),
+  useScreenHeader: (options: { rightElement?: React.ReactNode }) => {
+    mockHeaderRightElement = options.rightElement;
+  },
   FlowProgress: ({
     count,
     currentIndex,
@@ -108,6 +111,7 @@ jest.mock("heroui-native", () => ({
 
 jest.mock("expo-router", () => ({
   useRouter: () => ({ replace: jest.fn() }),
+  useNavigation: () => ({ setOptions: jest.fn() }),
   Link: (props: { children: React.ReactNode }) => props.children,
 }));
 
@@ -138,6 +142,7 @@ describe("OnboardingScreen", () => {
     onSkip.mockReset();
     onComplete.mockReset();
     mockErrorBoundary.mockClear();
+    mockHeaderRightElement = null;
   });
 
   it("renders every step from the registry when the pager has laid out", () => {

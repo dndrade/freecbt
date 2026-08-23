@@ -1,4 +1,9 @@
-import { Section, StandardScreen, backHeaderAction } from "@/shared/components";
+import {
+  Section,
+  StandardScreen,
+  backHeaderAction,
+  useScreenHeader,
+} from "@/shared/components";
 import { PinInput } from "./ui/pin-input";
 import { ModelLoadedProps } from "@/src/hooks/use-model";
 import { Action } from "@/src/model";
@@ -7,7 +12,7 @@ import { Redirect, useRouter } from "expo-router";
 import React, { useState } from "react";
 
 export function PinUpdateScreen(
-  props: Pick<ModelLoadedProps, "dispatch" | "translate">
+  props: Pick<ModelLoadedProps, "dispatch" | "translate">,
 ): React.ReactNode {
   const { dispatch, translate: t } = props;
   const router = useRouter();
@@ -37,7 +42,7 @@ export function PinUpdateScreen(
       }
       default:
         throw new Error(
-          `unknown lock-form status: ${form.status satisfies never}`
+          `unknown lock-form status: ${form.status satisfies never}`,
         );
     }
   }
@@ -70,7 +75,7 @@ export function PinUpdateScreen(
     }
     default:
       throw new Error(
-        `unknown lock-form status: ${form.status satisfies never}`
+        `unknown lock-form status: ${form.status satisfies never}`,
       );
   }
 }
@@ -93,8 +98,9 @@ function PinStep(props: {
   onBack: () => void;
 }) {
   const { header, value, setValue, onComplete, onBack } = props;
+  useScreenHeader({ title: header, leftAction: backHeaderAction(onBack) });
   return (
-    <StandardScreen title={header} leftAction={backHeaderAction(onBack)}>
+    <StandardScreen>
       <Section className="items-center gap-4 mt-6">
         <PinInput
           value={value}

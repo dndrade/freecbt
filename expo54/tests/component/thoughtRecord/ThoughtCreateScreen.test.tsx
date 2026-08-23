@@ -19,6 +19,7 @@ const values = new Map<string, string>();
 
 jest.mock("expo-router", () => ({
   useRouter: () => ({ back: jest.fn(), replace: mockReplace }),
+  useNavigation: () => ({ setOptions: jest.fn() }),
 }));
 jest.mock("@/services/storage/zustandStorage", () => ({
   zustandMmkvStorage: {

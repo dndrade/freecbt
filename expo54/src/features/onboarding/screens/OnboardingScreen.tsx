@@ -16,6 +16,7 @@ import {
   FlowProgress,
   StandardScreen,
   backHeaderAction,
+  useScreenHeader,
 } from "@/shared/components";
 import { useReminders } from "@/features/reminders/use-reminders";
 import { useI18n } from "@/i18n/use-i18n";
@@ -115,28 +116,30 @@ export function OnboardingScreen({
     </View>
   );
 
+  useScreenHeader({
+    leftAction:
+      activeIndex > 0
+        ? backHeaderAction(() => onPressStep(-1), {
+            accessibilityLabel: t("onboarding_screen.previous"),
+          })
+        : undefined,
+    rightElement: (
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={t("onboarding_screen.skip")}
+        className="items-center justify-center"
+        style={{ minWidth: 44, height: 44, paddingHorizontal: 8 }}
+        onPress={handleSkip}
+      >
+        <Typography type="body-sm" style={{ color: accent }}>
+          {t("onboarding_screen.skip")}
+        </Typography>
+      </Pressable>
+    ),
+  });
+
   return (
     <StandardScreen
-      leftAction={
-        activeIndex > 0
-          ? backHeaderAction(() => onPressStep(-1), {
-              accessibilityLabel: t("onboarding_screen.previous"),
-            })
-          : undefined
-      }
-      right={
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel={t("onboarding_screen.skip")}
-          className="items-center justify-center"
-          style={{ minWidth: 44, height: 44, paddingHorizontal: 8 }}
-          onPress={handleSkip}
-        >
-          <Typography type="body-sm" style={{ color: accent }}>
-            {t("onboarding_screen.skip")}
-          </Typography>
-        </Pressable>
-      }
       scrollable={false}
       contentClassName="flex-1 gap-0 py-2"
       footer={footer}

@@ -1,4 +1,8 @@
-import { StandardScreen, backHeaderAction } from "@/shared/components";
+import {
+  StandardScreen,
+  backHeaderAction,
+  useScreenHeader,
+} from "@/shared/components";
 import { ModelLoadedProps } from "@/src/hooks/use-model";
 import { backupFlags } from "./backup-flags";
 import { EncryptedBackupExport } from "./encrypted-backup-export";
@@ -10,9 +14,7 @@ import React from "react";
 import { Text, View } from "react-native";
 import { Typography } from "heroui-native";
 
-export function BackupSettingsScreen(
-  props: ModelLoadedProps
-): React.ReactNode {
+export function BackupSettingsScreen(props: ModelLoadedProps): React.ReactNode {
   const { style: s, translate: t } = props;
   const router = useRouter();
 
@@ -24,8 +26,13 @@ export function BackupSettingsScreen(
     ? EncryptedBackupImport
     : LegacyBackupImport;
 
+  useScreenHeader({
+    title: t("nav.backup"),
+    leftAction: backHeaderAction(() => router.back()),
+  });
+
   return (
-    <StandardScreen title={t("nav.backup")} leftAction={backHeaderAction(() => router.back())}>
+    <StandardScreen>
       <View className="mt-2">
         <Typography type="body-sm" className="my-2">
           {t("backup_screen.export.description")}
