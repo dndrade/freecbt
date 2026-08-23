@@ -6,7 +6,7 @@ import * as ImagePath from "@/src/assets/image-path";
 import { Link, useRouter } from "expo-router";
 import { Typography } from "heroui-native";
 import React from "react";
-import { Image, View } from "react-native";
+import { Image, Pressable, View } from "react-native";
 import { useThoughtFromParams } from "./use-thought-from-route";
 
 export const SHRUG_EMOJI = "🤷‍";
@@ -23,7 +23,11 @@ export function ThoughtViewScreen({ model, translate: t }: ModelLoadedProps) {
       leftAction={backHeaderAction(() => router.back())}
       contentClassName="flex-1 gap-4"
     >
-      <ThoughtFieldCards thought={thought} distortions={model.distortionData.list} translate={t} />
+      <ThoughtFieldCards
+        thought={thought}
+        distortions={model.distortionData.list}
+        translate={t}
+      />
     </StandardScreen>
   );
 }
@@ -37,10 +41,14 @@ export function ThoughtFieldCards({
   distortions: readonly Distortion.Distortion[];
   translate: ModelLoadedProps["translate"];
 }) {
-  const slugs = new Set(Array.from(thought.cognitiveDistortions).map((d) => d.slug));
+  const slugs = new Set(
+    Array.from(thought.cognitiveDistortions).map((d) => d.slug),
+  );
   const distortions = availableDistortions.filter((d) => slugs.has(d.slug));
   const notSet = t("accessibility.thought_field_not_set");
-  const distortionsSummary = distortions.length ? distortions.map((d) => t(d.labelKey)).join(", ") : notSet;
+  const distortionsSummary = distortions.length
+    ? distortions.map((d) => t(d.labelKey)).join(", ")
+    : notSet;
 
   return (
     <>
@@ -52,10 +60,13 @@ export function ThoughtFieldCards({
           accessibilityLabel={`${t("auto_thought")}: ${thought.automaticThought || notSet}`}
           asChild
         >
-          <View accessible className="flex-row items-center rounded-lg border border-border bg-surface-secondary p-2">
+          <Pressable className="flex-row items-center rounded-lg border border-border bg-surface-secondary p-2">
             {thought.automaticThought ? (
               <>
-                <Image source={ImagePath.yellowBubble} className="h-6 w-6 self-center mr-2" />
+                <Image
+                  source={ImagePath.yellowBubble}
+                  className="h-6 w-6 self-center mr-2"
+                />
                 <Typography type="body" selectable className="flex-1">
                   {thought.automaticThought}
                 </Typography>
@@ -63,7 +74,7 @@ export function ThoughtFieldCards({
             ) : (
               <Typography type="body">{SHRUG_EMOJI}</Typography>
             )}
-          </View>
+          </Pressable>
         </Link>
       </View>
 
@@ -75,7 +86,7 @@ export function ThoughtFieldCards({
           accessibilityLabel={`${t("cog_distortion")}: ${distortionsSummary}`}
           asChild
         >
-          <View accessible className="gap-1 rounded-lg border border-border bg-surface-secondary p-2">
+          <Pressable className="gap-1 rounded-lg border border-border bg-surface-secondary p-2">
             {distortions.length ? (
               distortions.map((d) => (
                 <Typography key={d.slug} type="body">
@@ -85,7 +96,7 @@ export function ThoughtFieldCards({
             ) : (
               <Typography type="body">{SHRUG_EMOJI}</Typography>
             )}
-          </View>
+          </Pressable>
         </Link>
       </View>
 
@@ -97,11 +108,11 @@ export function ThoughtFieldCards({
           accessibilityLabel={`${t("challenge")}: ${thought.challenge || notSet}`}
           asChild
         >
-          <View accessible className="rounded-lg border border-border bg-surface-secondary p-2">
+          <Pressable className="rounded-lg border border-border bg-surface-secondary p-2">
             <Typography type="body" selectable>
               {thought.challenge || SHRUG_EMOJI}
             </Typography>
-          </View>
+          </Pressable>
         </Link>
       </View>
 
@@ -113,10 +124,13 @@ export function ThoughtFieldCards({
           accessibilityLabel={`${t("alt_thought")}: ${thought.alternativeThought || notSet}`}
           asChild
         >
-          <View accessible className="flex-row items-center rounded-lg border border-border bg-surface-secondary p-2">
+          <Pressable className="flex-row items-center rounded-lg border border-border bg-surface-secondary p-2">
             {thought.alternativeThought ? (
               <>
-                <Image source={ImagePath.pinkBubble} className="h-6 w-6 self-center mr-2" />
+                <Image
+                  source={ImagePath.pinkBubble}
+                  className="h-6 w-6 self-center mr-2"
+                />
                 <Typography type="body" selectable className="flex-1">
                   {thought.alternativeThought}
                 </Typography>
@@ -124,7 +138,7 @@ export function ThoughtFieldCards({
             ) : (
               <Typography type="body">{SHRUG_EMOJI}</Typography>
             )}
-          </View>
+          </Pressable>
         </Link>
       </View>
     </>
