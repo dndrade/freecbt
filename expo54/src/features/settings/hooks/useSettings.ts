@@ -50,6 +50,9 @@ export const useSettings = create<SettingsState>()(
         const parsed = PublicSettingsSchema.safeParse(
           (persistedState as { settings?: unknown } | undefined)?.settings,
         );
+        if (!parsed.success) {
+          console.warn("Discarding invalid persisted settings:", parsed.error);
+        }
         return {
           ...currentState,
           settings: parsed.success ? parsed.data : currentState.settings,

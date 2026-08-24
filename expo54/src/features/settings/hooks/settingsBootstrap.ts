@@ -10,9 +10,9 @@ let inFlight: Promise<void> | null = null;
 
 function readValidPersistedSettings() {
   // zustandMmkvStorage's real implementation is synchronous; StateStorage's
-  // type is broader to allow async storages, so narrow it here.
-  const raw = zustandMmkvStorage.getItem(SETTINGS_STORE_NAME) as string | null;
-  if (raw == null) return null;
+  // type is broader to allow async storages, so narrow it here at runtime.
+  const raw = zustandMmkvStorage.getItem(SETTINGS_STORE_NAME);
+  if (typeof raw !== "string") return null;
   let envelope: { state?: { settings?: unknown } };
   try {
     envelope = JSON.parse(raw);

@@ -83,6 +83,7 @@ test("does not read MMKV at all until something explicitly sets state (skipHydra
 });
 
 test("rehydrate rejects a schema-invalid persisted settings slice", async () => {
+  const warnSpy = jest.spyOn(console, "warn").mockImplementation(() => {});
   values.set(
     "@SettingsStore:v1",
     JSON.stringify({ state: { settings: { locale: 123 } }, version: 0 }),
@@ -95,4 +96,9 @@ test("rehydrate rejects a schema-invalid persisted settings slice", async () => 
     reminders: false,
     existingUser: false,
   });
+  expect(warnSpy).toHaveBeenCalledWith(
+    "Discarding invalid persisted settings:",
+    expect.anything(),
+  );
+  warnSpy.mockRestore();
 });

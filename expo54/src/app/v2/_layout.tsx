@@ -19,7 +19,7 @@ export default function Layout() {
         setIsReady(true);
         await SplashScreen.hideAsync();
       }
-    })();
+    })().catch(() => {});
   }, []);
 
   if (!isReady) return null;
