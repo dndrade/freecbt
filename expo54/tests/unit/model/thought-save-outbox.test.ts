@@ -1,6 +1,12 @@
 import { DistortionData, Thought } from "@/src/model";
+import {
+  THOUGHT_SAVE_OUTBOX_KEY,
+  thoughtSaveOutbox,
+} from "@/src/platform/storage/thought-save-outbox";
 import { AsyncStorageStatic } from "@react-native-async-storage/async-storage";
 import { createFakeAsyncStorage as fakeAsyncStorage } from "@/tests/support/async-storage";
+
+const Storage = { THOUGHT_SAVE_OUTBOX_KEY, thoughtSaveOutbox };
 
 function fakeAsyncStorageWithBlockedSet(initial: Record<string, string> = {}) {
   const store = new Map(Object.entries(initial));

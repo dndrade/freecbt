@@ -8,11 +8,11 @@ export function init(): Model {
   return { value: 0 };
 }
 
-export const incr = () => ({ action: "incr" } as const);
-export const decr = () => ({ action: "decr" } as const);
-export type Action = ReturnType<typeof incr | typeof decr>;
+export const incr = () => ({ action: "incr" }) as const;
+export const decr = () => ({ action: "decr" }) as const;
+export type CounterAction = ReturnType<typeof incr | typeof decr>;
 
-export function update(m: Model, a: Action): Model {
+export function update(m: Model, a: CounterAction): Model {
   switch (a.action) {
     case "incr":
       return { ...m, value: m.value + 1 };
@@ -23,7 +23,7 @@ export function update(m: Model, a: Action): Model {
   }
 }
 
-export type Ctx = [Model, (a: Action) => void];
+export type Ctx = [Model, (a: CounterAction) => void];
 export const Ctx = createContext<Ctx>(undefined as any as Ctx);
 
 // export default function Layout(props: { children: React.ReactNode }) {
