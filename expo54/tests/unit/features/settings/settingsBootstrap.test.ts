@@ -56,6 +56,18 @@ test("fresh install (no MMKV record, no legacy data) hydrates to public defaults
   });
 });
 
+test("fresh install does not log a spurious invalid-persisted-settings warning", async () => {
+  const warnSpy = jest.spyOn(console, "warn").mockImplementation(() => {});
+
+  await runSettingsBootstrap();
+
+  expect(warnSpy).not.toHaveBeenCalledWith(
+    "Discarding invalid persisted settings:",
+    expect.anything(),
+  );
+  warnSpy.mockRestore();
+});
+
 test("migrates pre-existing legacy AsyncStorage data without mutating legacy storage", async () => {
   await AsyncStorage.multiSet([
     [Settings.localeKey, "es"],

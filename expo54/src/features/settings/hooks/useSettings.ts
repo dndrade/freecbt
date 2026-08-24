@@ -47,9 +47,15 @@ export const useSettings = create<SettingsState>()(
       skipHydration: true,
       partialize: ({ settings }) => ({ settings }),
       merge: (persistedState, currentState) => {
-        const parsed = PublicSettingsSchema.safeParse(
-          (persistedState as { settings?: unknown } | undefined)?.settings,
-        );
+        const settings = (persistedState as { settings?: unknown } | undefined)
+          ?.settings;
+        // No MMKV record at all (fresh install, or nothing set yet) is not
+        // corruption -- only warn when a persisted slice exists but fails
+        // to parse.
+        if (settings === undefined) {
+          return currentState;
+        }
+        const parsed = PublicSettingsSchema.safeParse(settings);
         if (!parsed.success) {
           console.warn("Discarding invalid persisted settings:", parsed.error);
         }
