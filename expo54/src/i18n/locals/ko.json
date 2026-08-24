@@ -153,5 +153,11 @@
   "should_statements_one_liner": "ex: \"나는 더 잘해야했다.\"",
   "labeling_one_liner": "ex: \"그는 바보 야.\"",
   "self_blaming_one_liner": "나는 완전히 잘못이다.",
-  "other_blaming_one_liner": "누군가 다른 사람이 전적으로 잘못되었습니다."
+  "other_blaming_one_liner": "누군가 다른 사람이 전적으로 잘못되었습니다.",
+  "thought_delete": {
+    "confirm": "이 생각을 삭제할까요? 이 작업은 취소할 수 없습니다.",
+    "failed": "이 생각을 삭제하지 못했습니다.",
+    "delete": "삭제",
+    "cancel": "취소"
+  }
 }

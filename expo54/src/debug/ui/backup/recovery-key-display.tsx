@@ -1,6 +1,6 @@
 import type { ModelLoadedProps } from "@/src/hooks/use-model";
 import React from "react";
-import { Text } from "react-native";
+import { Typography } from "heroui-native";
 
 type Props = {
     style: ModelLoadedProps["style"];
@@ -12,21 +12,21 @@ export function RecoveryKeyDisplay(props: Props) {
 
     if (!recoveryKey) {
         return (
-            <Text style={[s.text]}>
+            <Typography type="body-sm">
                 The recovery key is not currently revealed.
-            </Text>
+            </Typography>
         );
     }
 
     return (
         <>
-            <Text style={[s.text]}>Recovery key</Text>
-            <Text selectable style={[s.text, s.my2]}>
+            <Typography type="body-sm">Recovery key</Typography>
+            <Typography type="body-sm" selectable className="my-2">
                 {recoveryKey}
-            </Text>
-            <Text style={[s.text]}>
+            </Typography>
+            <Typography type="body-sm">
                 Save this value outside FreeCBT before continuing.
-            </Text>
+            </Typography>
         </>
     );
 }

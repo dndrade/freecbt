@@ -8,7 +8,7 @@ import {
 } from "@react-navigation/drawer";
 import { useRouter, usePathname, type Href } from "expo-router";
 import React from "react";
-import { Text } from "react-native";
+import { Typography } from "heroui-native";
 
 function isActive(pathname: string, href: Href): boolean {
   const target = href as string;
@@ -26,8 +26,12 @@ export function DebugDrawerContent(props: DrawerContentComponentProps) {
   }
 
   return (
-    <DrawerContentScrollView {...props}>
-      <Text style={[s.subheader, s.my2, s.p3]}>FreeCBT Debug</Text>
+    <DrawerContentScrollView
+      {...props}
+      style={[s.bgRoot, { flex: 1 }]}
+      contentContainerStyle={[s.bgRoot]}
+    >
+      <Typography type="h3" className="my-2 p-3">FreeCBT Debug</Typography>
 
       {debugNavItems.map((item) => {
         const focused = isActive(pathname, item.href);
@@ -36,10 +40,10 @@ export function DebugDrawerContent(props: DrawerContentComponentProps) {
           <DrawerItem
             key={item.href as string}
             label={({ focused }) => (
-              <Text style={[s.text]}>
+              <Typography type="body-sm">
                 {focused ? "✓ " : ""}
                 {item.title}
-              </Text>
+              </Typography>
             )}
             accessibilityLabel={item.title}
             focused={focused}

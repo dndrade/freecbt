@@ -145,5 +145,11 @@
     "new_thought_button": "Novo pensamento",
     "settings_button": "Definições",
     "delete_thought_button": "Apagar pensamento"
+  },
+  "thought_delete": {
+    "confirm": "Excluir este pensamento? Esta ação não pode ser desfeita.",
+    "failed": "Não foi possível excluir este pensamento.",
+    "delete": "Excluir",
+    "cancel": "Cancelar"
   }
 }

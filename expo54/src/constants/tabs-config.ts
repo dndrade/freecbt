@@ -16,9 +16,8 @@ export interface TabConfig {
  *
  * Keep icon names in sync with Feather icon names.
  *
- * Note: These are the main hub tabs. The hub section also contains
- * nested settings pages (general, appearance, data, wellbeing, support, about)
- * but those are not top-level tabs.
+ * Note: These are the main hub tabs. Settings is not a tab - it's reached via
+ * the floating menu button in the tabs layout (see settings-menu-button.tsx).
  */
 export const TAB_CONFIG: TabConfig[] = [
   {
@@ -30,10 +29,5 @@ export const TAB_CONFIG: TabConfig[] = [
     name: "index",
     labelKey: "settings.hub.home.label",
     icon: "home",
-  },
-  {
-    name: "settings/index",
-    labelKey: "accessibility.settings_button",
-    icon: "settings",
   },
 ];

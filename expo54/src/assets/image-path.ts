@@ -1,10 +1,24 @@
-export const purpleBubble = require("@/assets/purple/Dook.png");
-export const yellowBubble = require("@/assets/yellow/Dook.png");
-export const pinkBubble = require("@/assets/pink/Dook.png");
-export const bubbles = [yellowBubble, purpleBubble, pinkBubble];
+// src/assets/image-path.ts
+import looker from '../../assets/looker/Looker.png';
+import eater from '../../assets/eater/eater.png';
+import logo from '../../assets/logo/logo.png';
+import notifications from '../../assets/notifications/notifications.png';
+import paymentLooker from '../../assets/paymentlooker/paymentlooker.png';
 
-export const looker = require("@/assets/looker/Looker.png");
-export const eater = require("@/assets/eater/eater.png");
-export const logo = require("@/assets/logo/logo.png");
-export const notifications = require("@/assets/notifications/notifications.png");
-export const lockIllustration = require("@/assets/lock/lock-illustration.png");
+import purpleBubble from '../../assets/purple/Dook.png';
+import yellowBubble from '../../assets/yellow/Dook.png';
+import pinkBubble from '../../assets/pink/Dook.png';
+
+export {
+    looker,
+    eater,
+    logo,
+    notifications,
+    paymentLooker,
+    purpleBubble,
+    yellowBubble,
+    pinkBubble,
+};
+
+export const bubbles = [yellowBubble, purpleBubble, pinkBubble];
+export const lockIllustration = paymentLooker;

@@ -1,6 +1,5 @@
 // Android's built-in share-sheet "Save" target rejects text/plain payloads
-// with "Can't save text. Try saving a link instead." — see
-// .dev/data-compatibility/verification/results/backup/BACKUP-002-v2-android-emulator.md.
+// with "Can't save text. Try saving a link instead." (confirmed on-device).
 // The backup archive is a compressed, non-text envelope (see
 // src/model/archive/thoughts-archive.ts), so text/plain was never an
 // accurate label.
@@ -11,8 +10,8 @@
 // subtype wildcard, or full */* wildcard), and most messaging/notes apps
 // filter on text/* or similar — not application/octet-stream. That dropped
 // the chooser from 5 targets to 3 (Drive, Gmail, Quick Share only; Signal,
-// WhatsApp, Messages, Bluetooth, etc. all silently excluded). See
-// .dev/data-compatibility/verification/results/backup/BACKUP-003-v2-android-emulator-fail-013-reverify.md.
+// WhatsApp, Messages, Bluetooth, etc. all silently excluded), confirmed
+// on-device.
 //
 // "*/*" is the standard Android wildcard that matches every app's
 // share-target intent-filter, restoring the full chooser list. It's broader
@@ -31,7 +30,5 @@ export const BACKUP_IMPORT_MIME_TYPES: readonly string[] = [
 // A prior device re-verification found Android's "Save" share target no
 // longer offered after the MIME type above changed to
 // application/octet-stream, while the exported filename still ended in
-// .txt — see
-// .dev/data-compatibility/verification/results/backup/BACKUP-003-v2-android-emulator-fail-013-reverify.md.
-// No extension avoids re-introducing a filename/MIME mismatch.
+// .txt. No extension avoids re-introducing a filename/MIME mismatch.
 export const BACKUP_EXPORT_FILENAME = "FreeCBT-backup";

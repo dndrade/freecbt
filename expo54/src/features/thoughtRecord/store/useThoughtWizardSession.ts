@@ -1,0 +1,151 @@
+import { create } from "zustand";
+import { createJSONStorage, persist } from "zustand/middleware";
+import { Distortion, DistortionData, Thought } from "@/model";
+import { zustandMmkvStorage } from "@/services/storage/zustandStorage";
+import { ensureThoughtRecordReady } from "../services/ensureThoughtRecordReady";
+import { thoughtsService } from "../services/thoughtsService";
+
+const slides: readonly Thought.SlideName[] = [
+  "automatic-thought",
+  "distortions",
+  "challenge",
+  "alternative-thought",
+];
+
+type State = {
+  currentSlide: Thought.SlideName;
+  automaticThought: string;
+  selectedDistortionSlugs: string[];
+  challenge: string;
+  alternativeThought: string;
+  draftRevision: number;
+  setSlide(s: Thought.SlideName): void;
+  nextSlide(): void;
+  prevSlide(): void;
+  setAutomaticThought(s: string): void;
+  toggleDistortion(s: string): void;
+  setChallenge(s: string): void;
+  setAlternativeThought(s: string): void;
+  isSaving: boolean;
+  error: Error | null;
+  saveRecord(): Promise<
+    | { status: "saved"; thought: Thought.Thought }
+    | { status: "empty" | "failed" }
+  >;
+  reset(): void;
+};
+
+const initial = {
+  currentSlide: "automatic-thought" as Thought.SlideName,
+  automaticThought: "",
+  selectedDistortionSlugs: [] as string[],
+  challenge: "",
+  alternativeThought: "",
+  draftRevision: 0,
+  isSaving: false,
+  error: null,
+};
+
+export const useThoughtWizardSession = create<State>()(
+  persist(
+    (set, get) => ({
+      ...initial,
+      setSlide: (currentSlide) =>
+        set(({ draftRevision }) => ({
+          currentSlide,
+          draftRevision: draftRevision + 1,
+        })),
+      nextSlide: () => {
+        const i = slides.indexOf(get().currentSlide);
+        if (i < slides.length - 1)
+          set(({ draftRevision }) => ({
+            currentSlide: slides[i + 1],
+            draftRevision: draftRevision + 1,
+          }));
+      },
+      prevSlide: () => {
+        const i = slides.indexOf(get().currentSlide);
+        if (i > 0)
+          set(({ draftRevision }) => ({
+            currentSlide: slides[i - 1],
+            draftRevision: draftRevision + 1,
+          }));
+      },
+      setAutomaticThought: (automaticThought) =>
+        set(({ draftRevision }) => ({
+          automaticThought,
+          draftRevision: draftRevision + 1,
+        })),
+      toggleDistortion: (slug) =>
+        set(({ selectedDistortionSlugs, draftRevision }) => ({
+          selectedDistortionSlugs: selectedDistortionSlugs.includes(slug)
+            ? selectedDistortionSlugs.filter((s) => s !== slug)
+            : [...selectedDistortionSlugs, slug],
+          draftRevision: draftRevision + 1,
+        })),
+      setChallenge: (challenge) =>
+        set(({ draftRevision }) => ({
+          challenge,
+          draftRevision: draftRevision + 1,
+        })),
+      setAlternativeThought: (alternativeThought) =>
+        set(({ draftRevision }) => ({
+          alternativeThought,
+          draftRevision: draftRevision + 1,
+        })),
+      saveRecord: async () => {
+        if (get().isSaving) return { status: "failed" };
+        const state = get(),
+          spec = {
+            automaticThought: state.automaticThought,
+            cognitiveDistortions: Distortion.createParsers(
+              DistortionData,
+            ).fromSlugSet.decode(new Set(state.selectedDistortionSlugs)),
+            challenge: state.challenge,
+            alternativeThought: state.alternativeThought,
+          };
+        if (!Thought.isMeaningfulSpec(spec)) return { status: "empty" };
+        set({ isSaving: true, error: null });
+        const sourceDraftRevision = state.draftRevision,
+          thought = Thought.create(spec, new Date());
+        try {
+          await thoughtsService(
+            DistortionData,
+            await ensureThoughtRecordReady(),
+          ).write(thought);
+          if (get().draftRevision === sourceDraftRevision) get().reset();
+          return { status: "saved", thought };
+        } catch (error) {
+          set({
+            error: error instanceof Error ? error : new Error(String(error)),
+          });
+          return { status: "failed" };
+        } finally {
+          set({ isSaving: false });
+        }
+      },
+      reset: () =>
+        set(({ draftRevision }) => ({
+          ...initial,
+          draftRevision: draftRevision + 1,
+        })),
+    }),
+    {
+      name: "thoughtRecord:wizard-session:v1",
+      storage: createJSONStorage(() => zustandMmkvStorage),
+      partialize: ({
+        currentSlide,
+        automaticThought,
+        selectedDistortionSlugs,
+        challenge,
+        alternativeThought,
+      }) => ({
+        currentSlide,
+        automaticThought,
+        selectedDistortionSlugs,
+        challenge,
+        alternativeThought,
+      }),
+    },
+  ),
+);

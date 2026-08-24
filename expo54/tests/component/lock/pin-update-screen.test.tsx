@@ -1,24 +1,29 @@
-import { fireEvent, render, screen } from "@testing-library/react-native";
+import { fireEvent, screen } from "@testing-library/react-native";
 import React from "react";
 import { Action } from "@/src/model";
 import { PinUpdateScreen } from "@/src/features/lock/pin-update-screen";
+import { renderWithProviders } from "@/tests/support/render";
 
 const mockDispatch = jest.fn();
 
-jest.mock("@/src/components", () => {
+jest.mock("@/shared/components", () => {
   const React = jest.requireActual("react");
   const { Text, View } = jest.requireActual("react-native");
 
   return {
-    Screen: ({ children }: { children: React.ReactNode }) => <View>{children}</View>,
-    Section: ({ children }: { children: React.ReactNode }) => <View>{children}</View>,
-    ScreenHeader: ({ title }: { title: string }) => <Text>{title}</Text>,
+    Screen: ({ children }: { children: React.ReactNode }) => (
+      <View>{children}</View>
+    ),
+    Section: ({ children }: { children: React.ReactNode }) => (
+      <View>{children}</View>
+    ),
   };
 });
 
 jest.mock("@/src/features/lock/ui/pin-input", () => {
   const React = jest.requireActual("react");
-  const { Pressable, Text, TextInput, View } = jest.requireActual("react-native");
+  const { Pressable, Text, TextInput, View } =
+    jest.requireActual("react-native");
 
   return {
     PinInput: ({
@@ -48,15 +53,17 @@ jest.mock("expo-router", () => {
     Redirect: ({ href }: { href: string }) => (
       <Text testID="redirect">{href}</Text>
     ),
+    useRouter: () => ({ back: jest.fn() }),
+    useNavigation: () => ({ setOptions: jest.fn() }),
   };
 });
 
 function renderPinUpdateScreen() {
-  return render(
+  return renderWithProviders(
     <PinUpdateScreen
       dispatch={mockDispatch}
       translate={(key: string) => key}
-    />
+    />,
   );
 }
 

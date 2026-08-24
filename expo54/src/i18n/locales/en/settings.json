@@ -1,0 +1,15 @@
+{
+  "header": "Settings",
+  "sections": {
+    "general": "General",
+    "support": "Support & Legal",
+    "about": "About"
+  },
+  "rows": {
+    "reminders": "Reminders",
+    "language": "Language",
+    "reportIssue": "Report an Issue",
+    "privacy": "Privacy Policy",
+    "source": "Source Code"
+  }
+}

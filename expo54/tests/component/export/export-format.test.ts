@@ -1,9 +1,9 @@
-import { render } from "@testing-library/react-native";
 import React from "react";
 import { View } from "react-native";
 import { DistortionData, Model, Settings, Thought } from "@/src/model";
 import { ExportScreen } from "@/src/features/export/export-screen";
 import { toCSV, toMarkdown } from "@/src/features/export/export-format";
+import { renderWithProviders } from "@/tests/support/render";
 
 const mockLinks: { name: string; body: () => string }[] = [];
 
@@ -14,10 +14,15 @@ jest.mock("@/src/platform/sharing/download-or-share", () => ({
   },
 }));
 
-jest.mock("@/src/components", () => ({
-  Screen: ({ children }: { children: React.ReactNode }) =>
+jest.mock("@/shared/components", () => ({
+  StandardScreen: ({ children }: { children: React.ReactNode }) =>
     React.createElement(View, null, children),
-  ScreenHeader: () => null,
+  backHeaderAction: (onPress: () => void) => ({ onPress }),
+  useScreenHeader: jest.fn(),
+}));
+
+jest.mock("expo-router", () => ({
+  useRouter: () => ({ back: jest.fn() }),
 }));
 
 const T = Thought.createParsers(DistortionData);
@@ -38,7 +43,7 @@ const thoughts = [
     updatedAt: "2021-02-03T04:05:06.000Z",
     automaticThought: "# hash _ under = equal ` tick :FreeCBT:",
     cognitiveDistortions: ["all-or-nothing", "mind-reading"],
-    challenge: 'comma, double " single \' newline\nvalue',
+    challenge: "comma, double \" single ' newline\nvalue",
     alternativeThought: "alternative",
     v: Thought.VERSION,
   }),
@@ -64,19 +69,20 @@ const translate = (key: string) => key;
 
 function captureRouteBodies(): Record<string, string> {
   mockLinks.length = 0;
-  render(
+  renderWithProviders(
     React.createElement(ExportScreen, {
       model,
       dispatch: jest.fn(),
       style: {} as never,
       translate,
-    })
+    }),
   );
   return Object.fromEntries(mockLinks.map(({ name, body }) => [name, body()]));
 }
 
 test("captures the current Markdown golden output", () => {
-  expect(toMarkdown({ thoughts, translate })).toBe(String.raw`created: 1/2/2020 3:04:05 AM
+  expect(toMarkdown({ thoughts, translate }))
+    .toBe(String.raw`created: 1/2/2020 3:04:05 AM
 updated: 1/2/2020 3:04:05 AM
 id: plain-id
 
@@ -122,7 +128,8 @@ alternative
 });
 
 test("captures the current CSV golden output", () => {
-  expect(toCSV(thoughts)).toBe(String.raw`uuid,createdAt,updatedAt,automaticThought,cognitiveDistortions,challenge,alternativeThought
+  expect(toCSV(thoughts))
+    .toBe(String.raw`uuid,createdAt,updatedAt,automaticThought,cognitiveDistortions,challenge,alternativeThought
 plain-id,2020-01-02T03:04:05.000Z,2020-01-02T03:04:05.000Z,normal thought,,,
 special-id,2021-02-03T04:05:06.000Z,2021-02-03T04:05:06.000Z,# hash _ under = equal ${String.fromCharCode(96)} tick :FreeCBT:,"all-or-nothing,mind-reading","comma, double "" single ' newline
 value",alternative`);
@@ -130,6 +137,6 @@ value",alternative`);
 
 test("captures the current JSON serialization path", () => {
   expect(captureRouteBodies()["FreeCBT.json"]).toBe(
-    String.raw`{"v":"Archive-v2","thoughts":[{"automaticThought":"normal thought","cognitiveDistortions":[],"challenge":"","alternativeThought":"","createdAt":"2020-01-02T03:04:05.000Z","updatedAt":"2020-01-02T03:04:05.000Z","uuid":"plain-id","v":"Thought-v2"},{"automaticThought":"# hash _ under = equal ${String.fromCharCode(96)} tick :FreeCBT:","cognitiveDistortions":["all-or-nothing","mind-reading"],"challenge":"comma, double \" single ' newline\nvalue","alternativeThought":"alternative","createdAt":"2021-02-03T04:05:06.000Z","updatedAt":"2021-02-03T04:05:06.000Z","uuid":"special-id","v":"Thought-v2"}]}`
+    String.raw`{"v":"Archive-v2","thoughts":[{"automaticThought":"normal thought","cognitiveDistortions":[],"challenge":"","alternativeThought":"","createdAt":"2020-01-02T03:04:05.000Z","updatedAt":"2020-01-02T03:04:05.000Z","uuid":"plain-id","v":"Thought-v2"},{"automaticThought":"# hash _ under = equal ${String.fromCharCode(96)} tick :FreeCBT:","cognitiveDistortions":["all-or-nothing","mind-reading"],"challenge":"comma, double \" single ' newline\nvalue","alternativeThought":"alternative","createdAt":"2021-02-03T04:05:06.000Z","updatedAt":"2021-02-03T04:05:06.000Z","uuid":"special-id","v":"Thought-v2"}]}`,
   );
 });

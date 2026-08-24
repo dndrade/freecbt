@@ -1,212 +1,200 @@
 import { Archive, Distortion } from "@/src/model";
 import {
-    type BackupFileSystem,
-    type WrittenBackupFile,
-    createBackupFilename,
-    resolveBackupDestination,
-    writeBackupFile,
+  type BackupFileSystem,
+  type WrittenBackupFile,
+  createBackupFilename,
+  resolveBackupDestination,
+  writeBackupFile,
 } from "./backup-destination";
-import type { SecureBackupRecoveryKey } from "@/src/platform/storage/storage";
+import type { SecureBackupRecoveryKey } from "./recovery-key";
 import { pruneOldBackups } from "./backup-file-system";
 
-export {
-    RecoveryKeyFingerprintMismatchError,
-} from "@/src/model/archive/archive-crypto";
+export { RecoveryKeyFingerprintMismatchError } from "@/src/model/archive/archive-crypto";
 
 export class MissingRecoveryKeyError extends Error {
-    constructor() {
-        super("secure backup recovery key is unavailable");
-        this.name = "MissingRecoveryKeyError";
-        Object.setPrototypeOf(this, MissingRecoveryKeyError.prototype);
-    }
+  constructor() {
+    super("secure backup recovery key is unavailable");
+    this.name = "MissingRecoveryKeyError";
+    Object.setPrototypeOf(this, MissingRecoveryKeyError.prototype);
+  }
 }
 
 export class InvalidBackupArchiveError extends Error {
-    constructor(reason: string) {
-        super(`invalid backup archive: ${reason}`);
-        this.name = "InvalidBackupArchiveError";
-        Object.setPrototypeOf(this, InvalidBackupArchiveError.prototype);
-    }
+  constructor(reason: string) {
+    super(`invalid backup archive: ${reason}`);
+    this.name = "InvalidBackupArchiveError";
+    Object.setPrototypeOf(this, InvalidBackupArchiveError.prototype);
+  }
 }
 
 export type SecureBackupDestination = {
-    getConfiguredDirectoryUri(): Promise<string | null>;
-    defaultDirectoryUri: string;
-    isAccessible(directoryUri: string): Promise<boolean>;
-    fileSystem: BackupFileSystem;
-    now(): Date;
+  getConfiguredDirectoryUri(): Promise<string | null>;
+  defaultDirectoryUri: string;
+  isAccessible(directoryUri: string): Promise<boolean>;
+  fileSystem: BackupFileSystem;
+  now(): Date;
 };
 
 export type SecureBackupBase = {
-    getRecoveryKeyStatus(): Promise<"missing" | "configured">;
-    setupRecoveryKey(): Promise<string>;
-    revealRecoveryKey(): Promise<string>;
-    exportArchiveV3(value: Archive.Archive): Promise<string>;
-    restoreArchive(
-        text: string,
-        manualKey?: string
-    ): Promise<Archive.Archive>;
+  getRecoveryKeyStatus(): Promise<"missing" | "configured">;
+  setupRecoveryKey(): Promise<string>;
+  revealRecoveryKey(): Promise<string>;
+  exportArchiveV3(value: Archive.Archive): Promise<string>;
+  restoreArchive(text: string, manualKey?: string): Promise<Archive.Archive>;
 };
 
 export type SecureBackupWithDestination = SecureBackupBase & {
-    createBackup(value: Archive.Archive): Promise<WrittenBackupFile>;
-    restoreBackupFile(
-        fileUri: string,
-        manualKey?: string
-    ): Promise<Archive.Archive>;
+  createBackup(value: Archive.Archive): Promise<WrittenBackupFile>;
+  restoreBackupFile(
+    fileUri: string,
+    manualKey?: string,
+  ): Promise<Archive.Archive>;
 };
 
 export function secureBackup(
-    distortionData: Distortion.Data,
-    recoveryKeys: SecureBackupRecoveryKey
+  distortionData: Distortion.Data,
+  recoveryKeys: SecureBackupRecoveryKey,
 ): SecureBackupBase;
 export function secureBackup(
-    distortionData: Distortion.Data,
-    recoveryKeys: SecureBackupRecoveryKey,
-    destination: SecureBackupDestination
+  distortionData: Distortion.Data,
+  recoveryKeys: SecureBackupRecoveryKey,
+  destination: SecureBackupDestination,
 ): SecureBackupWithDestination;
 export function secureBackup(
-    distortionData: Distortion.Data,
-    recoveryKeys: SecureBackupRecoveryKey,
-    destination?: SecureBackupDestination
+  distortionData: Distortion.Data,
+  recoveryKeys: SecureBackupRecoveryKey,
+  destination?: SecureBackupDestination,
 ): SecureBackupBase | SecureBackupWithDestination {
-    const archive = Archive.createParsers(distortionData);
-    let pendingRecoveryKey: Promise<string> | null = null;
+  const archive = Archive.createParsers(distortionData);
+  let pendingRecoveryKey: Promise<string> | null = null;
 
-    async function readOrCreateRecoveryKey(): Promise<string> {
-        const existing = await recoveryKeys.read();
+  async function readOrCreateRecoveryKey(): Promise<string> {
+    const existing = await recoveryKeys.read();
 
-        if (existing !== null) {
-            return existing;
+    if (existing !== null) {
+      return existing;
+    }
+
+    if (pendingRecoveryKey === null) {
+      pendingRecoveryKey = (async () => {
+        const rechecked = await recoveryKeys.read();
+
+        if (rechecked !== null) {
+          return rechecked;
         }
 
-        if (pendingRecoveryKey === null) {
-            pendingRecoveryKey = (async () => {
-                const rechecked = await recoveryKeys.read();
-
-                if (rechecked !== null) {
-                    return rechecked;
-                }
-
-                return await recoveryKeys.create();
-            })();
-        }
-
-        const current = pendingRecoveryKey;
-
-        try {
-            return await current;
-        } finally {
-            if (pendingRecoveryKey === current) {
-                pendingRecoveryKey = null;
-            }
-        }
+        return await recoveryKeys.create();
+      })();
     }
 
-    async function getRecoveryKeyStatus(): Promise<
-        "missing" | "configured"
-    > {
-        return (await recoveryKeys.read()) === null ? "missing" : "configured";
+    const current = pendingRecoveryKey;
+
+    try {
+      return await current;
+    } finally {
+      if (pendingRecoveryKey === current) {
+        pendingRecoveryKey = null;
+      }
+    }
+  }
+
+  async function getRecoveryKeyStatus(): Promise<"missing" | "configured"> {
+    return (await recoveryKeys.read()) === null ? "missing" : "configured";
+  }
+
+  async function setupRecoveryKey(): Promise<string> {
+    return await readOrCreateRecoveryKey();
+  }
+
+  async function revealRecoveryKey(): Promise<string> {
+    const recoveryKey = await recoveryKeys.read();
+
+    if (recoveryKey === null) {
+      throw new MissingRecoveryKeyError();
     }
 
-    async function setupRecoveryKey(): Promise<string> {
-        return await readOrCreateRecoveryKey();
+    return recoveryKey;
+  }
+
+  async function exportArchiveV3(value: Archive.Archive): Promise<string> {
+    const recoveryKey = await setupRecoveryKey();
+    return await archive.encodeEncrypted(value, recoveryKey);
+  }
+
+  async function restoreArchive(
+    text: string,
+    manualKey?: string,
+  ): Promise<Archive.Archive> {
+    const decoded = archive.decodeFile(text);
+
+    if (decoded.kind === "invalid") {
+      throw new InvalidBackupArchiveError(decoded.reason);
     }
 
-    async function revealRecoveryKey(): Promise<string> {
-        const recoveryKey = await recoveryKeys.read();
-
-        if (recoveryKey === null) {
-            throw new MissingRecoveryKeyError();
-        }
-
-        return recoveryKey;
+    if (decoded.kind === "legacy") {
+      return decoded.archive;
     }
 
-    async function exportArchiveV3(
-        value: Archive.Archive
-    ): Promise<string> {
-        const recoveryKey = await setupRecoveryKey();
-        return await archive.encodeEncrypted(value, recoveryKey);
+    const recoveryKey = manualKey ?? (await recoveryKeys.read());
+
+    if (recoveryKey === null) {
+      throw new MissingRecoveryKeyError();
     }
 
-    async function restoreArchive(
-        text: string,
-        manualKey?: string
-    ): Promise<Archive.Archive> {
-        const decoded = archive.decodeFile(text);
+    return await decoded.decrypt(recoveryKey);
+  }
 
-        if (decoded.kind === "invalid") {
-            throw new InvalidBackupArchiveError(decoded.reason);
-        }
+  const base: SecureBackupBase = {
+    getRecoveryKeyStatus,
+    setupRecoveryKey,
+    revealRecoveryKey,
+    exportArchiveV3,
+    restoreArchive,
+  };
 
-        if (decoded.kind === "legacy") {
-            return decoded.archive;
-        }
+  if (destination === undefined) {
+    return base;
+  }
 
-        const recoveryKey = manualKey ?? await recoveryKeys.read();
+  const backupDestination = destination;
 
-        if (recoveryKey === null) {
-            throw new MissingRecoveryKeyError();
-        }
+  async function createBackup(
+    value: Archive.Archive,
+  ): Promise<WrittenBackupFile> {
+    const body = await exportArchiveV3(value);
+    const resolved = await resolveBackupDestination({
+      configuredDirectoryUri:
+        await backupDestination.getConfiguredDirectoryUri(),
+      defaultDirectoryUri: backupDestination.defaultDirectoryUri,
+      isAccessible: backupDestination.isAccessible,
+    });
+    const filename = createBackupFilename(backupDestination.now());
 
-        return await decoded.decrypt(recoveryKey);
-    }
+    const written = await writeBackupFile({
+      directoryUri: resolved.directoryUri,
+      filename,
+      body,
+      fileSystem: backupDestination.fileSystem,
+    });
 
-    const base: SecureBackupBase = {
-        getRecoveryKeyStatus,
-        setupRecoveryKey,
-        revealRecoveryKey,
-        exportArchiveV3,
-        restoreArchive,
-    };
+    await pruneOldBackups(resolved.directoryUri, backupDestination.fileSystem);
 
-    if (destination === undefined) {
-        return base;
-    }
+    return written;
+  }
 
-    const backupDestination = destination;
+  async function restoreBackupFile(
+    fileUri: string,
+    manualKey?: string,
+  ): Promise<Archive.Archive> {
+    const body = await backupDestination.fileSystem.read(fileUri);
+    return await restoreArchive(body, manualKey);
+  }
 
-    async function createBackup(
-        value: Archive.Archive
-    ): Promise<WrittenBackupFile> {
-        const body = await exportArchiveV3(value);
-        const resolved = await resolveBackupDestination({
-            configuredDirectoryUri:
-                await backupDestination.getConfiguredDirectoryUri(),
-            defaultDirectoryUri: backupDestination.defaultDirectoryUri,
-            isAccessible: backupDestination.isAccessible,
-        });
-        const filename = createBackupFilename(backupDestination.now());
-
-        const written = await writeBackupFile({
-            directoryUri: resolved.directoryUri,
-            filename,
-            body,
-            fileSystem: backupDestination.fileSystem,
-        });
-
-        await pruneOldBackups(
-            resolved.directoryUri,
-            backupDestination.fileSystem
-        );
-
-        return written;
-    }
-
-    async function restoreBackupFile(
-        fileUri: string,
-        manualKey?: string
-    ): Promise<Archive.Archive> {
-        const body = await backupDestination.fileSystem.read(fileUri);
-        return await restoreArchive(body, manualKey);
-    }
-
-    return {
-        ...base,
-        createBackup,
-        restoreBackupFile,
-    };
+  return {
+    ...base,
+    createBackup,
+    restoreBackupFile,
+  };
 }
 
 export type SecureBackup = SecureBackupBase;

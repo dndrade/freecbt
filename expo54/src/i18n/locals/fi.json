@@ -138,5 +138,11 @@
   "should_statements": "Pitäisi-lauseet",
   "should_statements_explanation_1": "Jos liität johonkin ominaisuuksia joita heillä ei ole, käytät pitäisi-lauseita. Esimerkiksi, jos pelkäät lentämistä ja toistat itsellesi \"minulla ei pitäisi olla lentopelkoa, ei lentokoneessa ole mitään vikaa!\", asetat itsellesi turhia paineita. Sinulla on lentopelkoa! On täysin tavallista ihmisille jotka kärsivät lentopelosta pelätä lentämistä!",
   "should_statements_explanation_2": "Pitäisi-lauseet usein tuntuvat hullunkurisilta kun sanot sen ääneen; ne ovat epäloogisia!",
-  "should_statements_thought": "Olen aikuinen, ei minulla pitäisi olla tällaisia henkisiä ongelmia."
+  "should_statements_thought": "Olen aikuinen, ei minulla pitäisi olla tällaisia henkisiä ongelmia.",
+  "thought_delete": {
+    "confirm": "Poistetaanko tämä ajatus? Tätä ei voi kumota.",
+    "failed": "Tätä ajatusta ei voitu poistaa.",
+    "delete": "Poista",
+    "cancel": "Peruuta"
+  }
 }

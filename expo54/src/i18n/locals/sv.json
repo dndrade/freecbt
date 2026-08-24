@@ -145,5 +145,11 @@
     "new_thought_button": "ny tanke",
     "settings_button": "inställningar",
     "delete_thought_button": "ta bort tanke"
+  },
+  "thought_delete": {
+    "confirm": "Ta bort den här tanken? Det går inte att ångra.",
+    "failed": "Det gick inte att ta bort den här tanken.",
+    "delete": "Ta bort",
+    "cancel": "Avbryt"
   }
 }

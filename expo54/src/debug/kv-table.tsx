@@ -1,4 +1,5 @@
-import { Text, View } from "react-native";
+import { View } from "react-native";
+import { Typography } from "heroui-native";
 import { Style } from "../hooks/use-style";
 
 export type KVTableEntry = readonly [string, string | React.JSX.Element];
@@ -12,9 +13,9 @@ export function KVTable(props: {
     <View style={[s.flexCol]}>
       {entries.map(([k, v]) => (
         <View key={k} style={[s.flexRow]}>
-          <Text style={[...cell, s.text, { flex: 1 }, s.textRight]}>{k}</Text>
+          <Typography type="body-xs" style={{ flex: 1, textAlign: 'right' }}>{k}</Typography>
           {typeof v === "string" ? (
-            <Text style={[...cell, s.text, { flex: 3 }]}>{v}</Text>
+            <Typography type="body-xs" style={{ flex: 3 }}>{v}</Typography>
           ) : (
             <View style={[cell, { flex: 3 }]}>{v}</View>
           )}

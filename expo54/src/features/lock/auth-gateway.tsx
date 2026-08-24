@@ -1,4 +1,4 @@
-import { Screen, Section } from "@/src/components";
+import { Card, Section, StandardScreen } from "@/shared/components";
 import { LoadModel, ModelLoadedProps } from "@/src/hooks/use-model";
 import { Action } from "@/src/model";
 import { Button, Typography } from "heroui-native";
@@ -43,7 +43,7 @@ function AuthReady(props: ModelLoadedProps & { children: React.ReactNode }) {
   }
 
   return (
-    <Screen>
+    <StandardScreen>
       <Section className="items-center gap-4">
         <Image source={ImagePath.logo} className="h-8" resizeMode="contain" />
         <Image
@@ -67,12 +67,12 @@ function AuthReady(props: ModelLoadedProps & { children: React.ReactNode }) {
         <Typography type="body-sm" className="text-accent">
           {t("lock_screen.forgot_pin")}
         </Typography>
-        <Section className="bg-surface-secondary rounded-lg p-3">
+        <Card>
           <Typography type="body-xs" color="muted">
             {t("lock_screen.reset_warning")}
           </Typography>
-        </Section>
+        </Card>
       </Section>
-    </Screen>
+    </StandardScreen>
   );
 }

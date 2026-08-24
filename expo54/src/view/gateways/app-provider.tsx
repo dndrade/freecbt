@@ -3,18 +3,16 @@ import {
   configureReanimatedLogger,
   ReanimatedLogLevel,
 } from "react-native-reanimated";
-import { SafeAreaProvider } from "react-native-safe-area-context";
-import { I18nProvider } from "../../i18n/use-i18n";
-import { ModelProvider, useModel } from "../../hooks/use-model";
-import { Model } from "../../model";
+import { I18nProvider, defaultLocale } from "../../i18n/use-i18n";
+import { ModelProvider } from "../../hooks/use-model";
+import { useSettings } from "@/src/features/settings/hooks/useSettings";
 import { AuthGateway } from "@/src/features/lock/auth-gateway";
-import { OnboardingGateway } from "./onboarding-gateway"
+import { OnboardingGateway } from "./onboarding-gateway";
 import { registerDevMenu } from "@/src/debug/register-dev-menu";
-import { ThemeSync } from "@/src/theme/theme-sync";
+import { ThemeSync } from "@/shared/theme/theme-sync";
 
 export function ModelI18nProvider(props: { children: React.ReactNode }) {
-  const [m] = useModel();
-  const locale = Model.locale(m);
+  const locale = useSettings((s) => s.settings.locale) ?? defaultLocale();
   return <I18nProvider locale={locale}>{props.children}</I18nProvider>;
 }
 
@@ -36,9 +34,7 @@ export function AppProvider(props: { children: React.ReactNode }) {
 
       <ModelI18nProvider>
         <OnboardingGateway>
-          <AuthGateway>
-            <SafeAreaProvider>{props.children}</SafeAreaProvider>
-          </AuthGateway>
+          <AuthGateway>{props.children}</AuthGateway>
         </OnboardingGateway>
       </ModelI18nProvider>
     </ModelProvider>

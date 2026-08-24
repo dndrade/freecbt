@@ -1,0 +1,92 @@
+{
+  "onboarding_screen": {
+    "previous": "Föregående",
+    "skip": "Hoppa över",
+    "next": "Nästa",
+    "progress": "Konfigurationsförlopp",
+    "progress_step": "Steg %{step} av %{count}",
+    "saving": "Sparar…",
+    "save_failed": "Det gick inte att spara. Försök igen.",
+    "get_started": "Kom igång",
+    "auto_thought_ex": "Jag missade George's fest, han måste vara arg på mig nu.",
+    "challenge_ex": "George vet att jag inte alltid kan vara med på allt. Jag skulle inte vara arg på honom om inte han kom till min fest en gång.\n\nJag borde behandla mig själv som jag hade behandlat andra.",
+    "alt_thought_ex": "Det är sant att jag missade Georges fest, jag kan be om ursäkt, och han kommer med all sannolikhet förlåta mig.",
+    "cog_distortion": {
+      "label": "Tankeläsning",
+      "slug": "tanke-läsning"
+    },
+    "intro": {
+      "line1": "Välkommen till",
+      "emphasis1": "FreeCBT",
+      "line2": ", ",
+      "emphasis2": "Kognitiv Beteende Terapi (KBT)",
+      "line3": "Appen."
+    },
+    "crash_course": {
+      "line1": "Detta är en",
+      "emphasis1": "snabbkurs",
+      "line2": "i KBT och",
+      "emphasis2": "inte ett alternativ",
+      "line3": "till en utbildad terapeut."
+    },
+    "mood_thoughts": {
+      "line1": "Ett:",
+      "emphasis1": "dina tankar skapar ditt mående."
+    },
+    "thoughts_arent_thoughts": {
+      "line1": "Två: dina tankar kan vara",
+      "emphasis1": "automatiska."
+    },
+    "your_distorted": {
+      "line1": "Tre: automatiska tankar kan vara",
+      "emphasis1": "förvrängda."
+    },
+    "cbt_overview": {
+      "line1": "Målet med KBT är att känna igen",
+      "emphasis1": "förvrängda tankar",
+      "line2": "och",
+      "emphasis2": "ersätta dem",
+      "line3": "med mer verkliga tankar."
+    },
+    "ready": {
+      "emphasis1": "Redo?",
+      "line1": "Låt oss ge igenom stegen."
+    },
+    "catch": {
+      "line1": "Vi börjar med",
+      "emphasis1": "att skriva ner",
+      "line2": "automatiska tankar när de kommer till oss."
+    },
+    "bad_thought_note": {
+      "line1": "Skriv ner tanken:",
+      "line2": "Jag missade George's fest, han måste vara arg på mig nu."
+    },
+    "identify_distortions": {
+      "line1": "Leta efter",
+      "emphasis1": "Kognitiva förvrängningar"
+    },
+    "bad_distortions": {
+      "line1": "Vet vi verkligen att George kommer att hata oss? Om inte så försöker vi oss på tankeläsning.",
+      "emphasis1": "🧠 Tankeläsning",
+      "line2": "Jag missade George's fest, han måste vara arg på mig nu."
+    },
+    "challenge_screen": {
+      "line1": "Varför är inte denna tanken realistisk?",
+      "emphasis1": "Utmana den!"
+    },
+    "write_challenge": {
+      "line1": "Vi skriver något i denna stilen:"
+    },
+    "alt_thought": {
+      "line1": "Till sist skall vi skriva en",
+      "emphasis1": "alternativ tanke."
+    },
+    "show_off": {
+      "line1": "Hitta den senare:"
+    },
+    "got_it": {
+      "line1": "Och det är faktiskt allt!",
+      "btn_title": "Nu kör vi!"
+    }
+  }
+}

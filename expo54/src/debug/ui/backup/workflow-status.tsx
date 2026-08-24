@@ -1,6 +1,6 @@
 import type { ModelLoadedProps } from "@/src/hooks/use-model";
 import React from "react";
-import { Text } from "react-native";
+import { Typography } from "heroui-native";
 
 export type WorkflowKeyStatus =
     | "unchecked"
@@ -19,17 +19,17 @@ export function WorkflowStatus(props: Props) {
 
     return (
         <>
-            <Text style={[s.text]}>
+            <Typography type="body-xs">
                 Recovery key: {props.keyStatus}
-            </Text>
-            <Text style={[s.text]}>
+            </Typography>
+            <Typography type="body-xs">
                 Saved confirmation:{" "}
                 {props.confirmedSaved ? "confirmed" : "not confirmed"}
-            </Text>
-            <Text style={[s.text]}>
+            </Typography>
+            <Typography type="body-xs">
                 Archive-v3:{" "}
                 {props.readyForArchiveV3 ? "ready" : "not ready"}
-            </Text>
+            </Typography>
         </>
     );
 }

@@ -20,7 +20,10 @@
     "auto_thought_ex": "Ho perso la festa di Giorgio, ora mi odia.",
     "challenge_ex": "Giorgio sa che non posso farcela ogni volta, non l'odierei se mancerebbe a qualcosa di mio.\n\nDovrei trattare me stesso bene almeno tanto quanto io tratto gli altri",
     "alt_thought_ex": "È vero che ho perso la festa di Giorgio, ma posso scusarmi così probabilmente mi perdonerà.",
-    "cog_distortion": { "label": "Lettura del pensiero", "slug": "lettura-del-pensiero" },
+    "cog_distortion": {
+      "label": "Lettura del pensiero",
+      "slug": "lettura-del-pensiero"
+    },
     "intro": {
       "line1": "Benvenuto in",
       "emphasis1": "FreeCBT",
@@ -28,7 +31,7 @@
       "emphasis2": "Terapia Cognitivo Comportamentale (TCC)",
       "line3": "App."
     },
-    
+
     "crash_course": {
       "line1": "Questo è un",
       "emphasis1": "corso intensivo",
@@ -96,7 +99,7 @@
       "btn_title": "Andiamo!"
     }
   },
-  
+
   "auto_thought": "Pensiero Automatico",
   "cog_distortion": " Seleziona la Distorsione Cognitiva",
   "challenge": "Sfida il pensiero",
@@ -117,14 +120,13 @@
     "changed_placeholder": "le probabilità di incidente aereo sono molto basse",
     "alt_thought_placeholder": "Cosa dovremmo pensare invece?"
   },
-    "explanation_screen": {
+  "explanation_screen": {
     "header": "FreeCBT."
   },
   "finished_screen": {
     "header": "FreeCBT"
   },
-  
-  
+
   "all_or_nothing_thinking": "Pensiero in \"Tutto o Niente\" o \"Nero o Bianco\"",
   "all_or_nothing_thinking_explanation": "Questa distorsione si presenta quanto non pensiamo ad una via di mezzo. Se pensiamo che una nostra piccola colpa ci renda irreparabilmente marci o terribili, stiamo pensando escusivament in \"tutto Bianco o Nero\".",
   "all_or_nothing_thinking_thought": "Il colloquio di lavoro è andato male... nessuno mi assumerà mai!.",
@@ -200,5 +202,11 @@
   "should_statements_one_liner": "esempio: \" Dovrei aver fatto di meglio\"",
   "labeling_one_liner": "esempio: \"è un cretino\"",
   "self_blaming_one_liner": "Darti tutta la colpa",
-  "other_blaming_one_liner": "Dare la colpa tutta a qualcun altro"
+  "other_blaming_one_liner": "Dare la colpa tutta a qualcun altro",
+  "thought_delete": {
+    "confirm": "Eliminare questo pensiero? L’operazione non può essere annullata.",
+    "failed": "Impossibile eliminare questo pensiero.",
+    "delete": "Elimina",
+    "cancel": "Annulla"
+  }
 }

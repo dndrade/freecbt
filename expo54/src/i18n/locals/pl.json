@@ -138,5 +138,11 @@
   "should_statements": "Stwierdzenia typu Powienienem",
   "should_statements_explanation_1": "Jeśli przypisujesz komuś możliwości, których nie posiadają, używasz sformuowania \"powienien\" w szkodliwy sposób. Na przykład, jeśli boisz się latać samolotem i mówisz sobie \"Nie powinienem się tego bać, nie ma nic złego w samolotach!\" nakładasz na siebie nadmierny ciężar. Boisz się lotów! To normalne, że ludzie, którzy mają taki lęk, boją się latać!",
   "should_statements_explanation_2": "Stwierdzenia typu \"Powinienem\" mogą wydawać się bezsensowne, kiedy powiesz je na głos; oto chodzi! Są nielogiczne!",
-  "should_statements_thought": "Jestem dorosłą osobą, nie powinienem mieć problemów psychicznych."
+  "should_statements_thought": "Jestem dorosłą osobą, nie powinienem mieć problemów psychicznych.",
+  "thought_delete": {
+    "confirm": "Usunąć tę myśl? Tej operacji nie można cofnąć.",
+    "failed": "Nie udało się usunąć tej myśli.",
+    "delete": "Usuń",
+    "cancel": "Anuluj"
+  }
 }

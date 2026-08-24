@@ -1,0 +1,13 @@
+node_modules/
+.git/
+.superpowers/
+.dev/
+coverage/
+dist/
+expo54/.expo/
+expo54/.maestro/
+expo54/android/build/
+expo54/android/.cxx/
+expo54/android/app/.cxx/
+expo54/ios/build/
+www/.next/

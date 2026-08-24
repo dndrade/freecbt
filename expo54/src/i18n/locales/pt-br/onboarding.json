@@ -1,0 +1,92 @@
+{
+  "onboarding_screen": {
+    "previous": "Anterior",
+    "skip": "Pular",
+    "next": "Próximo",
+    "progress": "Progresso da configuração",
+    "progress_step": "Etapa %{step} de %{count}",
+    "saving": "Salvando…",
+    "save_failed": "Não foi possível salvar. Tente novamente.",
+    "get_started": "Começar",
+    "auto_thought_ex": "Me esqueci da festa do Jorge! Ele deve me odiar.",
+    "challenge_ex": "O Jorge sabe que não consigo ir a todas as festas. Eu não o odiaria caso se esquecesse da minha. Tenho que me considerar tão bem quanto considero os outros.",
+    "alt_thought_ex": "É verdade que me esqueci da festa do Jorge mas posso pedir desculpa e ele compreenderá.",
+    "cog_distortion": {
+      "label": "Leitura da mente",
+      "slug": "leitura-mente"
+    },
+    "intro": {
+      "line1": "Bem vindo ao",
+      "emphasis1": "FreeCBT",
+      "line2": ", uma",
+      "emphasis2": "app",
+      "line3": " de Terapia Cognitivo Comportamental (TCC)."
+    },
+    "crash_course": {
+      "line1": "Isto é um",
+      "emphasis1": "curso rápido",
+      "line2": "de TCC e ",
+      "emphasis2": "não uma alternativa",
+      "line3": "a um terapeuta."
+    },
+    "mood_thoughts": {
+      "line1": "Primeiro:",
+      "emphasis1": "Os seus pensamentos causam as suas emoções."
+    },
+    "thoughts_arent_thoughts": {
+      "line1": "Segundo: Os seus pensamentos podem ser",
+      "emphasis1": "automáticos."
+    },
+    "your_distorted": {
+      "line1": "Terceiro: Pensamentos automáticos estão frequentemente",
+      "emphasis1": "distorcidos."
+    },
+    "cbt_overview": {
+      "line1": "O objetivo de TCC é reconhecer os",
+      "emphasis1": "pensamentos distorcidos",
+      "line2": "e",
+      "emphasis2": "substituí-los",
+      "line3": "por pensamentos racionais."
+    },
+    "ready": {
+      "emphasis1": "Pronto?",
+      "line1": "Vamos passo-a-passo."
+    },
+    "catch": {
+      "line1": "1. Vamos começar por",
+      "emphasis1": "escrever",
+      "line2": "os pensamentos automáticos assim que acontecerem."
+    },
+    "bad_thought_note": {
+      "line1": "Repare o pensamento:",
+      "line2": "Me esqueci da festa do Jorge. Ele deve me odiar."
+    },
+    "identify_distortions": {
+      "line1": "Procure por",
+      "emphasis1": "distorções cognitivas"
+    },
+    "bad_distortions": {
+      "line1": "Sabemos mesmo se o Jorge vai nos odiar? Se não, estamos fazendo",
+      "emphasis1": "leitura da mente.",
+      "line2": "Me esqueci da festa do Jorge. Ele deve me odiar."
+    },
+    "challenge_screen": {
+      "line1": "3. Por que este pensamento não é realista?",
+      "emphasis1": "Desafie-o."
+    },
+    "write_challenge": {
+      "line1": "Vamos escrever algo do tipo:"
+    },
+    "alt_thought": {
+      "line1": "4. Finalmente, vamos escrever um",
+      "emphasis1": "pensamento alternativo."
+    },
+    "show_off": {
+      "line1": "Encontrar mais tarde:"
+    },
+    "got_it": {
+      "line1": "E é basicamente isto.",
+      "btn_title": "Bora lá!"
+    }
+  }
+}

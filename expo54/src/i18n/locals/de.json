@@ -320,5 +320,11 @@
     "json": {
       "button": "Export als JSON"
     }
+  },
+  "thought_delete": {
+    "confirm": "Diesen Gedanken löschen? Dies kann nicht rückgängig gemacht werden.",
+    "failed": "Dieser Gedanke konnte nicht gelöscht werden.",
+    "delete": "Löschen",
+    "cancel": "Abbrechen"
   }
 }

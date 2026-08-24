@@ -12,7 +12,7 @@ installFreeCBTTestTheme();
 jest.mock("@react-native-async-storage/async-storage", () =>
   // the docs recommend this way
   // eslint-disable-next-line @typescript-eslint/no-require-imports
-  require("@react-native-async-storage/async-storage/jest/async-storage-mock")
+  require("@react-native-async-storage/async-storage/jest/async-storage-mock"),
 );
 
 // this gets jest-expo working. not sure why it's needed.
@@ -29,7 +29,10 @@ if (typeof global.structuredClone === "undefined") {
 }
 
 // provide a polyfill for crypto.randomUUID since it's not available in Node.js/Jest
-if (typeof globalThis.crypto === "undefined" || typeof globalThis.crypto.randomUUID !== "function") {
+if (
+  typeof globalThis.crypto === "undefined" ||
+  typeof globalThis.crypto.randomUUID !== "function"
+) {
   let counter = 0;
   if (globalThis.crypto === undefined) {
     (globalThis as any).crypto = {};
@@ -48,9 +51,11 @@ process.env.EXPO_OS = Platform.OS;
 // package ships an official jest mock for exactly this; use it so real
 // components can call the hook directly in tests.
 // https://github.com/th3rdwave/react-native-safe-area-context#jest
-jest.mock("react-native-safe-area-context", () =>
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  require("react-native-safe-area-context/jest/mock").default
+jest.mock(
+  "react-native-safe-area-context",
+  () =>
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    require("react-native-safe-area-context/jest/mock").default,
 );
 
 // @react-navigation/core's useTheme() throws "Couldn't find a theme" for any
@@ -115,61 +120,83 @@ jest.mock("expo-router", () => ({
 // (which now uses SecureStore for the pincode) see real get/set/delete
 // semantics instead.
 jest.mock("expo-secure-store", () => {
-    const store = new Map<string, string>();
+  const store = new Map<string, string>();
 
-    return {
-        WHEN_UNLOCKED_THIS_DEVICE_ONLY: 1,
+  return {
+    WHEN_UNLOCKED_THIS_DEVICE_ONLY: 1,
 
-        getItemAsync: async (key: string) => store.get(key) ?? null,
+    getItemAsync: async (key: string) => store.get(key) ?? null,
 
-        setItemAsync: async (
-            key: string,
-            value: string,
-            _options?: {
-                keychainAccessible?: number;
-            }
-        ) => {
-            store.set(key, value);
-        },
+    setItemAsync: async (
+      key: string,
+      value: string,
+      _options?: {
+        keychainAccessible?: number;
+      },
+    ) => {
+      store.set(key, value);
+    },
 
-        deleteItemAsync: async (key: string) => {
-            store.delete(key);
-        },
-    };
+    deleteItemAsync: async (key: string) => {
+      store.delete(key);
+    },
+  };
 });
 // expo-crypto's native module isn't linked in the jest environment. Mock
 // getRandomBytesAsync with real randomness (via Node's crypto) so tests
 // that check for salt/nonce uniqueness are meaningful, not just wired.
 jest.mock("expo-crypto", () => {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const nodeCrypto = require("crypto");
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const nodeCrypto = require("crypto");
 
-    return {
-        randomUUID: () => nodeCrypto.randomUUID(),
-        getRandomBytesAsync: async (byteCount: number) => {
-            const buf = nodeCrypto.randomBytes(byteCount);
-            return new Uint8Array(buf);
-        },
+  return {
+    randomUUID: () => nodeCrypto.randomUUID(),
+    getRandomBytesAsync: async (byteCount: number) => {
+      const buf = nodeCrypto.randomBytes(byteCount);
+      return new Uint8Array(buf);
+    },
 
-        digest: async (_algorithm: string, data: BufferSource) => {
-            const bytes = Buffer.from(
-                data instanceof ArrayBuffer
-                    ? data
-                    : data.buffer.slice(
-                        data.byteOffset,
-                        data.byteOffset + data.byteLength
-                    )
-            );
+    digest: async (_algorithm: string, data: BufferSource) => {
+      const bytes = Buffer.from(
+        data instanceof ArrayBuffer
+          ? data
+          : data.buffer.slice(
+              data.byteOffset,
+              data.byteOffset + data.byteLength,
+            ),
+      );
 
-            return nodeCrypto.createHash("sha256").update(bytes).digest().buffer;
-        },
-    };
+      return nodeCrypto.createHash("sha256").update(bytes).digest().buffer;
+    },
+  };
 });
 
 // react-native-quick-crypto's native module isn't linked in the jest
 // environment. Mock pbkdf2 using Node's own (native) crypto.pbkdf2 so
 // archive-crypto tests exercise genuine PBKDF2 behavior, not a stub —
 // same rationale as the expo-crypto mock above.
+// react-native-mmkv's createMMKV() calls a native Turbo/Nitro module at
+// import time, which throws "NitroModules could not be found" in the jest
+// environment (no native binary). Mock it with a simple in-memory Map-backed
+// store so src/services/storage/mmkv.ts (and anything importing it, like
+// zustand-persisted settings) can be pulled in transitively without every
+// test needing its own local mock.
+jest.mock("react-native-mmkv", () => {
+  const store = new Map<string, string>();
+
+  return {
+    createMMKV: () => ({
+      getString: (key: string) => store.get(key),
+      set: (key: string, value: string) => {
+        store.set(key, value);
+      },
+      remove: (key: string) => {
+        store.delete(key);
+      },
+    }),
+  };
+});
+
 jest.mock("react-native-quick-crypto", () => {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   const nodeCrypto = require("crypto");
@@ -181,7 +208,7 @@ jest.mock("react-native-quick-crypto", () => {
       iterations: number,
       keylen: number,
       digest: string,
-      callback: (err: Error | null, derivedKey?: Buffer) => void
+      callback: (err: Error | null, derivedKey?: Buffer) => void,
     ) => {
       nodeCrypto.pbkdf2(password, salt, iterations, keylen, digest, callback);
     },

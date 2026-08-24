@@ -1,6 +1,5 @@
-import { ThoughtEditScreen } from "@/src/features/thoughts/thought-edit-screen";
-import { LoadModel } from "@/src/hooks/use-model";
+import { ThoughtEditScreen } from "@/features/thoughtRecord/screens/ThoughtEditScreen";
 
 export default function Edit() {
-  return <LoadModel ready={ThoughtEditScreen} />;
+  return <ThoughtEditScreen />;
 }

@@ -1,4 +1,5 @@
 import { Stack } from "expo-router";
+import { useThemeColor } from "heroui-native";
 import React from "react";
 
 export const unstable_settings = {
@@ -6,5 +7,17 @@ export const unstable_settings = {
 };
 
 export default function SettingsLayout() {
-  return <Stack screenOptions={{ headerShown: false }} />;
+  const background = useThemeColor("background");
+  const foreground = useThemeColor("foreground");
+
+  return (
+    <Stack
+      screenOptions={{
+        headerStyle: { backgroundColor: background },
+        headerTintColor: foreground,
+        headerTitleStyle: { color: foreground, fontWeight: "600" },
+        headerShadowVisible: false,
+      }}
+    />
+  );
 }

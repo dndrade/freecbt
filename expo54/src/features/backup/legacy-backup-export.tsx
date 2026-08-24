@@ -5,7 +5,8 @@ import {
     BACKUP_EXPORT_MIME_TYPE,
 } from "@/src/platform/sharing/backup-mime";
 import React from "react";
-import { Text, TouchableOpacity } from "react-native";
+import { TouchableOpacity } from "react-native";
+import { Typography } from "heroui-native";
 import type { BackupExportControlProps } from "./backup-control-contract";
 
 export function LegacyBackupExport(props: BackupExportControlProps) {
@@ -23,19 +24,19 @@ export function LegacyBackupExport(props: BackupExportControlProps) {
             type={BACKUP_EXPORT_MIME_TYPE}
             UTI="org.erosson.freecbt.backup"
             translate={t}
-            error={(error) => <Text style={[s.errorText]}>{error}</Text>}
+            error={(error) => <Typography type="body-sm" className="text-danger">{error}</Typography>}
             share={(onPress) => (
                 <TouchableOpacity style={[s.button, s.my2]} onPress={onPress}>
-                    <Text style={[s.buttonText]}>
+                    <Typography type="body-sm">
                         {t("backup_screen.export.share.button")}
-                    </Text>
+                    </Typography>
                 </TouchableOpacity>
             )}
             download={() => (
                 <TouchableOpacity style={[s.button, s.my2]}>
-                    <Text style={[s.buttonText]}>
+                    <Typography type="body-sm">
                         {t("backup_screen.export.file.button")}
-                    </Text>
+                    </Typography>
                 </TouchableOpacity>
             )}
         />

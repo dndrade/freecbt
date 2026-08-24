@@ -1,7 +1,7 @@
-import { SettingsScreen } from "@/src/features/settings/settings-screen";
-import { LoadModel } from "@/src/hooks/use-model";
 import React from "react";
+import { SettingsScreen } from "@/features/settings/screens/SettingsScreen";
+import { LoadModel } from "@/hooks/use-model";
 
-export default function MainSettingsCurrent() {
-  return <LoadModel ready={SettingsScreen} />;
+export default function CurrentSettings() {
+  return <LoadModel ready={SettingsScreen as any} />;
 }

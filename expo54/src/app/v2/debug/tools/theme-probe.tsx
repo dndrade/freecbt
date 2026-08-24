@@ -1,9 +1,9 @@
-import { Screen, Section } from "@/src/components";
+import { Section, StandardScreen } from "@/shared/components";
 import { Button, Typography } from "heroui-native";
 
 export default function ThemeProbe() {
     return (
-        <Screen>
+        <StandardScreen>
             <Section>
                 <Typography type="h1">
                     FreeCBT
@@ -33,6 +33,6 @@ export default function ThemeProbe() {
                     Destructive
                 </Button>
             </Section>
-        </Screen>
+        </StandardScreen>
     );
 }

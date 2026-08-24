@@ -1,23 +1,12 @@
 import { Routes } from "@/src";
-import { OnboardingScreen } from "@/src/features/onboarding/onboarding-screen";
-import { LoadModel, ModelLoadedProps } from "@/src/hooks/use-model";
-import { Action } from "@/src/model";
+import { OnboardingScreen } from "@/src/features/onboarding";
 import { useRouter } from "expo-router";
 
-export default function Index() {
-  return <LoadModel ready={Onboarding} />;
-}
-
-function Onboarding(props: ModelLoadedProps) {
+export default function Intro() {
   const router = useRouter();
+  const finishOnboarding = () => router.replace(Routes.homeV2());
 
   return (
-    <OnboardingScreen
-      {...props}
-      onSkip={() => {
-        props.dispatch(Action.setExistingUser());
-        router.push(Routes.homeV2());
-      }}
-    />
+    <OnboardingScreen onSkip={finishOnboarding} onComplete={finishOnboarding} />
   );
 }

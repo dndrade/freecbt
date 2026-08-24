@@ -1,0 +1,111 @@
+{
+  "onboarding_screen": {
+    "previous": "Anterior",
+    "skip": "Saltar",
+    "next": "Seguinte",
+    "progress": "Progresso da configuração",
+    "progress_step": "Passo %{step} de %{count}",
+    "saving": "A guardar…",
+    "save_failed": "Não foi possível guardar. Tenta novamente.",
+    "get_started": "Começar",
+    "readme": "Primeiro, deves ler isto.",
+    "header": "O Guia FreeCBT",
+    "block1": {
+      "header": "FreeCBT é algo que deves praticar",
+      "body": "Requer trabalho, mas aprender FreeCBT pode ajudar-te a sentir-te muito melhor."
+    },
+    "block2": {
+      "header": "Usa o FreeCBT no momento.",
+      "body": "Quando te sentires ansioso, zangado ou deprimido, utiliza o FreeCBT."
+    },
+    "auto_thought_ex": "Faltei à festa do George, ele deve me odiar.",
+    "challenge_ex": "O George sabe que não pude comparecer todas as vezes, eu não o odiaria se ele perdesse algo meu.\n \nDevo tratar de mim pelo menos tão bem quanto trato os outros.",
+    "alt_thought_ex": "É verdade que faltei à festa do George, posso pedir desculpas e ele provavelmente vai-me perdoar.",
+    "cog_distortion": {
+      "label": "Leitura da mente",
+      "slug": "leitura-da-mente"
+    },
+    "intro": {
+      "line1": "Bem vindo(a) ao",
+      "emphasis1": "FreeCBT",
+      "line2": ", a aplicação de",
+      "emphasis2": "Terapia Cognitiva Comportamental.",
+      "line3": ""
+    },
+    "crash_course": {
+      "line1": "O FreeCBT é um",
+      "emphasis1": "crash course",
+      "line2": "em CBT,",
+      "emphasis2": "sem substituir",
+      "line3": "um terapeuta."
+    },
+    "mood_thoughts": {
+      "line1": "Prmeiro:",
+      "emphasis1": "os teus pensamentos causam os teus sentimentos."
+    },
+    "thoughts_arent_thoughts": {
+      "line1": "Segundo: os teus pensamentos podem ser",
+      "emphasis1": "automaticos."
+    },
+    "your_distorted": {
+      "line1": "Terceiro: Pensamentos automáticos são frequentemente",
+      "emphasis1": "distorcidos."
+    },
+    "cbt_overview": {
+      "line1": "O objetivo da TCC (Terapia Cognitivo-Comportamental) é reconhecer",
+      "emphasis1": "pensamentos distorcidos",
+      "line2": "e",
+      "emphasis2": "substituí-los",
+      "line3": "por pensamentos racionais."
+    },
+    "ready": {
+      "emphasis1": "Pronto?",
+      "line1": "Vamos rever os passos."
+    },
+    "catch": {
+      "line1": "Vamos começar por",
+      "emphasis1": "apontar",
+      "line2": "os pensamentos automáticos, assim que acontecem."
+    },
+    "bad_thought_note": {
+      "line1": "Anota o pensamento:",
+      "line2": "Faltei à festa do George, ele deve me odiar."
+    },
+    "identify_distortions": {
+      "line1": "Procura por",
+      "emphasis1": "distorções cognitivas"
+    },
+    "bad_distortions": {
+      "line1": "Sabemos realmente se o George nos odiará? Se não sabemos, estamos",
+      "emphasis1": "🧠 a ler a mente.",
+      "line2": "Faltei à festa do George, ele deve me odiar."
+    },
+    "challenge_screen": {
+      "line1": "Porque é que este pensamento não é realista?",
+      "emphasis1": "Questiona esse pensamento."
+    },
+    "write_challenge": {
+      "line1": "Vamos escrever algo assim:"
+    },
+    "alt_thought": {
+      "line1": "Finalmente, vamos escrever um",
+      "emphasis1": "pensamento alternativo."
+    },
+    "show_off": {
+      "line1": "Encontra-o mais tarde."
+    },
+    "got_it": {
+      "line1": "Estás pronto(a) para avançar!",
+      "btn_title": "Vamos lá!"
+    },
+    "reminders": {
+      "header": "Antes de terminarmos, podemos enviar-te lembretes, se quiseres.",
+      "disabled": "Podes controlar os lembretes nas configurações.",
+      "button": {
+        "yes": "Sim!",
+        "no": "Continuar sem notificações",
+        "continue": "Continuar"
+      }
+    }
+  }
+}

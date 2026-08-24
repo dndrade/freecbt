@@ -7,7 +7,7 @@ jest.mock("@/src/hooks/use-model", () => ({ useModel: () => mockUseModel() }));
 jest.mock("uniwind", () => ({ Uniwind: { setTheme: mockSetTheme } }));
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
-const { ThemeSync } = require("@/src/theme/theme-sync");
+const { ThemeSync } = require("@/shared/theme/theme-sync");
 
 beforeEach(() => {
   mockSetTheme.mockClear();

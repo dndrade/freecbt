@@ -3,8 +3,9 @@ import { LoadModel, ModelLoadedProps } from "@/src/hooks/use-model";
 import * as ImagePath from "@/src/assets/image-path";
 import { Link } from "expo-router";
 import React from "react";
-import { Image, ScrollView, Text, TouchableOpacity, View } from "react-native";
+import { Image, ScrollView, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { Typography } from "heroui-native";
 
 export default function Index() {
   return <LoadModel ready={Ready} />;
@@ -23,9 +24,9 @@ function Ready(props: ModelLoadedProps) {
               href="https://freecbt.erosson.org/explanation/?ref=quirk"
             >
               <TouchableOpacity style={[s.flex1]}>
-                <Text style={[s.buttonText]}>
+                <Typography type="body-sm">
                   {t("onboarding_screen.header")}
-                </Text>
+                </Typography>
               </TouchableOpacity>
             </Link>
             <Link
@@ -41,24 +42,24 @@ function Ready(props: ModelLoadedProps) {
               href={Routes.introV2()}
             >
               <TouchableOpacity style={[s.flex1]}>
-                <Text style={[s.text]}>{t("explanation_screen.intro")}</Text>
+                <Typography type="body-sm">{t("explanation_screen.intro")}</Typography>
               </TouchableOpacity>
             </Link>
           </View>
           {model.distortionData.list.map((d, i) => (
             <View key={d.slug} style={[s.my2]}>
-              <Text style={[s.subheader]}>{t(d.labelKey)}</Text>
-              {/* <Text style={[s.text]}>{t(d.descriptionKey)}</Text> */}
-              <Text style={[s.text]}>
+              <Typography type="body-sm" className="font-semibold">{t(d.labelKey)}</Typography>
+              {/* <Typography type="body-sm">{t(d.descriptionKey)}</Typography> */}
+              <Typography type="body-sm">
                 {d.explanationKeys.map((tk) => t(tk)).join("\n\n")}
-              </Text>
+              </Typography>
 
               <View style={[s.flexRow, s.my2]}>
                 <Image source={img(i)} style={[s.bubble, s.m2]} />
-                <Text style={[s.text, s.bgCard, s.border, s.rounded, s.p2]}>
+                <Typography type="body-sm" className="rounded-md p-2 border">
                   {" "}
                   {t(d.explanationThoughtKey)}
-                </Text>
+                </Typography>
               </View>
             </View>
           ))}

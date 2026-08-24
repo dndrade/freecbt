@@ -1,4 +1,5 @@
-import { LoadModel, ModelLoadedProps } from "@/src/hooks/use-model";
+import { ErrorBoundary } from "@/shared/components/ErrorBoundary";
+import { useSettings } from "@/src/features/settings/hooks/useSettings";
 import { usePathname, useRouter } from "expo-router";
 import React, { useEffect, useRef } from "react";
 import { Routes } from "../..";
@@ -7,17 +8,24 @@ export function OnboardingGateway(props: {
   children: React.ReactNode;
 }): React.JSX.Element {
   return (
-    <LoadModel
-      ready={(lprops) => (
-        <OnboardingReady {...lprops}>{props.children}</OnboardingReady>
-      )}
-    />
+    <ErrorBoundary
+      fallback={props.children}
+      onError={(err) => {
+        if (__DEV__) {
+          console.warn(
+            "onboarding gateway failed, letting the user into the app:",
+            err,
+          );
+        }
+      }}
+    >
+      <OnboardingReady>{props.children}</OnboardingReady>
+    </ErrorBoundary>
   );
 }
-function OnboardingReady(
-  props: ModelLoadedProps & { children: React.ReactNode }
-) {
-  const { model } = props;
+
+function OnboardingReady(props: { children: React.ReactNode }) {
+  const existingUser = useSettings((s) => s.settings.existingUser);
   const pathname = usePathname();
   const isOnboarding = pathname === "/v2/help/intro";
   const router = useRouter();
@@ -28,13 +36,13 @@ function OnboardingReady(
       hasRedirected.current = false;
       return;
     }
-    if (!model.settings.existingUser && !isOnboarding && !hasRedirected.current) {
+    if (!existingUser && !hasRedirected.current) {
       hasRedirected.current = true;
       router.push(Routes.introV2());
     }
-  }, [model.settings.existingUser, isOnboarding, router]);
+  }, [existingUser, isOnboarding, router]);
 
-  if (model.settings.existingUser || isOnboarding) {
+  if (existingUser || isOnboarding) {
     return props.children;
   } else {
     // Redirect in progress, show loading or nothing

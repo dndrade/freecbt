@@ -1,7 +1,8 @@
 import { useDefaultStyle } from "@/src/hooks/use-style";
 import React, { ReactNode } from "react";
-import { ScrollView, Text, View } from "react-native";
+import { ScrollView, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { Typography } from "heroui-native";
 
 export interface DebugScreenProps {
   title: string;
@@ -19,9 +20,9 @@ export function DebugScreen(props: DebugScreenProps) {
         contentContainerStyle={[s.container, s.p4]}
         keyboardShouldPersistTaps="handled"
       >
-        <Text style={[s.subheader, s.my2]}>{props.title}</Text>
+        <Typography type="h3" className="my-2">{props.title}</Typography>
 
-        <Text style={[s.text, s.my2]}>{props.description}</Text>
+        <Typography type="body-sm" className="my-2">{props.description}</Typography>
 
         {props.metadata ? (
           <View style={[s.my2]}>{props.metadata}</View>

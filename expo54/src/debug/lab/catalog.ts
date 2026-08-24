@@ -37,6 +37,15 @@ export const labFamilies = [
     href: "/v2/debug/lab/onboarding",
   },
   {
+    id: "thoughts",
+    title: "Thoughts",
+    description: "Current thought list and detail experience.",
+    // Points at the real production route (not a lab-local reconstruction):
+    // the adaptive list/detail split can only be correctly assembled by the
+    // actual nested route tree, including [idOrKey] detail routing.
+    href: "/v2/thoughts",
+  },
+  {
     id: "settings",
     title: "Settings",
     description: "Current settings baselines and entry flows.",
@@ -84,6 +93,21 @@ export const labFamilies = [
             description: "Production-like backup setup flow.",
             href: "/v2/debug/lab/settings/backup/current",
             status: "current",
+          },
+        ],
+      },
+      {
+        id: "secure-backups-v2",
+        title: "Secure Backups (v2)",
+        description: "Proposed secure-vault backup setup experience (mocked).",
+        href: "/v2/debug/lab/settings/secure-backups-v2",
+        variants: [
+          {
+            id: "secure-backups-v2-current",
+            title: "Proposed",
+            description: "Mocked 9-screen secure backups setup flow.",
+            href: "/v2/debug/lab/settings/secure-backups-v2/current",
+            status: "experimental",
           },
         ],
       },

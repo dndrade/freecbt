@@ -192,14 +192,24 @@
       "general": { "label": "General" },
       "appearance": { "label": "Appearance" },
       "data": { "label": "Data", "description": "Backup, restore, export" },
-      "wellbeing": { "label": "Wellbeing", "description": "Crisis lines, learn about CBT" },
-      "support": { "label": "Support", "description": "Help center, contact us, privacy" },
-      "about": { "label": "About" }
+      "wellbeing": {
+        "label": "Wellbeing",
+        "description": "Crisis lines, learn about CBT"
+      },
+      "support": {
+        "label": "Support",
+        "description": "Help center, contact us, privacy"
+      },
+      "about": { "label": "About" },
+      "menu": { "help": "Help" }
     },
     "general": {
       "header": "General",
       "notifications": { "label": "Notifications" },
-      "applock": { "label": "App Lock", "description": "Require a pincode to open" },
+      "applock": {
+        "label": "App Lock",
+        "description": "Require a pincode to open"
+      },
       "language": { "label": "Language" }
     },
     "appearance": {
@@ -212,25 +222,44 @@
     },
     "data": {
       "header": "Data",
-      "backup": { "label": "Backup & Restore", "description": "Save or restore your FreeCBT data" },
-      "export": { "label": "Export journal", "description": "Save as Markdown, CSV, or JSON" }
+      "backup": {
+        "label": "Backup & Restore",
+        "description": "Save or restore your FreeCBT data"
+      },
+      "export": {
+        "label": "Export journal",
+        "description": "Save as Markdown, CSV, or JSON"
+      }
     },
     "wellbeing": {
       "header": "Wellbeing",
-      "learn": { "label": "Learn about CBT", "description": "What it is and how it works" },
-      "crisis": { "label": "Crisis Resources", "description": "Hotlines and emergency contacts", "todo": "Crisis resource content is not available in this build yet." }
+      "learn": {
+        "label": "Learn about CBT",
+        "description": "What it is and how it works"
+      },
+      "crisis": {
+        "label": "Crisis Resources",
+        "description": "Hotlines and emergency contacts",
+        "todo": "Crisis resource content is not available in this build yet."
+      }
     },
     "support": {
       "header": "Support",
       "help": { "label": "Help Center" },
-      "contact": { "label": "Contact Us", "description": "Email the FreeCBT maintainer" },
+      "contact": {
+        "label": "Contact Us",
+        "description": "Email the FreeCBT maintainer"
+      },
       "issue": { "label": "Report an issue", "description": "GitHub issues" }
     },
     "about": {
       "header": "About",
       "version": "Version {{version}}",
       "source": { "label": "Source code" },
-      "acknowledgements": { "label": "Acknowledgements", "todo": "Acknowledgements are not available in this build yet." }
+      "acknowledgements": {
+        "label": "Acknowledgements",
+        "todo": "Acknowledgements are not available in this build yet."
+      }
     },
     "privacy": "Privacy Policy",
     "terms": "Terms of Service"
@@ -242,6 +271,7 @@
     "header": "FreeCBT",
     "edit": "Edit",
     "new": "New",
+    "new_thought": "New Thought",
     "save": "Save",
     "submit": "Save & Finish",
     "// auto_thought_placeholder_UNUSED": "ex: \"The plane might crash\"",
@@ -262,6 +292,7 @@
     "discard_draft_no": "Keep editing",
     "thought_saved": "Thought saved",
     "thought_save_failed": "Couldn't save your thought",
+    "thought_load_failed": "Couldn't load this thought",
     "thought_save_capacity": "Too many unfinished saves. Your text is safe here - resolve some below, then save again.",
     "recovery_header": "Needs attention (%{count})",
     "recovery_dismiss": "Dismiss",
@@ -414,7 +445,7 @@
       "submit": "Continue",
       "cancel": "Cancel"
     }
-},
+  },
   "export_screen": {
     "header": "FreeCBT->",
     "description": "View your FreeCBT data in other formats. You cannot import these files back into FreeCBT later.",
@@ -441,5 +472,11 @@
     "unlock_button": "Unlock",
     "forgot_pin": "Forgot your PIN?",
     "reset_warning": "If you reset your PIN, some local access may be affected."
+  },
+  "thought_delete": {
+    "confirm": "Delete this thought? This cannot be undone.",
+    "failed": "Couldn't delete this thought.",
+    "delete": "Delete",
+    "cancel": "Cancel"
   }
 }

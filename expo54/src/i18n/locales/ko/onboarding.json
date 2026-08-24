@@ -1,0 +1,92 @@
+{
+  "onboarding_screen": {
+    "previous": "이전",
+    "skip": "건너뛰기",
+    "next": "다음",
+    "progress": "설정 진행 상황",
+    "progress_step": "%{count}단계 중 %{step}단계",
+    "saving": "저장 중…",
+    "save_failed": "저장하지 못했습니다. 다시 시도하세요.",
+    "get_started": "시작하기",
+    "auto_thought_ex": "나는 친구의 초대에 못갔어, 나를 미워할꺼야.",
+    "challenge_ex": "그 친구는 내가 모든 모임에 나갈 수 없다는 걸 잘 알아. 나는 내 초대에 누군가 못 온다 해도 미워하지는 않을꺼야\n\n내가 나 자신을 대할 때도, 타인이 나를 대하는 만큼은 존중해줘야해.",
+    "alt_thought_ex": "내가 모임에 못간건 사실이야, 하지만 내가 사과한다면, 친구는 나를 받아줄꺼야.",
+    "cog_distortion": {
+      "label": "독심술",
+      "slug": "mind-reading"
+    },
+    "intro": {
+      "line1": "반갑습니다.",
+      "emphasis1": "FreeCBT",
+      "line2": "는",
+      "emphasis2": "인지 행동 치료 (CBT)",
+      "line3": "를 도와주는 앱입니다."
+    },
+    "crash_course": {
+      "line1": "이 앱은 인지 행동 치료를 위한",
+      "emphasis1": "짧은 훈련용",
+      "line2": "앱이며",
+      "emphasis2": "전문 치료사를 대신할 수는 없습니다.",
+      "line3": ""
+    },
+    "mood_thoughts": {
+      "line1": "하나:",
+      "emphasis1": "당신의 생각이 당신의 기분을 만듭니다."
+    },
+    "thoughts_arent_thoughts": {
+      "line1": "둘: 당신의 생각은 ",
+      "emphasis1": "자동적일 가능성이 있습니다."
+    },
+    "your_distorted": {
+      "line1": "셋: 자동적 생각은 종종",
+      "emphasis1": "왜곡될 수 있습니다."
+    },
+    "cbt_overview": {
+      "line1": "인지 행동 치료는 ",
+      "emphasis1": "왜곡된 생각",
+      "line2": "을 인지하고 그것을",
+      "emphasis2": "이성적인 생각",
+      "line3": "으로 바꿔나가는 것입니다."
+    },
+    "ready": {
+      "emphasis1": "준비되셨나요?",
+      "line1": "이 앱을 사용하는 방법을 설명하겠습니다."
+    },
+    "catch": {
+      "line1": "1. 우선은 그때 그때",
+      "emphasis1": "자동적으로 떠오른 생각",
+      "line2": "을 적으세요."
+    },
+    "bad_thought_note": {
+      "line1": "생각 적기:",
+      "line2": "오늘 친구가 초대한 모임에 나가기로 했는데, 약속을 못지켰어. 그 친구는 날 미워할꺼야."
+    },
+    "identify_distortions": {
+      "line1": "자동적 사고에서",
+      "emphasis1": "인지 왜곡을 찾아내기"
+    },
+    "bad_distortions": {
+      "line1": "정말로 그 친구가 나를 미워하는게 확실할까? 그렇지 않다면 내가 하는 것은",
+      "emphasis1": "독심술이다",
+      "line2": "나는 친구의 초대에 못가서 미움 받을꺼야."
+    },
+    "challenge_screen": {
+      "line1": "3. 이 자동적 사고가 비현실적이라면?",
+      "emphasis1": "바꿔보자."
+    },
+    "write_challenge": {
+      "line1": "왜곡된 것을 고쳐보자:"
+    },
+    "alt_thought": {
+      "line1": "4. 이제",
+      "emphasis1": "새로운 생각을 적어보자."
+    },
+    "show_off": {
+      "line1": "정리하면:"
+    },
+    "got_it": {
+      "line1": "지금까지 이 앱의 사용법을 말씀드렸습니다.",
+      "btn_title": "시작해보아요!"
+    }
+  }
+}
