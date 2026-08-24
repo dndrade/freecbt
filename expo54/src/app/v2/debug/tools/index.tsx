@@ -14,11 +14,6 @@ export default function ToolsIndex() {
     >
       <DebugSection title="Inspection">
         <DebugAction
-          label="Debug Inspector"
-          detail="Inspect app state and development diagnostics"
-          onPress={() => router.push("/v2/debug/tools/debug")}
-        />
-        <DebugAction
           label="Theme Probe"
           detail="Preview the UI foundation"
           onPress={() => router.push("/v2/debug/tools/theme-probe")}

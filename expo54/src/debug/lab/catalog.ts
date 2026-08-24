@@ -52,21 +52,6 @@ export const labFamilies = [
     href: "/v2/debug/lab/settings",
     scenarios: [
       {
-        id: "main-settings",
-        title: "Main Settings",
-        description: "Current settings home experience.",
-        href: "/v2/debug/lab/settings/main",
-        variants: [
-          {
-            id: "main-settings-current",
-            title: "Current",
-            description: "Production-like settings home.",
-            href: "/v2/debug/lab/settings/main/current",
-            status: "current",
-          },
-        ],
-      },
-      {
         id: "pin-setup",
         title: "PIN Setup",
         description: "Current PIN setup flow.",

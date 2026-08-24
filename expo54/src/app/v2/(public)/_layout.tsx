@@ -1,13 +1,12 @@
-import { LoadModel, ModelLoadedProps } from "@/src/hooks/use-model";
 import { useThemeColor } from "heroui-native";
 import { Stack } from "expo-router";
 import React from "react";
 
 export default function Layout() {
-  return <LoadModel ready={Nav} />;
+  return <Nav />;
 }
 
-function Nav(_: ModelLoadedProps) {
+function Nav() {
   const background = useThemeColor("background");
   const foreground = useThemeColor("foreground");
 
