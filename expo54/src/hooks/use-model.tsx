@@ -1,16 +1,22 @@
 import { Storage } from "@/src";
-import { Action, Cmd, Distortion, DistortionData, Model } from "@/src/model";
+import {
+  Action,
+  Cmd,
+  Distortion,
+  DistortionData,
+  Model,
+  Settings,
+} from "@/src/model";
 import AsyncStorage, {
   AsyncStorageStatic,
 } from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
-import * as SecureStore from "expo-secure-store";
 import React, { useEffect } from "react";
 import { ActivityIndicator, Appearance } from "react-native";
 import { createElmArch, useElmArch } from "./use-elm-arch";
 import { defaultLocale, TranslateFn, useTranslate } from "@/src/i18n/use-i18n";
 import { Style, useStyle } from "./use-style";
-import { settings } from "@/src/features/settings/data/settingsStorage";
+import { getPin, removePin, setPin } from "@/features/lock/services/pinStorage";
 
 const Ctx = createElmArch<Model.Model, Action.Action, Cmd.Cmd>();
 
@@ -54,7 +60,7 @@ export interface ModelLoadedProps {
 export type ModelLoadedComponent = (props: ModelLoadedProps) => React.ReactNode;
 
 function useCmdRunner(data: Distortion.Data, storage: AsyncStorageStatic) {
-  const s = settings(storage, SecureStore);
+  const s = legacySettings(storage);
   const t = Storage.thoughts(data, storage);
   const drafts = Storage.homeThoughtDraft(data, storage);
   const outbox = Storage.thoughtSaveOutbox(data, storage);
@@ -219,4 +225,34 @@ function useCmdRunner(data: Distortion.Data, storage: AsyncStorageStatic) {
       }
     };
   };
+}
+
+function legacySettings(storage: AsyncStorageStatic) {
+  async function read(): Promise<Settings.Settings> {
+    const [batch, pincode] = await Promise.all([
+      storage.multiGet(Settings.batchKeys),
+      getPin(),
+    ]);
+    return Settings.fromJson.parse({
+      ...Object.fromEntries(batch),
+      [Settings.pincodeKey]: pincode,
+    });
+  }
+
+  async function write(value: Settings.Settings): Promise<void> {
+    const json = Settings.fromJson.encode(value);
+    const { [Settings.pincodeKey]: pincode, ...rest } = json;
+    const entries = Object.entries(rest);
+    await Promise.all([
+      storage.multiRemove(
+        entries.filter(([, v]) => v === null).map(([k]) => k),
+      ),
+      storage.multiSet(
+        entries.filter((entry): entry is [string, string] => entry[1] !== null),
+      ),
+      pincode === null ? removePin() : setPin(pincode),
+    ]);
+  }
+
+  return { read, write };
 }
