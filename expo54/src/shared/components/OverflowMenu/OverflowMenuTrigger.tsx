@@ -1,11 +1,13 @@
 import React from "react";
 import { Menu } from "heroui-native";
 import { HeaderActionButton } from "../Layout/Base/HeaderActionButton";
+import { Icon, SemanticIconName } from "../Icon";
 
 export interface OverflowMenuItem {
   label: string;
   onPress: () => void;
   destructive?: boolean;
+  icon?: SemanticIconName;
 }
 
 export interface OverflowMenuTriggerProps {
@@ -49,6 +51,13 @@ export function OverflowMenuTrigger({
               onPress={deferPress(item.onPress)}
               variant={item.destructive ? "danger" : "default"}
             >
+              {item.icon ? (
+                <Icon
+                  name={item.icon}
+                  size="sm"
+                  testID={`overflow-menu-item-icon-${item.label}`}
+                />
+              ) : null}
               <Menu.ItemTitle>{item.label}</Menu.ItemTitle>
             </Menu.Item>
           ))}
