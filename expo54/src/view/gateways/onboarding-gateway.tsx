@@ -12,7 +12,10 @@ export function OnboardingGateway(props: {
       fallback={props.children}
       onError={(err) => {
         if (__DEV__) {
-          console.warn("onboarding gateway failed, letting the user into the app:", err);
+          console.warn(
+            "onboarding gateway failed, letting the user into the app:",
+            err,
+          );
         }
       }}
     >
@@ -22,22 +25,13 @@ export function OnboardingGateway(props: {
 }
 
 function OnboardingReady(props: { children: React.ReactNode }) {
-  const existingUser = useSettings((s) => s.settings?.existingUser ?? false);
-  const isHydrated = useSettings((s) => s.isHydrated);
-  const initialize = useSettings((s) => s.initialize);
+  const existingUser = useSettings((s) => s.settings.existingUser);
   const pathname = usePathname();
   const isOnboarding = pathname === "/v2/help/intro";
   const router = useRouter();
   const hasRedirected = useRef(false);
 
   useEffect(() => {
-    void initialize();
-  }, [initialize]);
-
-  useEffect(() => {
-    if (!isHydrated) {
-      return;
-    }
     if (isOnboarding) {
       hasRedirected.current = false;
       return;
@@ -46,11 +40,8 @@ function OnboardingReady(props: { children: React.ReactNode }) {
       hasRedirected.current = true;
       router.push(Routes.introV2());
     }
-  }, [existingUser, isHydrated, isOnboarding, router]);
+  }, [existingUser, isOnboarding, router]);
 
-  if (!isHydrated) {
-    return null;
-  }
   if (existingUser || isOnboarding) {
     return props.children;
   } else {

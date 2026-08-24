@@ -4,18 +4,11 @@ import { Text } from "react-native";
 import { OnboardingGateway } from "@/src/view/gateways/onboarding-gateway";
 
 const mockPush = jest.fn();
-const mockInitialize = jest.fn();
 let mockPathname = "/v2";
 let mockSettingsState: {
-  settings: { existingUser: boolean } | null;
-  isHydrated: boolean;
-  isLoading: boolean;
-  initialize: () => Promise<void>;
+  settings: { existingUser: boolean };
 } = {
   settings: { existingUser: false },
-  isHydrated: true,
-  isLoading: false,
-  initialize: mockInitialize,
 };
 let mockSettingsThrows = false;
 
@@ -53,40 +46,10 @@ describe("OnboardingGateway", () => {
   beforeEach(() => {
     mockPathname = "/v2";
     mockPush.mockClear();
-    mockInitialize.mockClear();
     mockSettingsState = {
       settings: { existingUser: false },
-      isHydrated: true,
-      isLoading: false,
-      initialize: mockInitialize,
     };
     mockSettingsThrows = false;
-  });
-
-  it("initializes settings once and waits for hydration", () => {
-    mockSettingsState = {
-      settings: null,
-      isHydrated: false,
-      isLoading: true,
-      initialize: mockInitialize,
-    };
-    const view = render(gateway());
-
-    expect(mockInitialize).toHaveBeenCalledTimes(1);
-    expect(screen.queryByText("gateway child")).toBeNull();
-    expect(mockPush).not.toHaveBeenCalled();
-
-    mockSettingsState = {
-      settings: { existingUser: true },
-      isHydrated: true,
-      isLoading: false,
-      initialize: mockInitialize,
-    };
-    view.rerender(gateway());
-
-    expect(mockInitialize).toHaveBeenCalledTimes(1);
-    expect(screen.getByText("gateway child")).toBeTruthy();
-    expect(mockPush).not.toHaveBeenCalled();
   });
 
   it("redirects to onboarding when the user has not completed it", () => {
@@ -97,9 +60,6 @@ describe("OnboardingGateway", () => {
   it("renders children directly for an existing user", () => {
     mockSettingsState = {
       settings: { existingUser: true },
-      isHydrated: true,
-      isLoading: false,
-      initialize: mockInitialize,
     };
     render(gateway());
     expect(screen.getByText("gateway child")).toBeTruthy();
@@ -115,8 +75,12 @@ describe("OnboardingGateway", () => {
 
   it("fails open and renders children if the settings read throws during render", () => {
     mockSettingsThrows = true;
-    const consoleError = jest.spyOn(console, "error").mockImplementation(() => {});
-    const consoleWarn = jest.spyOn(console, "warn").mockImplementation(() => {});
+    const consoleError = jest
+      .spyOn(console, "error")
+      .mockImplementation(() => {});
+    const consoleWarn = jest
+      .spyOn(console, "warn")
+      .mockImplementation(() => {});
     render(gateway());
     expect(screen.getByText("gateway child")).toBeTruthy();
     expect(mockPush).not.toHaveBeenCalled();
