@@ -3,12 +3,11 @@ import {
   configureReanimatedLogger,
   ReanimatedLogLevel,
 } from "react-native-reanimated";
-import { SafeAreaProvider } from "react-native-safe-area-context";
 import { I18nProvider } from "../../i18n/use-i18n";
 import { ModelProvider, useModel } from "../../hooks/use-model";
 import { Model } from "../../model";
 import { AuthGateway } from "@/src/features/lock/auth-gateway";
-import { OnboardingGateway } from "./onboarding-gateway"
+import { OnboardingGateway } from "./onboarding-gateway";
 import { registerDevMenu } from "@/src/debug/register-dev-menu";
 import { ThemeSync } from "@/shared/theme/theme-sync";
 
@@ -36,9 +35,7 @@ export function AppProvider(props: { children: React.ReactNode }) {
 
       <ModelI18nProvider>
         <OnboardingGateway>
-          <AuthGateway>
-            <SafeAreaProvider>{props.children}</SafeAreaProvider>
-          </AuthGateway>
+          <AuthGateway>{props.children}</AuthGateway>
         </OnboardingGateway>
       </ModelI18nProvider>
     </ModelProvider>

@@ -1,4 +1,4 @@
-export { deferPress, OverflowMenuTrigger } from "./OverflowMenuTrigger";
+export { OverflowMenuTrigger } from "./OverflowMenuTrigger";
 export type {
   OverflowMenuItem,
   OverflowMenuTriggerProps,

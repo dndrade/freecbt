@@ -29,6 +29,14 @@ jest.mock("@/src/view/gateways/app-provider", () => ({
   AppProvider: (props: { children: React.ReactNode }) => props.children,
 }));
 
+function mockSafeAreaProvider(props: { children: React.ReactNode }) {
+  return props.children;
+}
+
+jest.mock("react-native-safe-area-context", () => ({
+  SafeAreaProvider: mockSafeAreaProvider,
+}));
+
 jest.mock("heroui-native/provider", () => ({
   HeroUINativeProvider: (props: { children: React.ReactNode }) =>
     props.children,
@@ -93,6 +101,17 @@ describe("v2 root layout", () => {
       expect(screen.getByText("slot rendered")).toBeTruthy();
     });
     expect(hideAsync).toHaveBeenCalledTimes(1);
+  });
+
+  it("places HeroUI and its portal host inside SafeAreaProvider", async () => {
+    const { UNSAFE_getByType } = render(<Layout />);
+
+    await act(async () => {
+      deferred?.resolve();
+      await Promise.resolve();
+    });
+
+    expect(UNSAFE_getByType(mockSafeAreaProvider)).toBeTruthy();
   });
 
   // The layout's bootstrap effect is `try { await runSettingsBootstrap(); }

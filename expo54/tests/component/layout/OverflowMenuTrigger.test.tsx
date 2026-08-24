@@ -1,10 +1,73 @@
 import React from "react";
-import { render, screen } from "@testing-library/react-native";
+import { fireEvent, render, screen } from "@testing-library/react-native";
+import { Pressable, Text } from "react-native";
 import { renderWithProviders } from "@/tests/support/render";
-import {
-  deferPress,
-  OverflowMenuTrigger,
-} from "@/shared/components/OverflowMenu";
+import { OverflowMenuTrigger } from "@/shared/components/OverflowMenu";
+
+let mockOnOpenChange: ((isOpen: boolean) => void) | undefined;
+let mockAnimationFrame: FrameRequestCallback | undefined;
+
+jest.mock("heroui-native", () => {
+  const actual = jest.requireActual("heroui-native");
+  const Menu = Object.assign(
+    (props: {
+      children: React.ReactNode;
+      onOpenChange?: (isOpen: boolean) => void;
+    }) => {
+      mockOnOpenChange = props.onOpenChange;
+      return props.children;
+    },
+    {
+      Trigger: ({ children }: { children: React.ReactNode }) => (
+        <Pressable
+          testID="overflow-menu-trigger"
+          onPress={() => mockOnOpenChange?.(true)}
+        >
+          {children}
+        </Pressable>
+      ),
+      Portal: ({ children }: { children: React.ReactNode }) => children,
+      Overlay: () => null,
+      Content: ({ children }: { children: React.ReactNode }) => children,
+      Item: ({
+        children,
+        onPress,
+      }: {
+        children: React.ReactNode;
+        onPress: () => void;
+      }) => (
+        <Pressable
+          testID="overflow-menu-item"
+          onPress={() => {
+            onPress();
+            mockAnimationFrame?.(0);
+            mockOnOpenChange?.(false);
+          }}
+        >
+          {children}
+        </Pressable>
+      ),
+      ItemTitle: ({ children }: { children: React.ReactNode }) => (
+        <Text>{children}</Text>
+      ),
+    },
+  );
+
+  return { ...actual, Menu };
+});
+
+beforeEach(() => {
+  mockOnOpenChange = undefined;
+  mockAnimationFrame = undefined;
+  jest.spyOn(global, "requestAnimationFrame").mockImplementation((callback) => {
+    mockAnimationFrame = callback;
+    return 0;
+  });
+});
+
+afterEach(() => {
+  jest.restoreAllMocks();
+});
 
 describe("OverflowMenuTrigger", () => {
   it("renders nothing for an empty items array", () => {
@@ -20,36 +83,20 @@ describe("OverflowMenuTrigger", () => {
   });
 });
 
-describe("deferPress", () => {
-  it("does not call the wrapped onPress synchronously", () => {
-    const rafSpy = jest
-      .spyOn(global, "requestAnimationFrame")
-      .mockImplementation(() => 0);
+describe("menu item navigation", () => {
+  it("waits for HeroUI to close the menu before scheduling navigation", () => {
     const onPress = jest.fn();
 
-    deferPress(onPress)();
+    renderWithProviders(
+      <OverflowMenuTrigger items={[{ label: "Settings", onPress }]} />,
+    );
+
+    fireEvent.press(screen.getByTestId("overflow-menu-trigger"));
+    fireEvent.press(screen.getByTestId("overflow-menu-item"));
 
     expect(onPress).not.toHaveBeenCalled();
-    expect(rafSpy).toHaveBeenCalledWith(onPress);
-
-    rafSpy.mockRestore();
-  });
-
-  it("calls the wrapped onPress once the deferred frame runs", () => {
-    let rafCallback: FrameRequestCallback | undefined;
-    const rafSpy = jest
-      .spyOn(global, "requestAnimationFrame")
-      .mockImplementation((cb) => {
-        rafCallback = cb;
-        return 0;
-      });
-    const onPress = jest.fn();
-
-    deferPress(onPress)();
-    rafCallback?.(0);
+    mockAnimationFrame?.(0);
 
     expect(onPress).toHaveBeenCalledTimes(1);
-
-    rafSpy.mockRestore();
   });
 });

@@ -6,6 +6,7 @@ import { HeroUINativeProvider } from "heroui-native/provider";
 import { useEffect, useState } from "react";
 import * as SplashScreen from "expo-splash-screen";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { SafeAreaProvider } from "react-native-safe-area-context";
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
@@ -26,11 +27,15 @@ export default function Layout() {
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <HeroUINativeProvider config={{ devInfo: { stylingPrinciples: false } }}>
-        <AppProvider>
-          <Slot />
-        </AppProvider>
-      </HeroUINativeProvider>
+      <SafeAreaProvider>
+        <HeroUINativeProvider
+          config={{ devInfo: { stylingPrinciples: false } }}
+        >
+          <AppProvider>
+            <Slot />
+          </AppProvider>
+        </HeroUINativeProvider>
+      </SafeAreaProvider>
     </GestureHandlerRootView>
   );
 }
