@@ -1,15 +1,14 @@
 // src/features/settings/components/LanguagePicker.tsx
 import React from "react";
-import { Text, StyleSheet, ScrollView } from "react-native";
-import { useTranslation } from "react-i18next";
+import { StyleSheet, ScrollView } from "react-native";
+import { Typography } from "heroui-native";
 import { Card } from "@/shared/components";
 import {
   localeTags as supportedLanguages,
+  useTranslate,
   type LocaleTag as SupportedLanguage,
 } from "@/i18n/use-i18n";
 import { useSettings } from "../hooks/useSettings";
-import { useModel } from "@/src/hooks/use-model";
-import { Action } from "@/src/model";
 
 interface LanguagePickerProps {
   onDismiss: () => void;
@@ -18,14 +17,12 @@ interface LanguagePickerProps {
 export const LanguagePicker: React.FC<LanguagePickerProps> = ({
   onDismiss,
 }) => {
-  const { t } = useTranslation("common");
+  const t = useTranslate();
   const currentLocale = useSettings((s) => s.settings?.locale ?? null);
   const setLocale = useSettings((s) => s.setLocale);
-  const [, dispatch] = useModel();
 
   const handleSelect = (lang: SupportedLanguage | null) => {
     void setLocale(lang);
-    dispatch(Action.setLocale(lang));
     onDismiss();
   };
 
@@ -36,14 +33,14 @@ export const LanguagePicker: React.FC<LanguagePickerProps> = ({
         onPress={() => handleSelect(null)}
         style={[styles.itemCard, currentLocale === null && styles.selectedCard]}
       >
-        <Text
+        <Typography.Paragraph
           style={[
             styles.langText,
             currentLocale === null && styles.selectedText,
           ]}
         >
-          {t("settings.locale.default", "System Default")}
-        </Text>
+          {t("settings.locale.default")}
+        </Typography.Paragraph>
       </Card>
 
       {/* Full 20+ Language List */}
@@ -57,11 +54,11 @@ export const LanguagePicker: React.FC<LanguagePickerProps> = ({
               onPress={() => handleSelect(lang)}
               style={[styles.itemCard, isSelected && styles.selectedCard]}
             >
-              <Text
+              <Typography.Paragraph
                 style={[styles.langText, isSelected && styles.selectedText]}
               >
-                {lang.toUpperCase()} — {t(`settings.locale.list.${lang}`, lang)}
-              </Text>
+                {lang.toUpperCase()} — {t(`settings.locale.list.${lang}`)}
+              </Typography.Paragraph>
             </Card>
           );
         })}

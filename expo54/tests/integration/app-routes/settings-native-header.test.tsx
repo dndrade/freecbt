@@ -17,12 +17,13 @@ jest.mock("expo-router", () => {
 });
 
 jest.mock("heroui-native", () => ({
-  Typography: { Heading: () => null },
+  Typography: { Heading: () => null, Paragraph: () => null },
   useThemeColor: (token: string) => token,
 }));
 
-jest.mock("react-i18next", () => ({
-  useTranslation: () => ({ t: (_key: string, fallback: string) => fallback }),
+jest.mock("@/i18n/use-i18n", () => ({
+  useTranslate: () => (key: string) =>
+    key === "settings.header" ? "Settings" : key,
 }));
 
 jest.mock("@/shared/components", () => ({

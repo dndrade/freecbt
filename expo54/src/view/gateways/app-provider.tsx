@@ -3,17 +3,16 @@ import {
   configureReanimatedLogger,
   ReanimatedLogLevel,
 } from "react-native-reanimated";
-import { I18nProvider } from "../../i18n/use-i18n";
-import { ModelProvider, useModel } from "../../hooks/use-model";
-import { Model } from "../../model";
+import { I18nProvider, defaultLocale } from "../../i18n/use-i18n";
+import { ModelProvider } from "../../hooks/use-model";
+import { useSettings } from "@/src/features/settings/hooks/useSettings";
 import { AuthGateway } from "@/src/features/lock/auth-gateway";
 import { OnboardingGateway } from "./onboarding-gateway";
 import { registerDevMenu } from "@/src/debug/register-dev-menu";
 import { ThemeSync } from "@/shared/theme/theme-sync";
 
 export function ModelI18nProvider(props: { children: React.ReactNode }) {
-  const [m] = useModel();
-  const locale = Model.locale(m);
+  const locale = useSettings((s) => s.settings.locale) ?? defaultLocale();
   return <I18nProvider locale={locale}>{props.children}</I18nProvider>;
 }
 
