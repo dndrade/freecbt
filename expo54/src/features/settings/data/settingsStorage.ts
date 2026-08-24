@@ -6,7 +6,7 @@ export const PublicSettingsSchema = Settings.Settings.pick({
   locale: true,
   reminders: true,
   existingUser: true,
-});
+}).extend({ theme: Settings.Settings.shape.theme.default(null) });
 export type PublicSettings = z.infer<typeof PublicSettingsSchema>;
 
 // Read-only: never touches SecureStore or writes to AsyncStorage. Safe to
@@ -18,6 +18,7 @@ export async function readLegacyPublicSettings(
     Settings.localeKey,
     Settings.remindersKey,
     Settings.existingUserKey,
+    Settings.themeKey,
   ]);
   const decoded = Settings.fromJson.parse({
     ...Object.fromEntries(batch),
@@ -29,5 +30,6 @@ export async function readLegacyPublicSettings(
     locale: decoded.locale,
     reminders: decoded.reminders,
     existingUser: decoded.existingUser,
+    theme: decoded.theme,
   };
 }

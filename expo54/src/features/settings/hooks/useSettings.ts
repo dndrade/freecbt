@@ -14,12 +14,14 @@ export const DEFAULT_PUBLIC_SETTINGS: PublicSettings = {
   locale: defaults.locale,
   reminders: defaults.reminders,
   existingUser: defaults.existingUser,
+  theme: defaults.theme,
 };
 
 export interface SettingsState {
   settings: PublicSettings;
   setLocale: (locale: PublicSettings["locale"]) => void;
   setReminders: (reminders: boolean) => void;
+  setTheme: (theme: PublicSettings["theme"]) => void;
   completeOnboarding: () => void;
 }
 
@@ -31,6 +33,7 @@ export const useSettings = create<SettingsState>()(
         set((s) => ({ settings: { ...s.settings, locale } })),
       setReminders: (reminders) =>
         set((s) => ({ settings: { ...s.settings, reminders } })),
+      setTheme: (theme) => set((s) => ({ settings: { ...s.settings, theme } })),
       completeOnboarding: () =>
         set((s) => ({ settings: { ...s.settings, existingUser: true } })),
     }),
