@@ -3,6 +3,12 @@ import { Menu } from "heroui-native";
 import { HeaderActionButton } from "../Layout/Base/HeaderActionButton";
 import { Icon, SemanticIconName } from "../Icon";
 
+/** heroui-native's default PortalHost lives inside a second, nested
+ * SafeAreaProvider whose children toggle null on portal mount/unmount,
+ * which crashes Android's dispatchGetDisplayList. Route the overflow menu
+ * to its own host (mounted in the root layout) instead. */
+export const OVERFLOW_MENU_PORTAL_HOST = "overflow-menu";
+
 export interface OverflowMenuItem {
   label: string;
   onPress: () => void;
@@ -41,7 +47,7 @@ export function OverflowMenuTrigger({
           floating={floating}
         />
       </Menu.Trigger>
-      <Menu.Portal>
+      <Menu.Portal hostName={OVERFLOW_MENU_PORTAL_HOST}>
         <Menu.Overlay />
         <Menu.Content presentation="popover">
           {items.map((item) => (
