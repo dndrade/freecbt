@@ -82,21 +82,6 @@ export const labFamilies = [
         ],
       },
       {
-        id: "backup-setup",
-        title: "Backup Setup",
-        description: "Current backup setup entry flow.",
-        href: "/v2/debug/lab/settings/backup",
-        variants: [
-          {
-            id: "backup-setup-current",
-            title: "Current",
-            description: "Production-like backup setup flow.",
-            href: "/v2/debug/lab/settings/backup/current",
-            status: "current",
-          },
-        ],
-      },
-      {
         id: "secure-backups-v2",
         title: "Secure Backups (v2)",
         description: "Proposed secure-vault backup setup experience (mocked).",
@@ -132,7 +117,7 @@ export const labFamilies = [
 
 function findById<T extends { readonly id: string }>(
   items: readonly T[],
-  id: string
+  id: string,
 ): T {
   const match = items.find((item) => item.id === id);
   if (!match) {
@@ -145,7 +130,10 @@ export function getLabFamily(id: string): LabFamily {
   return findById(labFamilies, id);
 }
 
-export function getLabScenario(familyId: string, scenarioId: string): LabScenario {
+export function getLabScenario(
+  familyId: string,
+  scenarioId: string,
+): LabScenario {
   const family = getLabFamily(familyId);
   if (!family.scenarios) {
     throw new Error(`family has no scenarios: ${familyId}`);
@@ -156,7 +144,7 @@ export function getLabScenario(familyId: string, scenarioId: string): LabScenari
 export function getLabVariant(
   familyId: string,
   scenarioId: string,
-  variantId: string
+  variantId: string,
 ): LabVariant {
   return findById(getLabScenario(familyId, scenarioId).variants, variantId);
 }

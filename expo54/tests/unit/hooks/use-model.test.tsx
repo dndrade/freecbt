@@ -6,7 +6,8 @@ import React from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Action, DistortionData, Model, Settings, Thought } from "@/src/model";
 import { ModelProvider, useModel } from "@/src/hooks/use-model";
-import { Storage } from "@/src";
+import { homeThoughtDraft } from "@/src/platform/storage/home-thought-draft";
+import { thoughtSaveOutbox } from "@/src/platform/storage/thought-save-outbox";
 import { THOUGHT_SAVE_OUTBOX_KEY } from "@/src/platform/storage/thought-save-outbox";
 import { resetAsyncStorage } from "@/tests/support/async-storage";
 
@@ -62,7 +63,7 @@ test("use-model hydrates the durable draft and unresolved outbox without writing
   };
   const thought = Thought.create(
     sampleSpec({ automaticThought: "interrupted save" }),
-    new Date("2026-08-11T00:00:02.000Z")
+    new Date("2026-08-11T00:00:02.000Z"),
   );
   const active = {
     submissionId: thought.uuid,
@@ -76,8 +77,8 @@ test("use-model hydrates the durable draft and unresolved outbox without writing
     updatedAt: new Date("2026-08-11T00:00:04.000Z"),
     status: "active" as const,
   };
-  await Storage.homeThoughtDraft(DistortionData, AsyncStorage).write(draft);
-  await Storage.thoughtSaveOutbox(DistortionData, AsyncStorage).insert(active);
+  await homeThoughtDraft(DistortionData, AsyncStorage).write(draft);
+  await thoughtSaveOutbox(DistortionData, AsyncStorage).insert(active);
   const setItem = jest.spyOn(AsyncStorage, "setItem");
   setItem.mockClear();
   const wrapper = ({ children }: { children: React.ReactNode }) => (
@@ -159,7 +160,7 @@ test("use-model reports completion persistence failure", async () => {
     expect((result.current[0] as Model.Ready).onboardingCompletion).toEqual({
       status: "failure",
       error,
-    })
+    }),
   );
   expect((result.current[0] as Model.Ready).settings.existingUser).toBe(false);
   multiSet.mockRestore();
@@ -182,15 +183,19 @@ test("use-model reports completion success only after persistence resolves", asy
   act(() => result.current[1](Action.beginOnboardingCompletion()));
   await waitFor(() =>
     expect(multiSet).toHaveBeenCalledWith(
-      expect.arrayContaining([[Settings.existingUserKey, "1"]])
-    )
+      expect.arrayContaining([[Settings.existingUserKey, "1"]]),
+    ),
   );
-  expect((result.current[0] as Model.Ready).onboardingCompletion).toBe("saving");
+  expect((result.current[0] as Model.Ready).onboardingCompletion).toBe(
+    "saving",
+  );
   expect((result.current[0] as Model.Ready).settings.existingUser).toBe(false);
 
   resolveWrite();
   await waitFor(() =>
-    expect((result.current[0] as Model.Ready).onboardingCompletion).toBe("idle")
+    expect((result.current[0] as Model.Ready).onboardingCompletion).toBe(
+      "idle",
+    ),
   );
   expect((result.current[0] as Model.Ready).settings.existingUser).toBe(true);
   multiSet.mockRestore();
@@ -201,14 +206,14 @@ test("use-model persists one submitted snapshot after outbox insertion succeeds"
   const writePending = new Promise<void>((resolve) => {
     releaseWrite = resolve;
   });
-  const setItem = jest.spyOn(AsyncStorage, "setItem").mockImplementation(
-    async (key: string, value: string) => {
+  const setItem = jest
+    .spyOn(AsyncStorage, "setItem")
+    .mockImplementation(async (key: string, value: string) => {
       if (key === THOUGHT_SAVE_OUTBOX_KEY) {
         await writePending;
       }
       return Promise.resolve(value) as unknown as Promise<void>;
-    }
-  );
+    });
   const wrapper = ({ children }: { children: React.ReactNode }) => (
     <ModelProvider>{children}</ModelProvider>
   );
@@ -216,9 +221,17 @@ test("use-model persists one submitted snapshot after outbox insertion succeeds"
   await waitFor(() => expect(result.current[0].status).toBe("ready"));
 
   const spec = sampleSpec({ automaticThought: "original snapshot" });
-  act(() => result.current[1](Action.createThought(spec, new Date("2026-08-11T04:00:00.000Z"))));
+  act(() =>
+    result.current[1](
+      Action.createThought(spec, new Date("2026-08-11T04:00:00.000Z")),
+    ),
+  );
   spec.automaticThought = "mutated after dispatch";
-  act(() => result.current[1](Action.createThought(spec, new Date("2026-08-11T04:00:01.000Z"))));
+  act(() =>
+    result.current[1](
+      Action.createThought(spec, new Date("2026-08-11T04:00:01.000Z")),
+    ),
+  );
 
   expect((result.current[0] as Model.Ready).thoughtSaveOutbox).toHaveLength(1);
   expect((result.current[0] as Model.Ready).thoughts.size).toBe(0);
@@ -226,16 +239,23 @@ test("use-model persists one submitted snapshot after outbox insertion succeeds"
   releaseWrite();
 
   await waitFor(() =>
-    expect((result.current[0] as Model.Ready).thoughtSaveOutbox).toEqual([])
+    expect((result.current[0] as Model.Ready).thoughtSaveOutbox).toEqual([]),
   );
   expect((result.current[0] as Model.Ready).thoughts).toEqual(
-    new Map([[expect.any(String), expect.objectContaining({ automaticThought: "original snapshot" })]])
+    new Map([
+      [
+        expect.any(String),
+        expect.objectContaining({ automaticThought: "original snapshot" }),
+      ],
+    ]),
   );
 
   const outboxWrites = setItem.mock.calls.filter(
-    ([key]) => key === THOUGHT_SAVE_OUTBOX_KEY
+    ([key]) => key === THOUGHT_SAVE_OUTBOX_KEY,
   );
-  expect(outboxWrites.map(([, value]) => JSON.parse(value as string).records)).toEqual([
+  expect(
+    outboxWrites.map(([, value]) => JSON.parse(value as string).records),
+  ).toEqual([
     [expect.objectContaining({ status: "insertion-pending" })],
     [expect.objectContaining({ status: "active", thoughtPersisted: false })],
     [expect.objectContaining({ status: "active", thoughtPersisted: true })],
@@ -246,12 +266,12 @@ test("use-model persists one submitted snapshot after outbox insertion succeeds"
 
 test("use-model releases insertion-pending reservation when outbox insertion fails", async () => {
   const error = new Error("outbox write failed");
-  const setItem = jest.spyOn(AsyncStorage, "setItem").mockImplementation(
-    async (key: string, value: string) => {
+  const setItem = jest
+    .spyOn(AsyncStorage, "setItem")
+    .mockImplementation(async (key: string, value: string) => {
       if (key === THOUGHT_SAVE_OUTBOX_KEY) throw error;
       return Promise.resolve(value) as unknown as Promise<void>;
-    }
-  );
+    });
   const wrapper = ({ children }: { children: React.ReactNode }) => (
     <ModelProvider>{children}</ModelProvider>
   );
@@ -262,13 +282,13 @@ test("use-model releases insertion-pending reservation when outbox insertion fai
     result.current[1](
       Action.createThought(
         sampleSpec({ automaticThought: "will fail to queue" }),
-        new Date("2026-08-11T05:00:00.000Z")
-      )
-    )
+        new Date("2026-08-11T05:00:00.000Z"),
+      ),
+    ),
   );
 
   await waitFor(() =>
-    expect((result.current[0] as Model.Ready).thoughtSaveOutbox).toEqual([])
+    expect((result.current[0] as Model.Ready).thoughtSaveOutbox).toEqual([]),
   );
   expect((result.current[0] as Model.Ready).thoughtSaveResult).toEqual({
     status: "failure",

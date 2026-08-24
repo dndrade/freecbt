@@ -11,7 +11,6 @@ import type {
   ThoughtSaveOutboxRecord,
 } from "./thought-save";
 import * as Thought from "./thought";
-import * as Archive from "./archive/thoughts-archive";
 
 export type Model = Loading | Ready;
 export type Loading = typeof loading;
@@ -33,9 +32,7 @@ export interface Ready {
   deviceLocale: LocaleTag;
 }
 export type OnboardingCompletion =
-  | "idle"
-  | "saving"
-  | { status: "failure"; error: unknown };
+  "idle" | "saving" | { status: "failure"; error: unknown };
 export type PersistenceState = "idle" | { status: "failure"; error: unknown };
 export type ThoughtSaveResult =
   | "idle"
@@ -63,10 +60,10 @@ export function ready(p: Omit<Ready, "status">): Ready {
       p.homeThoughtDraft?.sourceRevision ?? p.homeThoughtDraftRevision,
       ...p.thoughtSaveOutbox
         .map((record) => record.sourceDraftRevision)
-        .filter((revision) => revision !== NO_HOME_DRAFT_REVISION)
+        .filter((revision) => revision !== NO_HOME_DRAFT_REVISION),
     ),
     thoughtSaveOutbox: p.thoughtSaveOutbox.map((record) =>
-      record.status === "active" ? { ...record, status: "uncertain" } : record
+      record.status === "active" ? { ...record, status: "uncertain" } : record,
     ),
   };
 }
@@ -111,7 +108,7 @@ export function restorableHomeThoughtDraft(m: Ready): Thought.Spec | null {
   // disk, just not pre-filled). Compare snapshot content too if that ever bites.
   if (
     m.thoughtSaveOutbox.some(
-      (record) => record.sourceDraftRevision === draft.sourceRevision
+      (record) => record.sourceDraftRevision === draft.sourceRevision,
     )
   ) {
     return null;
@@ -122,13 +119,9 @@ export function restorableHomeThoughtDraft(m: Ready): Thought.Spec | null {
 export function thoughtsList(m: Ready): readonly Thought.Thought[] {
   return _.sortBy(Array.from(m.thoughts.values()), (t) => t.createdAt);
 }
-export function toArchive(m: Ready): Archive.Archive {
-  return { thoughts: thoughtsList(m) };
-}
-
 type Pair<A, B> = readonly [A, B];
 export function thoughtsByDate(
-  m: Ready
+  m: Ready,
 ): readonly Pair<string, readonly Thought.Thought[]>[] {
   const g = _.groupBy(thoughtsList(m), (t) => t.createdAt.toDateString());
   const pairs = Object.entries(g) as readonly Pair<
@@ -173,7 +166,7 @@ function updateReady(m: Ready, a: Action.Action): readonly [Model, Cmd.List] {
     case "set-pincode": {
       return updateSettings(
         { ...m, sessionAuthed: !!a.value },
-        { pincode: a.value }
+        { pincode: a.value },
       );
     }
     case "set-history-label": {
@@ -231,12 +224,21 @@ function updateReady(m: Ready, a: Action.Action): readonly [Model, Cmd.List] {
     }
     case "home-thought-draft-write-failed": {
       return [
-        { ...m, homeThoughtDraftPersistence: { status: "failure", error: a.error } },
+        {
+          ...m,
+          homeThoughtDraftPersistence: { status: "failure", error: a.error },
+        },
         [],
       ];
     }
     case "create-thought": {
-      return createThoughtSubmission(m, a.spec, a.now, a.origin, a.submissionId);
+      return createThoughtSubmission(
+        m,
+        a.spec,
+        a.now,
+        a.origin,
+        a.submissionId,
+      );
     }
     case "home-thought-draft-cleanup-failed": {
       // Keep whatever the user has now; only record why the durable clear failed.
@@ -247,7 +249,8 @@ function updateReady(m: Ready, a: Action.Action): readonly [Model, Cmd.List] {
           status: "clear-failed",
           sourceRevision: a.record.sourceRevision,
           outboxSubmissionId: a.outboxSubmissionId,
-          lastError: a.error instanceof Error ? a.error.message : String(a.error),
+          lastError:
+            a.error instanceof Error ? a.error.message : String(a.error),
           updatedAt: a.now,
         },
       };
@@ -262,16 +265,16 @@ function updateReady(m: Ready, a: Action.Action): readonly [Model, Cmd.List] {
       const accepted = m.thoughtSaveOutbox.find(
         (record) =>
           record.submissionId === a.submissionId &&
-          record.status === "insertion-pending"
+          record.status === "insertion-pending",
       );
       const [cleaned, cleanupCmds] = reconcileHomeDraft(
         {
           ...m,
           thoughtSaveOutbox: m.thoughtSaveOutbox.map((record) =>
-            record === accepted ? { ...record, status: "pending" } : record
+            record === accepted ? { ...record, status: "pending" } : record,
           ),
         },
-        accepted
+        accepted,
       );
       const [next, saveCmds] = selectNextThoughtSave(cleaned, a.now);
       return [next, [...cleanupCmds, ...saveCmds]];
@@ -281,7 +284,7 @@ function updateReady(m: Ready, a: Action.Action): readonly [Model, Cmd.List] {
         {
           ...m,
           thoughtSaveOutbox: m.thoughtSaveOutbox.filter(
-            (record) => record.submissionId !== a.submissionId
+            (record) => record.submissionId !== a.submissionId,
           ),
           thoughtSaveResult: {
             status: "failure",
@@ -316,7 +319,7 @@ function updateReady(m: Ready, a: Action.Action): readonly [Model, Cmd.List] {
     }
     case "discard-thought-save": {
       const record = m.thoughtSaveOutbox.find(
-        (candidate) => candidate.submissionId === a.submissionId
+        (candidate) => candidate.submissionId === a.submissionId,
       );
       // same eligibility as Retry: only a record the user can't otherwise move
       // forward. Isolated to the one matching record - nothing else changes.
@@ -334,7 +337,7 @@ function updateReady(m: Ready, a: Action.Action): readonly [Model, Cmd.List] {
     }
     case "thought-save-outbox-updated": {
       const current = m.thoughtSaveOutbox.find(
-        (record) => record.submissionId === a.value.submissionId
+        (record) => record.submissionId === a.value.submissionId,
       );
       if (current === undefined || !sameThoughtSaveRecord(current, a.value)) {
         return [m, []];
@@ -342,7 +345,15 @@ function updateReady(m: Ready, a: Action.Action): readonly [Model, Cmd.List] {
       if (current.status === "active") {
         return current.thoughtPersisted
           ? [m, [Cmd.removeThoughtSaveOutbox(current.submissionId)]]
-          : [m, [Cmd.writeSubmittedThought(current.submissionId, current.thought)]];
+          : [
+              m,
+              [
+                Cmd.writeSubmittedThought(
+                  current.submissionId,
+                  current.thought,
+                ),
+              ],
+            ];
       }
       if (
         current.status === "failed" ||
@@ -355,7 +366,7 @@ function updateReady(m: Ready, a: Action.Action): readonly [Model, Cmd.List] {
     }
     case "thought-save-write-succeeded": {
       const record = m.thoughtSaveOutbox.find(
-        (candidate) => candidate.submissionId === a.submissionId
+        (candidate) => candidate.submissionId === a.submissionId,
       );
       if (
         record === undefined ||
@@ -365,17 +376,21 @@ function updateReady(m: Ready, a: Action.Action): readonly [Model, Cmd.List] {
       ) {
         return [m, []];
       }
-      const [next, cmds] = updateThoughtSaveRecord(m, a.submissionId, (current) => ({
-        ...current,
-        thoughtPersisted: true,
-      }));
+      const [next, cmds] = updateThoughtSaveRecord(
+        m,
+        a.submissionId,
+        (current) => ({
+          ...current,
+          thoughtPersisted: true,
+        }),
+      );
       const thoughts = new Map(m.thoughts);
       thoughts.set(Thought.key(a.thought), a.thought);
       return [{ ...(next as Ready), thoughts }, cmds];
     }
     case "thought-save-write-failed": {
       const record = m.thoughtSaveOutbox.find(
-        (candidate) => candidate.submissionId === a.submissionId
+        (candidate) => candidate.submissionId === a.submissionId,
       );
       if (record === undefined) return [m, []];
       if (record.status !== "active" || record.thoughtPersisted) {
@@ -391,7 +406,7 @@ function updateReady(m: Ready, a: Action.Action): readonly [Model, Cmd.List] {
             thoughtSaveOutbox: m.thoughtSaveOutbox.map((candidate) =>
               candidate.submissionId === a.submissionId
                 ? { ...candidate, retryRequested: false }
-                : candidate
+                : candidate,
             ),
           },
           [],
@@ -409,17 +424,18 @@ function updateReady(m: Ready, a: Action.Action): readonly [Model, Cmd.List] {
         {
           ...m,
           thoughtSaveOutbox: m.thoughtSaveOutbox.filter(
-            (record) => record.submissionId !== a.submissionId
+            (record) => record.submissionId !== a.submissionId,
           ),
         },
-        a.now
+        a.now,
       );
     }
     case "thought-save-outbox-removal-failed": {
       const record = m.thoughtSaveOutbox.find(
-        (candidate) => candidate.submissionId === a.submissionId
+        (candidate) => candidate.submissionId === a.submissionId,
       );
-      if (record?.status !== "active" || !record.thoughtPersisted) return [m, []];
+      if (record?.status !== "active" || !record.thoughtPersisted)
+        return [m, []];
       return updateThoughtSaveRecord(m, a.submissionId, (current) => ({
         ...current,
         status: "cleanup-failed",
@@ -437,40 +453,13 @@ function updateReady(m: Ready, a: Action.Action): readonly [Model, Cmd.List] {
       const m2: Model = { ...m, thoughts };
       return [m2, [Cmd.deleteThought(k)]];
     }
-    case "import-archive": {
-        const thoughts = new Map(m.thoughts);
-
-        for (const t of a.value.thoughts) {
-            thoughts.set(Thought.key(t), t);
-        }
-
-        const m2: Model = { ...m, thoughts };
-
-        return [
-            m2,
-            a.value.thoughts.map((t) => Cmd.writeThought(t)),
-        ];
-    }
-    // case "import-archive": {
-    //   const thoughts = new Map(
-    //       a.value.thoughts.map((t) => [Thought.key(t), t] as const)
-    //   );
-    //   const m2: Model = { ...m, thoughts };
-    //   return [
-    //     m2,
-    //     [
-    //       ...thoughtsList(m).map((t) => Cmd.deleteThought(Thought.key(t))),
-    //       ...a.value.thoughts.map((t) => Cmd.writeThought(t)),
-    //     ],
-    //   ];
-    // }
     default:
       throw new Error(`no such action: ${a satisfies never}`);
   }
 }
 function writeThought(
   m: Ready,
-  thought: Thought.Thought
+  thought: Thought.Thought,
 ): readonly [Model, Cmd.List] {
   const thoughts = new Map(m.thoughts);
   thoughts.set(Thought.key(thought), thought);
@@ -494,7 +483,7 @@ function cloneSpec(spec: Thought.Spec): Thought.Spec {
 function updateHomeDraft(
   m: Ready,
   spec: Thought.Spec,
-  now: Date
+  now: Date,
 ): readonly [Model, Cmd.List] {
   const revision = m.homeThoughtDraftRevision + 1;
   if (!Thought.isMeaningfulSpec(spec)) {
@@ -559,12 +548,13 @@ export const NO_HOME_DRAFT_REVISION = Number.MAX_SAFE_INTEGER;
  */
 function reconcileHomeDraft(
   m: Ready,
-  accepted: ThoughtSaveOutboxRecord | undefined
+  accepted: ThoughtSaveOutboxRecord | undefined,
 ): readonly [Ready, Cmd.List] {
   const draft = m.homeThoughtDraft;
   if (accepted === undefined || draft === null) return [m, []];
   if (accepted.sourceDraftRevision === NO_HOME_DRAFT_REVISION) return [m, []];
-  if (m.homeThoughtDraftRevision !== accepted.sourceDraftRevision) return [m, []];
+  if (m.homeThoughtDraftRevision !== accepted.sourceDraftRevision)
+    return [m, []];
   return [
     {
       ...m,
@@ -586,7 +576,7 @@ function createThoughtSubmission(
   spec: Thought.Spec,
   now: Date,
   origin: Action.ThoughtSaveOrigin,
-  submissionId: Thought.Id
+  submissionId: Thought.Id,
 ): readonly [Model, Cmd.List] {
   if (!Thought.isMeaningfulSpec(spec)) return [m, []];
   if (m.thoughtSaveOutbox.length >= 20) {
@@ -610,13 +600,16 @@ function createThoughtSubmission(
   ) {
     return [m, []];
   }
-  const thought = { ...Thought.create(cloneSpec(spec), now), uuid: submissionId };
+  const thought = {
+    ...Thought.create(cloneSpec(spec), now),
+    uuid: submissionId,
+  };
   const record: ThoughtSaveOutboxRecord = {
     submissionId: thought.uuid,
     thought,
     sourceDraftRevision:
       origin === "home"
-        ? m.homeThoughtDraft?.sourceRevision ?? m.homeThoughtDraftRevision
+        ? (m.homeThoughtDraft?.sourceRevision ?? m.homeThoughtDraftRevision)
         : NO_HOME_DRAFT_REVISION,
     attemptCount: 0,
     lastAttemptAt: now,
@@ -639,7 +632,7 @@ function createThoughtSubmission(
 function updateThoughtSaveRecord(
   m: Ready,
   submissionId: Thought.Id,
-  recipe: (record: ThoughtSaveOutboxRecord) => ThoughtSaveOutboxRecord
+  recipe: (record: ThoughtSaveOutboxRecord) => ThoughtSaveOutboxRecord,
 ): readonly [Model, Cmd.List] {
   let nextRecord: ThoughtSaveOutboxRecord | null = null;
   const nextOutbox = m.thoughtSaveOutbox.map((record) => {
@@ -657,22 +650,26 @@ function updateThoughtSaveRecord(
 function selectNextThoughtSave(
   m: Ready,
   now: Date,
-  submissionId?: Thought.Id
+  submissionId?: Thought.Id,
 ): readonly [Model, Cmd.List] {
   if (m.thoughtSaveOutbox.some((record) => record.status === "active")) {
     return [m, []];
   }
-  const record = submissionId === undefined
-    ? m.thoughtSaveOutbox.find(
-        (candidate) =>
-          candidate.retryRequested &&
-          (candidate.status === "failed" ||
-            candidate.status === "cleanup-failed" ||
-            candidate.status === "uncertain")
-      ) ?? m.thoughtSaveOutbox.find((candidate) => candidate.status === "pending")
-    : m.thoughtSaveOutbox.find(
-        (candidate) => candidate.submissionId === submissionId && candidate.status === "pending"
-      );
+  const record =
+    submissionId === undefined
+      ? (m.thoughtSaveOutbox.find(
+          (candidate) =>
+            candidate.retryRequested &&
+            (candidate.status === "failed" ||
+              candidate.status === "cleanup-failed" ||
+              candidate.status === "uncertain"),
+        ) ??
+        m.thoughtSaveOutbox.find((candidate) => candidate.status === "pending"))
+      : m.thoughtSaveOutbox.find(
+          (candidate) =>
+            candidate.submissionId === submissionId &&
+            candidate.status === "pending",
+        );
   if (record === undefined) return [m, []];
   const active = {
     ...record,
@@ -686,7 +683,7 @@ function selectNextThoughtSave(
     {
       ...m,
       thoughtSaveOutbox: m.thoughtSaveOutbox.map((candidate) =>
-        candidate.submissionId === active.submissionId ? active : candidate
+        candidate.submissionId === active.submissionId ? active : candidate,
       ),
     },
     [Cmd.updateThoughtSaveOutbox(active)],
@@ -695,7 +692,7 @@ function selectNextThoughtSave(
 
 function sameThoughtSaveRecord(
   left: ThoughtSaveOutboxRecord,
-  right: ThoughtSaveOutboxRecord
+  right: ThoughtSaveOutboxRecord,
 ): boolean {
   return (
     left.submissionId === right.submissionId &&
@@ -716,7 +713,7 @@ function sameThought(left: Thought.Thought, right: Thought.Thought): boolean {
 
 function updateSettings(
   m: Ready,
-  s: Partial<Settings.Settings>
+  s: Partial<Settings.Settings>,
 ): readonly [Model, Cmd.List] {
   const m2: Model = { ...m, settings: { ...m.settings, ...s } };
   return [m2, [Cmd.writeSettings(m2.settings)]];

@@ -1,4 +1,3 @@
-import { Storage } from "@/src";
 import { DistortionData, Thought } from "@/src/model";
 import { AsyncStorageStatic } from "@react-native-async-storage/async-storage";
 import { createFakeAsyncStorage as fakeAsyncStorage } from "@/tests/support/async-storage";
@@ -43,13 +42,17 @@ function makeThought(i: number): Thought.Thought {
   const updatedAt = new Date(Date.UTC(2026, 7, 11, 0, 10, i));
   return Thought.Thought.parse({
     automaticThought: `automatic-${i}`,
-    cognitiveDistortions: new Set([DistortionData.list[i % DistortionData.list.length]]),
+    cognitiveDistortions: new Set([
+      DistortionData.list[i % DistortionData.list.length],
+    ]),
     challenge: `challenge-${i}`,
     alternativeThought: `alternative-${i}`,
     createdAt,
     updatedAt,
-    uuid: `${String(i).padStart(8, "0")}-1111-4111-8111-${String(i)
-      .padStart(12, "0")}`,
+    uuid: `${String(i).padStart(8, "0")}-1111-4111-8111-${String(i).padStart(
+      12,
+      "0",
+    )}`,
   });
 }
 
@@ -61,7 +64,7 @@ function makeRecord(
     | "uncertain"
     | "active"
     | "failed"
-    | "cleanup-failed"
+    | "cleanup-failed",
 ) {
   const thought = makeThought(i);
   const lastAttemptAt = new Date(Date.UTC(2026, 7, 11, 0, 20, i));
@@ -129,7 +132,7 @@ describe("thoughtSaveOutbox", () => {
     const blocked = fakeAsyncStorageWithBlockedSet();
     const outbox = (Storage as any).thoughtSaveOutbox(
       DistortionData,
-      blocked.storage
+      blocked.storage,
     );
     const gate = blocked.blockNextSet();
     const first = makeRecord(9, "pending");
@@ -159,7 +162,7 @@ describe("thoughtSaveOutbox", () => {
       outbox.insert({
         ...record,
         submissionId: "ffffffff-ffff-4fff-8fff-ffffffffffff",
-      })
+      }),
     ).rejects.toThrow("submission identity");
   });
 
@@ -177,7 +180,7 @@ describe("thoughtSaveOutbox", () => {
     const blocked = fakeAsyncStorageWithBlockedSet();
     const outbox = (Storage as any).thoughtSaveOutbox(
       DistortionData,
-      blocked.storage
+      blocked.storage,
     );
     const record = makeRecord(25, "pending");
     await outbox.insert(record);
@@ -223,7 +226,7 @@ describe("thoughtSaveOutbox", () => {
     const blocked = fakeAsyncStorageWithBlockedSet();
     const outbox = (Storage as any).thoughtSaveOutbox(
       DistortionData,
-      blocked.storage
+      blocked.storage,
     );
     const gate = blocked.blockNextSet();
     const record = makeRecord(28, "pending");
@@ -234,7 +237,9 @@ describe("thoughtSaveOutbox", () => {
     gate.resolve();
 
     await insert;
-    await expect(outbox.readAll()).resolves.toEqual([makeRecord(28, "pending")]);
+    await expect(outbox.readAll()).resolves.toEqual([
+      makeRecord(28, "pending"),
+    ]);
   });
 
   test("rejects updates that change the immutable thought snapshot", async () => {
@@ -251,7 +256,7 @@ describe("thoughtSaveOutbox", () => {
           ...record.thought,
           alternativeThought: "changed after submission",
         },
-      })
+      }),
     ).rejects.toThrow("immutable thought");
   });
 
@@ -263,7 +268,7 @@ describe("thoughtSaveOutbox", () => {
       outbox.insert({
         ...makeRecord(23, "cleanup-failed"),
         thoughtPersisted: false,
-      })
+      }),
     ).rejects.toThrow("cleanup-failed");
   });
 
@@ -282,7 +287,7 @@ describe("thoughtSaveOutbox", () => {
             thought: {
               automaticThought: record.thought.automaticThought,
               cognitiveDistortions: Array.from(
-                record.thought.cognitiveDistortions
+                record.thought.cognitiveDistortions,
               ).map((d) => d.slug),
               challenge: record.thought.challenge,
               alternativeThought: record.thought.alternativeThought,
@@ -296,7 +301,7 @@ describe("thoughtSaveOutbox", () => {
             updatedAt: record.updatedAt.toISOString(),
           },
         ],
-      })
+      }),
     );
 
     await expect(outbox.readAll()).rejects.toThrow();
@@ -311,7 +316,7 @@ describe("thoughtSaveOutbox", () => {
         thought: {
           automaticThought: record.thought.automaticThought,
           cognitiveDistortions: Array.from(
-            record.thought.cognitiveDistortions
+            record.thought.cognitiveDistortions,
           ).map((d) => d.slug),
           challenge: record.thought.challenge,
           alternativeThought: record.thought.alternativeThought,
@@ -330,7 +335,7 @@ describe("thoughtSaveOutbox", () => {
       JSON.stringify({
         v: "thought-save-outbox/v1",
         records,
-      })
+      }),
     );
 
     const outbox = (Storage as any).thoughtSaveOutbox(DistortionData, async);
@@ -347,7 +352,7 @@ describe("thoughtSaveOutbox", () => {
 
     await expect(outbox.readAll()).resolves.toHaveLength(20);
     await expect(outbox.insert(makeRecord(999, "pending"))).rejects.toThrow(
-      "outbox capacity"
+      "outbox capacity",
     );
     await expect(outbox.readAll()).resolves.toHaveLength(20);
   });

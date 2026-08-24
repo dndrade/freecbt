@@ -1,5 +1,4 @@
 import type { LocaleTag } from "@/src/i18n/use-i18n";
-import * as Archive from "./archive/thoughts-archive";
 import * as Model from "./model";
 import * as Settings from "./settings";
 import * as Thought from "./thought";
@@ -36,7 +35,6 @@ export type Action = ReturnType<
   | typeof thoughtSaveWriteFailed
   | typeof deleteThought
   | typeof updateThought
-  | typeof importArchive
 >;
 export type Dispatch = (a: Action) => void;
 
@@ -92,7 +90,7 @@ export function homeThoughtDraftCleanupFailed(
   record: Model.Ready["homeThoughtDraft"] & object,
   outboxSubmissionId: Thought.Id,
   error: unknown,
-  now: Date
+  now: Date,
 ) {
   return {
     action: "home-thought-draft-cleanup-failed",
@@ -116,7 +114,7 @@ export function createThought(
    * watch that exact submission instead of guessing from shared outbox state -
    * every screen shares one model, so "whatever is in flight" is not ownership.
    */
-  submissionId: Thought.Id = Thought.newId()
+  submissionId: Thought.Id = Thought.newId(),
 ) {
   return { action: "create-thought", spec, now, origin, submissionId } as const;
 }
@@ -139,13 +137,17 @@ export function discardThoughtSave(submissionId: Thought.Id) {
 }
 export function thoughtSaveOutboxInsertionSucceeded(
   submissionId: Thought.Id,
-  now: Date
+  now: Date,
 ) {
-  return { action: "thought-save-outbox-insertion-succeeded", submissionId, now } as const;
+  return {
+    action: "thought-save-outbox-insertion-succeeded",
+    submissionId,
+    now,
+  } as const;
 }
 export function thoughtSaveOutboxInsertionFailed(
   submissionId: Thought.Id,
-  error: unknown
+  error: unknown,
 ) {
   return {
     action: "thought-save-outbox-insertion-failed",
@@ -154,7 +156,7 @@ export function thoughtSaveOutboxInsertionFailed(
   } as const;
 }
 export function thoughtSaveOutboxUpdated(
-  value: Model.Ready["thoughtSaveOutbox"][number]
+  value: Model.Ready["thoughtSaveOutbox"][number],
 ) {
   return { action: "thought-save-outbox-updated", value } as const;
 }
@@ -164,7 +166,7 @@ export function thoughtSaveOutboxRemoved(submissionId: Thought.Id, now: Date) {
 export function thoughtSaveOutboxRemovalFailed(
   submissionId: Thought.Id,
   error: unknown,
-  now: Date
+  now: Date,
 ) {
   return {
     action: "thought-save-outbox-removal-failed",
@@ -175,14 +177,18 @@ export function thoughtSaveOutboxRemovalFailed(
 }
 export function thoughtSaveWriteSucceeded(
   submissionId: Thought.Id,
-  thought: Thought.Thought
+  thought: Thought.Thought,
 ) {
-  return { action: "thought-save-write-succeeded", submissionId, thought } as const;
+  return {
+    action: "thought-save-write-succeeded",
+    submissionId,
+    thought,
+  } as const;
 }
 export function thoughtSaveWriteFailed(
   submissionId: Thought.Id,
   error: unknown,
-  now: Date
+  now: Date,
 ) {
   return {
     action: "thought-save-write-failed",
@@ -196,7 +202,4 @@ export function deleteThought(value: Thought.Id) {
 }
 export function updateThought(value: Thought.Thought) {
   return { action: "update-thought", value } as const;
-}
-export function importArchive(value: Archive.Archive) {
-  return { action: "import-archive", value } as const;
 }

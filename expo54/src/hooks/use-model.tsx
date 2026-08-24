@@ -1,4 +1,6 @@
-import { Storage } from "@/src";
+import { homeThoughtDraft } from "@/src/platform/storage/home-thought-draft";
+import { thoughtSaveOutbox } from "@/src/platform/storage/thought-save-outbox";
+import { thoughts } from "@/src/platform/storage/storage";
 import {
   Action,
   Cmd,
@@ -61,9 +63,9 @@ export type ModelLoadedComponent = (props: ModelLoadedProps) => React.ReactNode;
 
 function useCmdRunner(data: Distortion.Data, storage: AsyncStorageStatic) {
   const s = legacySettings(storage);
-  const t = Storage.thoughts(data, storage);
-  const drafts = Storage.homeThoughtDraft(data, storage);
-  const outbox = Storage.thoughtSaveOutbox(data, storage);
+  const t = thoughts(data, storage);
+  const drafts = homeThoughtDraft(data, storage);
+  const outbox = thoughtSaveOutbox(data, storage);
   const router = useRouter();
   // usually mutable stuff should be done with useState() in react, but here it blows up, and I couldn't solve why.
   let dispatch: (a: Action.Action) => void = () => {};
