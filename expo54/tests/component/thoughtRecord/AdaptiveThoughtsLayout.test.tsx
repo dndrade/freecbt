@@ -1,4 +1,4 @@
-import { AdaptiveThoughtsLayout } from "@/src/features/thoughts/adaptive-thoughts-layout";
+import { AdaptiveThoughtsLayout } from "@/src/features/thoughtRecord/screens/AdaptiveThoughtsLayout";
 import { fireEvent, render, screen } from "@testing-library/react-native";
 import React from "react";
 import { Text, View } from "react-native";
@@ -6,7 +6,7 @@ import { Text, View } from "react-native";
 function renderLayout(
   selectedId: string | null,
   hasThoughts = true,
-  list = <View testID="journal-pane" />
+  list = <View testID="journal-pane" />,
 ) {
   render(
     <AdaptiveThoughtsLayout
@@ -15,7 +15,7 @@ function renderLayout(
       selectedId={selectedId}
       hasThoughts={hasThoughts}
       selectThoughtText="Select a thought"
-    />
+    />,
   );
 }
 

@@ -2,20 +2,25 @@ import { fireEvent, screen } from "@testing-library/react-native";
 import { BottomTabBarHeightContext } from "@react-navigation/bottom-tabs";
 import React from "react";
 import { Pressable, View } from "react-native";
-import { useThoughtEntryForm, type ThoughtEntryFormProps } from "@/src/features/thoughts/thought-entry-form";
+import {
+  useThoughtEntryForm,
+  type ThoughtEntryFormProps,
+} from "@/src/features/thoughtRecord/screens/ThoughtEntryForm";
 import { StandardScreen } from "@/shared/components/Layout/StandardScreen";
 import { Distortion, DistortionData, Thought } from "@/src/model";
 import { renderWithProviders } from "@/tests/support/render";
 
 const translate = ((key: string, values?: Record<string, unknown>) =>
-  values ? `${key}:${JSON.stringify(values)}` : key) as ThoughtEntryFormProps["translate"];
+  values
+    ? `${key}:${JSON.stringify(values)}`
+    : key) as ThoughtEntryFormProps["translate"];
 
 /** The form is controlled; the wrapper screens own the value in real use. */
 function Harness(
-  props: Partial<ThoughtEntryFormProps> & { initial?: Thought.Spec }
+  props: Partial<ThoughtEntryFormProps> & { initial?: Thought.Spec },
 ) {
   const [value, setValue] = React.useState<Thought.Spec>(
-    props.initial ?? Thought.emptySpec()
+    props.initial ?? Thought.emptySpec(),
   );
   const { body, actions } = useThoughtEntryForm({
     route: "home",
@@ -92,7 +97,9 @@ describe("ThoughtEntryForm", () => {
     expect(progress.props.accessibilityValue).toMatchObject({ now: 1, max: 4 });
 
     next();
-    expect(screen.getByRole("progressbar").props.accessibilityValue).toMatchObject({
+    expect(
+      screen.getByRole("progressbar").props.accessibilityValue,
+    ).toMatchObject({
       now: 2,
     });
   });
@@ -100,22 +107,23 @@ describe("ThoughtEntryForm", () => {
   test("keeps progress and actions inside the centered entry column", () => {
     render(<Harness />);
 
-    expect(screen.getByTestId("thought-entry-content").props.className).toContain(
-      "max-w-xl"
-    );
-    expect(screen.getByTestId("thought-entry-progress").props.className).toContain(
-      "w-full"
-    );
-    expect(screen.getByTestId("thought-entry-actions").props.className).toContain(
-      "w-full"
-    );
+    expect(
+      screen.getByTestId("thought-entry-content").props.className,
+    ).toContain("max-w-xl");
+    expect(
+      screen.getByTestId("thought-entry-progress").props.className,
+    ).toContain("w-full");
+    expect(
+      screen.getByTestId("thought-entry-actions").props.className,
+    ).toContain("w-full");
   });
 
   test("Previous returns to the earlier step and is unavailable on the first", () => {
     render(<Harness />);
 
-    expect(screen.getByTestId("thought-entry-previous").props.accessibilityState)
-      .toMatchObject({ disabled: true });
+    expect(
+      screen.getByTestId("thought-entry-previous").props.accessibilityState,
+    ).toMatchObject({ disabled: true });
 
     next();
     next();
@@ -138,7 +146,10 @@ describe("ThoughtEntryForm", () => {
   test("preserves typed values across step navigation", () => {
     render(<Harness />);
 
-    fireEvent.changeText(screen.getByTestId("automatic-thought-input"), "a thought");
+    fireEvent.changeText(
+      screen.getByTestId("automatic-thought-input"),
+      "a thought",
+    );
     next();
     next();
     fireEvent.changeText(screen.getByTestId("challenge-input"), "a challenge");
@@ -146,11 +157,13 @@ describe("ThoughtEntryForm", () => {
     previous();
 
     expect(screen.getByTestId("automatic-thought-input").props.value).toBe(
-      "a thought"
+      "a thought",
     );
     next();
     next();
-    expect(screen.getByTestId("challenge-input").props.value).toBe("a challenge");
+    expect(screen.getByTestId("challenge-input").props.value).toBe(
+      "a challenge",
+    );
   });
 
   test("keeps selected distortions selected across step navigation", () => {
@@ -160,19 +173,19 @@ describe("ThoughtEntryForm", () => {
     next();
     fireEvent.press(screen.getByTestId(`distortion-${d.slug}`));
     expect(
-      screen.getByTestId(`distortion-${d.slug}`).props.accessibilityState
+      screen.getByTestId(`distortion-${d.slug}`).props.accessibilityState,
     ).toMatchObject({ checked: true });
 
     next();
     previous();
     expect(
-      screen.getByTestId(`distortion-${d.slug}`).props.accessibilityState
+      screen.getByTestId(`distortion-${d.slug}`).props.accessibilityState,
     ).toMatchObject({ checked: true });
 
     // toggling again clears it
     fireEvent.press(screen.getByTestId(`distortion-${d.slug}`));
     expect(
-      screen.getByTestId(`distortion-${d.slug}`).props.accessibilityState
+      screen.getByTestId(`distortion-${d.slug}`).props.accessibilityState,
     ).toMatchObject({ checked: false });
   });
 
@@ -189,28 +202,28 @@ describe("ThoughtEntryForm", () => {
     expect(card.props.accessibilityLabel).toBe(name);
     expect(screen.getAllByRole("checkbox", { name })).toHaveLength(1);
     expect(
-      screen.getByTestId(`distortion-card-${distortion.slug}`).props.className
+      screen.getByTestId(`distortion-card-${distortion.slug}`).props.className,
     ).toEqual(expect.stringContaining("border-accent"));
     expect(
-      screen.getByTestId(`distortion-card-${distortion.slug}`).props.className
+      screen.getByTestId(`distortion-card-${distortion.slug}`).props.className,
     ).toEqual(expect.stringContaining("bg-surface-tertiary"));
   });
 
   test("labels its fields and controls", () => {
     render(<Harness />);
 
-    expect(
-      screen.getByLabelText("auto_thought").props.accessibilityLabel
-    ).toBe("auto_thought");
-    expect(screen.getByTestId("thought-entry-next").props.accessibilityRole).toBe(
-      "button"
+    expect(screen.getByLabelText("auto_thought").props.accessibilityLabel).toBe(
+      "auto_thought",
     );
+    expect(
+      screen.getByTestId("thought-entry-next").props.accessibilityRole,
+    ).toBe("button");
     expect(screen.getByRole("progressbar")).toBeTruthy();
 
     next();
     expect(
       screen.getByTestId(`distortion-${DistortionData.list[0].slug}`).props
-        .accessibilityRole
+        .accessibilityRole,
     ).toBe("checkbox");
   });
 
@@ -219,7 +232,7 @@ describe("ThoughtEntryForm", () => {
 
     // the progress indicator announces the step, not the app's name
     expect(screen.getByRole("progressbar").props.accessibilityLabel).toBe(
-      'cbt_form.step_progress:{"step":1,"count":4}'
+      'cbt_form.step_progress:{"step":1,"count":4}',
     );
     expect(screen.getByText("cbt_form.retry")).toBeTruthy();
     const previous = screen.getByTestId("thought-entry-previous");
@@ -231,7 +244,7 @@ describe("ThoughtEntryForm", () => {
 
     next();
     expect(screen.getByRole("progressbar").props.accessibilityLabel).toBe(
-      'cbt_form.step_progress:{"step":2,"count":4}'
+      'cbt_form.step_progress:{"step":2,"count":4}',
     );
   });
 
@@ -260,9 +273,14 @@ describe("ThoughtEntryForm", () => {
   test("reports step changes and keeps focus on internal interaction", () => {
     const onStepChange = jest.fn();
     const onFocusRequest = jest.fn();
-    render(<Harness onStepChange={onStepChange} onFocusRequest={onFocusRequest} />);
+    render(
+      <Harness onStepChange={onStepChange} onFocusRequest={onFocusRequest} />,
+    );
 
-    fireEvent.changeText(screen.getByTestId("automatic-thought-input"), "typing");
+    fireEvent.changeText(
+      screen.getByTestId("automatic-thought-input"),
+      "typing",
+    );
     expect(onFocusRequest).toHaveBeenCalled();
     expect(onStepChange).not.toHaveBeenCalled();
 
@@ -275,7 +293,9 @@ describe("ThoughtEntryForm", () => {
     render(<Harness slide="challenge" />);
 
     expect(screen.getByTestId("challenge-input")).toBeTruthy();
-    expect(screen.getByRole("progressbar").props.accessibilityValue).toMatchObject({
+    expect(
+      screen.getByRole("progressbar").props.accessibilityValue,
+    ).toMatchObject({
       now: 3,
     });
   });
@@ -328,7 +348,10 @@ describe("useThoughtEntryForm", () => {
 
     // advancing via Actions' Next button is reflected in Body's own step
     // indicator, proving both nodes share one state instance, not two
-    expect(screen.getByTestId("thought-entry-previous").props.accessibilityState?.disabled).toBe(false);
+    expect(
+      screen.getByTestId("thought-entry-previous").props.accessibilityState
+        ?.disabled,
+    ).toBe(false);
   });
 });
 
@@ -339,11 +362,7 @@ function FooterHarness() {
     distortions: [] as Distortion.Distortion[],
     value: Thought.emptySpec(),
   });
-  return (
-    <StandardScreen footer={actions}>
-      {body}
-    </StandardScreen>
-  );
+  return <StandardScreen footer={actions}>{body}</StandardScreen>;
 }
 
 describe("create-thought regression: actions row clears the tab bar", () => {
@@ -351,10 +370,11 @@ describe("create-thought regression: actions row clears the tab bar", () => {
     renderWithProviders(
       <BottomTabBarHeightContext.Provider value={72}>
         <FooterHarness />
-      </BottomTabBarHeightContext.Provider>
+      </BottomTabBarHeightContext.Provider>,
     );
 
-    const footerWrapper = screen.getByTestId("thought-entry-actions").parent?.parent;
+    const footerWrapper = screen.getByTestId("thought-entry-actions").parent
+      ?.parent;
     expect(footerWrapper?.props.style.paddingBottom).toBe(24 + 72);
   });
 });
