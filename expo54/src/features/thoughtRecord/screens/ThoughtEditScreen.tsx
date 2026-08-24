@@ -6,7 +6,7 @@ import {
   backHeaderAction,
   useScreenHeader,
 } from "@/shared/components";
-import { useThoughtEntryForm } from "@/features/thoughts/thought-entry-form";
+import { useThoughtEntryForm } from "./ThoughtEntryForm";
 import { useMounted } from "@/hooks/use-mounted";
 import { ensureThoughtRecordReady } from "../services/ensureThoughtRecordReady";
 import {

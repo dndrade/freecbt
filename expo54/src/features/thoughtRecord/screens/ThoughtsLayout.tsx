@@ -1,5 +1,5 @@
 import { useTranslate } from "@/i18n/use-i18n";
-import { AdaptiveThoughtsLayout } from "@/features/thoughts/adaptive-thoughts-layout";
+import { AdaptiveThoughtsLayout } from "./AdaptiveThoughtsLayout";
 import { Slot, useFocusEffect, useLocalSearchParams } from "expo-router";
 import React from "react";
 import { useThoughtHistory } from "../hooks/useThoughtHistory";
@@ -16,7 +16,7 @@ export function ThoughtsLayout() {
     React.useCallback(() => {
       if (focused.current) void refresh();
       focused.current = true;
-    }, [refresh])
+    }, [refresh]),
   );
 
   return (

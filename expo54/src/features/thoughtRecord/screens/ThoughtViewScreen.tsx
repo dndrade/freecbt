@@ -5,7 +5,7 @@ import {
   HeaderActionButton,
   backHeaderAction,
 } from "@/shared/components";
-import { ThoughtFieldCards } from "@/features/thoughts/thought-view-screen";
+import { ThoughtFieldCards } from "./ThoughtFieldCards";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Button, Typography } from "heroui-native";
 import React from "react";

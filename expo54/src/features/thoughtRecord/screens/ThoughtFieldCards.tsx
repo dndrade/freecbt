@@ -1,37 +1,13 @@
 import { Routes } from "@/src";
-import {
-  StandardScreen,
-  HeaderActionButton,
-  backHeaderAction,
-} from "@/shared/components";
-import { ModelLoadedProps } from "@/src/hooks/use-model";
 import { Distortion, Thought } from "@/src/model";
 import * as ImagePath from "@/src/assets/image-path";
-import { Link, useRouter } from "expo-router";
+import { TranslateFn } from "@/src/i18n/use-i18n";
+import { Link } from "expo-router";
 import { Typography } from "heroui-native";
 import React from "react";
 import { Image, Pressable, View } from "react-native";
-import { useThoughtFromParams } from "./use-thought-from-route";
 
 export const SHRUG_EMOJI = "🤷‍";
-
-export function ThoughtViewScreen({ model, translate: t }: ModelLoadedProps) {
-  const res = useThoughtFromParams(model);
-  const router = useRouter();
-  if (res.status === "error") return res.error;
-  const thought = res.value;
-
-  return (
-    <StandardScreen contentClassName="flex-1 gap-4">
-      <HeaderActionButton action={backHeaderAction(() => router.back())} />
-      <ThoughtFieldCards
-        thought={thought}
-        distortions={model.distortionData.list}
-        translate={t}
-      />
-    </StandardScreen>
-  );
-}
 
 export function ThoughtFieldCards({
   thought,
@@ -40,7 +16,7 @@ export function ThoughtFieldCards({
 }: {
   thought: Thought.Thought;
   distortions: readonly Distortion.Distortion[];
-  translate: ModelLoadedProps["translate"];
+  translate: TranslateFn;
 }) {
   const slugs = new Set(
     Array.from(thought.cognitiveDistortions).map((d) => d.slug),

@@ -6,7 +6,7 @@ import {
   backHeaderAction,
   useScreenHeader,
 } from "@/shared/components";
-import { useThoughtEntryForm } from "@/features/thoughts/thought-entry-form";
+import { useThoughtEntryForm } from "./ThoughtEntryForm";
 import { useMounted } from "@/hooks/use-mounted";
 import { useThoughtWizardSession } from "../store/useThoughtWizardSession";
 import { useRouter } from "expo-router";
