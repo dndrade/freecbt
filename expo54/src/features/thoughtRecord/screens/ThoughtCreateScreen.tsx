@@ -7,6 +7,7 @@ import {
   useScreenHeader,
 } from "@/shared/components";
 import { useThoughtEntryForm } from "@/features/thoughts/thought-entry-form";
+import { useMounted } from "@/hooks/use-mounted";
 import { useThoughtWizardSession } from "../store/useThoughtWizardSession";
 import { useRouter } from "expo-router";
 import React from "react";
@@ -15,14 +16,7 @@ export function ThoughtCreateScreen() {
   const t = useTranslate();
   const router = useRouter();
   const session = useThoughtWizardSession();
-  const mounted = React.useRef(false);
-
-  React.useEffect(() => {
-    mounted.current = true;
-    return () => {
-      mounted.current = false;
-    };
-  }, []);
+  const mounted = useMounted();
 
   const value = React.useMemo(
     () => ({

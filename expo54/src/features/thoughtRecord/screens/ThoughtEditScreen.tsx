@@ -7,6 +7,7 @@ import {
   useScreenHeader,
 } from "@/shared/components";
 import { useThoughtEntryForm } from "@/features/thoughts/thought-entry-form";
+import { useMounted } from "@/hooks/use-mounted";
 import { ensureThoughtRecordReady } from "../services/ensureThoughtRecordReady";
 import {
   thoughtsService,
@@ -37,14 +38,7 @@ export function ThoughtEditScreen() {
   const [isSaving, setIsSaving] = React.useState(false);
   const [saveError, setSaveError] = React.useState<string | null>(null);
   const saving = React.useRef(false);
-  const mounted = React.useRef(false);
-
-  React.useEffect(() => {
-    mounted.current = true;
-    return () => {
-      mounted.current = false;
-    };
-  }, []);
+  const mounted = useMounted();
 
   React.useEffect(() => {
     let current = true;
