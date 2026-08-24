@@ -17,7 +17,7 @@ export function RemindersStep({ translate, reminders }: OnboardingStepProps) {
         <View className="w-full max-w-xs gap-3">
           <Button
             onPress={() => {
-              void reminders.enable(() => {}, translate);
+              void reminders.enable(translate);
               void setReminders(true);
             }}
           >
@@ -26,7 +26,7 @@ export function RemindersStep({ translate, reminders }: OnboardingStepProps) {
           <Button
             variant="secondary"
             onPress={() => {
-              void reminders.disable(() => {});
+              void reminders.disable();
               void setReminders(false);
             }}
           >
