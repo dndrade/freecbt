@@ -96,6 +96,19 @@ test("migrates pre-existing legacy AsyncStorage data without mutating legacy sto
   expect(secureSpy).not.toHaveBeenCalled();
 });
 
+test("legacy AsyncStorage migration does not log a spurious invalid-persisted-settings warning", async () => {
+  await AsyncStorage.multiSet([[Settings.remindersKey, "1"]]);
+  const warnSpy = jest.spyOn(console, "warn").mockImplementation(() => {});
+
+  await runSettingsBootstrap();
+
+  expect(warnSpy).not.toHaveBeenCalledWith(
+    "Discarding invalid persisted settings:",
+    expect.anything(),
+  );
+  warnSpy.mockRestore();
+});
+
 test("a second bootstrap call does not re-read legacy AsyncStorage", async () => {
   const multiGetSpy = jest.spyOn(AsyncStorage, "multiGet");
   await runSettingsBootstrap();

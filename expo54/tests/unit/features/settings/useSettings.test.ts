@@ -96,9 +96,19 @@ test("rehydrate rejects a schema-invalid persisted settings slice", async () => 
     reminders: false,
     existingUser: false,
   });
+  expect(warnSpy).toHaveBeenCalledTimes(1);
   expect(warnSpy).toHaveBeenCalledWith(
     "Discarding invalid persisted settings:",
     expect.anything(),
   );
+  warnSpy.mockRestore();
+});
+
+test("rehydrate against an empty MMKV record does not warn", async () => {
+  const warnSpy = jest.spyOn(console, "warn").mockImplementation(() => {});
+
+  await useSettings.persist.rehydrate();
+
+  expect(warnSpy).not.toHaveBeenCalled();
   warnSpy.mockRestore();
 });
