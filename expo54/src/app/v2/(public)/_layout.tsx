@@ -21,6 +21,7 @@ function Nav(_: ModelLoadedProps) {
       }}
     >
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+      <Stack.Screen name="settings" options={{ headerShown: false }} />
       <Stack.Screen name="help/index" />
       <Stack.Screen name="help/intro" />
     </Stack>

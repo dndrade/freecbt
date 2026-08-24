@@ -10,6 +10,7 @@ import {
   AccessibilityProps,
 } from "react-native";
 import { BottomTabBarHeightContext } from "@react-navigation/bottom-tabs";
+import { HeaderHeightContext } from "@react-navigation/elements";
 import { cn, useThemeColor } from "heroui-native";
 import { ScreenContainer } from "./Base";
 
@@ -37,6 +38,7 @@ export const StandardScreen: React.FC<StandardScreenProps> = ({
 }) => {
   const tabBarHeight = useContext(BottomTabBarHeightContext) ?? 0;
   const isInsideTabBar = tabBarHeight > 0;
+  const hasHeader = (useContext(HeaderHeightContext) ?? 0) > 0;
   const separator = useThemeColor("separator");
 
   return (
@@ -44,11 +46,12 @@ export const StandardScreen: React.FC<StandardScreenProps> = ({
       testID={testID}
       className={className}
       style={style}
-      edges={
-        isInsideTabBar
-          ? ["top", "left", "right"]
-          : ["top", "bottom", "left", "right"]
-      }
+      edges={[
+        ...(isInsideTabBar || hasHeader ? [] : (["top"] as const)),
+        "left",
+        "right",
+        ...(isInsideTabBar ? [] : (["bottom"] as const)),
+      ]}
       {...accessibilityProps}
     >
       <KeyboardAvoidingView
