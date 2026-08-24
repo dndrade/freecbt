@@ -1,6 +1,5 @@
-import { PinUpdateScreen } from "@/features/lock/pin-update-screen";
-import { LoadModel } from "@/hooks/use-model";
+import { ExportScreen } from "@/features/export/export-screen";
 
-export default function Lock() {
-  return <LoadModel ready={PinUpdateScreen} />;
+export default function Export() {
+  return <ExportScreen />;
 }
