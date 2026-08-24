@@ -97,34 +97,40 @@ describe("v2 root layout", () => {
 
   // The layout's bootstrap effect is `try { await runSettingsBootstrap(); }
   // finally { setIsReady(true); await SplashScreen.hideAsync(); }`, with no
-  // catch. On rejection, that finally still runs (the app renders and the
-  // splash still hides), and the rejection then propagates out of the
-  // effect's own fire-and-forget async IIFE, same as production -- nothing
-  // there awaits it either. Exercising that specific path through a real
-  // render would leave a genuinely unhandled rejection on the process, which
-  // jest has no supported way to expect or intercept from inside a test
-  // file (jest-environment-node's sandboxed `process` is a disconnected
-  // clone of the real one jest's own error handlers listen on -- see
-  // node_modules/jest-util/build/createProcessObject.js). So this proves
-  // the finally guarantee directly against the exact same try/finally/
-  // no-catch shape, fully awaited (nothing left unhandled), while the
-  // "resolves" test above already proves Layout's effect really reaches
-  // this finally when rendered.
+  // catch. On rejection, that finally still runs: the app still renders
+  // (setIsReady(true) happens first) and the splash still hides (hideAsync()
+  // is called next). Only *after* that finally block's own `await` settles
+  // does the original rejection re-propagate out of the effect's
+  // fire-and-forget async IIFE -- and since nothing there awaits it either
+  // (same as production), that would be a genuine unhandled rejection with
+  // no supported way for a test in this file to intercept or expect it (the
+  // sandboxed `process` this file sees is a disconnected copy of the one
+  // Jest's own unhandled-rejection reporting actually listens on -- see
+  // node_modules/jest-util/build/createProcessObject.js).
+  //
+  // Sidestep that entirely: what this test needs to prove is only that
+  // `hideAsync()` gets *called* on rejection -- not that its own promise
+  // ever resolves. Make hideAsync() return a promise that never settles for
+  // this test only, so the finally block's `await SplashScreen.hideAsync()`
+  // never completes, the original rejection is never re-thrown, and the
+  // effect's outer promise simply stays pending -- nothing ever becomes
+  // unhandled, and the render-based assertion below still exercises the
+  // real Layout component and the real finally guarantee.
   it("runs the finally (setIsReady + hideAsync) even when the awaited call rejects", async () => {
-    const setIsReady = jest.fn();
     const bootstrapError = new Error("bootstrap failed");
+    hideAsync.mockReturnValueOnce(new Promise<void>(() => {}));
 
-    const run = async () => {
-      try {
-        await Promise.reject(bootstrapError);
-      } finally {
-        setIsReady(true);
-        await hideAsync();
-      }
-    };
+    render(<Layout />);
+    expect(screen.queryByText("slot rendered")).toBeNull();
 
-    await expect(run()).rejects.toBe(bootstrapError);
-    expect(setIsReady).toHaveBeenCalledWith(true);
+    await act(async () => {
+      deferred?.reject(bootstrapError);
+      await Promise.resolve();
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText("slot rendered")).toBeTruthy();
+    });
     expect(hideAsync).toHaveBeenCalledTimes(1);
   });
 });
