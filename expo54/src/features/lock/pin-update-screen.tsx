@@ -4,17 +4,15 @@ import {
   backHeaderAction,
   useScreenHeader,
 } from "@/shared/components";
+import { useTranslate } from "@/i18n/use-i18n";
 import { PinInput } from "./ui/pin-input";
-import { ModelLoadedProps } from "@/src/hooks/use-model";
-import { Action } from "@/src/model";
 import * as Routes from "@/src/routes";
 import { Redirect, useRouter } from "expo-router";
 import React, { useState } from "react";
+import { setPin } from "./services/pinStorage";
 
-export function PinUpdateScreen(
-  props: Pick<ModelLoadedProps, "dispatch" | "translate">,
-): React.ReactNode {
-  const { dispatch, translate: t } = props;
+export function PinUpdateScreen(): React.ReactNode {
+  const t = useTranslate();
   const router = useRouter();
   const [form, setForm] = useState(emptyForm());
 
@@ -30,8 +28,10 @@ export function PinUpdateScreen(
       }
       case "confirm": {
         if (form.code === candidate) {
-          dispatch(Action.setPincode(form.code));
-          setForm({ ...emptyForm(), status: "done" });
+          void setPin(form.code).then(
+            () => setForm({ ...emptyForm(), status: "done" }),
+            () => setForm(emptyForm()),
+          );
         } else {
           setForm(emptyForm());
         }

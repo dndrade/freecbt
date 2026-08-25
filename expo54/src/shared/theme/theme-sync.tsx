@@ -1,15 +1,13 @@
 import { useEffect } from "react";
 import { Uniwind } from "uniwind";
-import { useModel } from "@/hooks/use-model";
+import { useSettings } from "@/features/settings/hooks/useSettings";
 
 export function ThemeSync() {
-    const [model] = useModel();
-    const theme =
-        model.status === "ready" ? model.settings.theme ?? "system" : "system";
+  const theme = useSettings((state) => state.settings.theme) ?? "system";
 
-    useEffect(() => {
-        Uniwind.setTheme(theme);
-    }, [theme]);
+  useEffect(() => {
+    Uniwind.setTheme(theme);
+  }, [theme]);
 
-    return null;
+  return null;
 }

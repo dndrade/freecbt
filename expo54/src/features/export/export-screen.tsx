@@ -3,17 +3,20 @@ import {
   backHeaderAction,
   useScreenHeader,
 } from "@/shared/components";
-import { ModelLoadedProps } from "@/src/hooks/use-model";
-import { Archive, Model } from "@/src/model";
+import { useTranslate } from "@/i18n/use-i18n";
+import { useDefaultStyle } from "@/src/hooks/use-style";
 import { DownloadOrShareLink } from "@/src/platform/sharing/download-or-share";
 import { toCSV, toMarkdown } from "./export-format";
 import { useRouter } from "expo-router";
 import React from "react";
-import { TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, TouchableOpacity, View } from "react-native";
 import { Typography } from "heroui-native";
+import { useThoughtHistory } from "../thoughtRecord/hooks/useThoughtHistory";
 
-export function ExportScreen(props: ModelLoadedProps): React.ReactNode {
-  const { style: s, translate: t } = props;
+export function ExportScreen(): React.ReactNode {
+  const s = useDefaultStyle();
+  const t = useTranslate();
+  const history = useThoughtHistory();
   const router = useRouter();
   useScreenHeader({
     title: t("export_screen.header"),
@@ -25,17 +28,29 @@ export function ExportScreen(props: ModelLoadedProps): React.ReactNode {
         <Typography type="body-sm" className="my-2">
           {t("export_screen.description")}
         </Typography>
-        <MarkdownLink {...props} />
-        <CSVLink {...props} />
-        <JSONLink {...props} />
+        {history.isLoading ? (
+          <ActivityIndicator />
+        ) : history.error ? (
+          <Typography type="body-sm" className="text-danger">
+            {history.error.message}
+          </Typography>
+        ) : (
+          <>
+            <MarkdownLink thoughts={history.thoughts} />
+            <CSVLink thoughts={history.thoughts} />
+          </>
+        )}
       </View>
     </StandardScreen>
   );
 }
 
-function MarkdownLink(props: ModelLoadedProps) {
-  const { model, style: s, translate: t } = props;
-  const thoughts = Model.thoughtsList(model);
+function MarkdownLink(props: {
+  thoughts: Parameters<typeof toMarkdown>[0]["thoughts"];
+}) {
+  const s = useDefaultStyle();
+  const t = useTranslate();
+  const { thoughts } = props;
   return (
     <DownloadOrShareLink
       name="FreeCBT.md"
@@ -66,9 +81,10 @@ function MarkdownLink(props: ModelLoadedProps) {
   );
 }
 
-function CSVLink(props: ModelLoadedProps) {
-  const { model, style: s, translate: t } = props;
-  const thoughts = Model.thoughtsList(model);
+function CSVLink(props: { thoughts: Parameters<typeof toCSV>[0] }) {
+  const s = useDefaultStyle();
+  const t = useTranslate();
+  const { thoughts } = props;
   return (
     <DownloadOrShareLink
       name="FreeCBT.csv"
@@ -92,40 +108,6 @@ function CSVLink(props: ModelLoadedProps) {
         <TouchableOpacity style={[s.button, s.my2]}>
           <Typography type="body-sm">
             {t("export_screen.csv.button")}
-          </Typography>
-        </TouchableOpacity>
-      )}
-    />
-  );
-}
-
-function JSONLink(props: ModelLoadedProps) {
-  const { model, style: s, translate: t } = props;
-  const parser = Archive.createParsers(model.distortionData);
-  const toArchive = () => parser.fromJson.encode(Model.toArchive(model));
-  return (
-    <DownloadOrShareLink
-      name="FreeCBT.json"
-      body={() => JSON.stringify(toArchive())}
-      type="application/json"
-      UTI="public.json"
-      translate={t}
-      error={(e) => (
-        <Typography type="body-sm" className="text-danger">
-          {e}
-        </Typography>
-      )}
-      share={(onPress) => (
-        <TouchableOpacity style={[s.button, s.my2]} onPress={onPress}>
-          <Typography type="body-sm">
-            {t("export_screen.json.button")}
-          </Typography>
-        </TouchableOpacity>
-      )}
-      download={() => (
-        <TouchableOpacity style={[s.button, s.my2]}>
-          <Typography type="body-sm">
-            {t("export_screen.json.button")}
           </Typography>
         </TouchableOpacity>
       )}

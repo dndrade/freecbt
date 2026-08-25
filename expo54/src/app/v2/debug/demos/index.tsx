@@ -23,16 +23,6 @@ export default function DemosIndex() {
           detail="Promise rendering patterns"
           onPress={() => router.push("/v2/debug/demos/promise")}
         />
-        <DebugAction
-          label="Hooks Init"
-          detail="Hook initialization patterns"
-          onPress={() => router.push("/v2/debug/demos/hooks-init")}
-        />
-        <DebugAction
-          label="Pure Elm Architecture"
-          detail="Elm-style reducer demo"
-          onPress={() => router.push("/v2/debug/demos/pure-elm-arch")}
-        />
       </DebugSection>
     </DebugScreen>
   );

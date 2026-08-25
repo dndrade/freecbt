@@ -1,10 +1,12 @@
-import { Storage } from "@/src";
 import { DistortionData, Thought } from "@/src/model";
+import { homeThoughtDraft } from "@/src/platform/storage/home-thought-draft";
 import { AsyncStorageStatic } from "@react-native-async-storage/async-storage";
 import { createFakeAsyncStorage as fakeAsyncStorage } from "@/tests/support/async-storage";
 
+const Storage = { homeThoughtDraft };
+
 function fakeAsyncStorageWithBlockedFirstSet(
-  initial: Record<string, string> = {}
+  initial: Record<string, string> = {},
 ) {
   const release = (() => {
     let resolve!: () => void;
@@ -142,7 +144,7 @@ describe("homeThoughtDraft", () => {
     const blocked = fakeAsyncStorageWithBlockedFirstSet();
     const drafts = (Storage as any).homeThoughtDraft(
       DistortionData,
-      blocked.storage
+      blocked.storage,
     );
     const older = {
       spec: sampleSpec(),
@@ -173,7 +175,7 @@ describe("homeThoughtDraft", () => {
     const blocked = fakeAsyncStorageWithBlockedFirstSet();
     const drafts = (Storage as any).homeThoughtDraft(
       DistortionData,
-      blocked.storage
+      blocked.storage,
     );
     const draft = {
       spec: sampleSpec(),

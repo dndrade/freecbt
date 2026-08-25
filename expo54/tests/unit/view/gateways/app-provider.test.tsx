@@ -23,13 +23,23 @@ function LocaleProbe() {
 beforeEach(() => {
   values.clear();
   useSettings.setState({
-    settings: { locale: null, reminders: false, existingUser: false },
+    settings: {
+      locale: null,
+      reminders: false,
+      existingUser: false,
+      theme: null,
+    },
   });
 });
 
 test("ModelI18nProvider derives the active locale from useSettings, not the legacy Model", () => {
   useSettings.setState({
-    settings: { locale: "es", reminders: false, existingUser: false },
+    settings: {
+      locale: "es",
+      reminders: false,
+      existingUser: false,
+      theme: null,
+    },
   });
 
   render(

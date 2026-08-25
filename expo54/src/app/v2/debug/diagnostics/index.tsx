@@ -6,20 +6,11 @@ import React from "react";
 
 export default function DiagnosticsIndex() {
   const router = useRouter();
-
   return (
     <DebugScreen
       title="Feature Diagnostics"
-      description="Inspect backup and notification flows."
+      description="Inspect notification flows."
     >
-      <DebugSection title="Backup">
-        <DebugAction
-          label="Backup"
-          detail="Recovery-key and backup diagnostics"
-          onPress={() => router.push("/v2/debug/diagnostics/backup")}
-        />
-      </DebugSection>
-
       <DebugSection title="Notifications">
         <DebugAction
           label="Notifications"
