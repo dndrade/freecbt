@@ -1,0 +1,11 @@
+{
+  "actions": {
+    "exit": "Exit",
+    "continue": "Continue",
+    "cancel": "Cancel",
+    "close": "Close",
+    "retry": "Retry"
+  },
+  "choices": { "on": "On", "off": "Off", "yes": "Yes", "no": "No" },
+  "status": { "loading": "Loading…", "done": "Done" }
+}

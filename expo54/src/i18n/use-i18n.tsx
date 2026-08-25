@@ -3,7 +3,6 @@ import { I18n, type TranslateOptions } from "i18n-js";
 import { createContext, useContext } from "react";
 import { z } from "zod";
 import locals0 from "./locals";
-import en from "./locals/en.json";
 
 // Type-safe, autocompletable translation keys!
 export function useTranslate() {
@@ -53,7 +52,7 @@ function walkReverse<T extends object>(obj: T): T {
       typeof val === "string"
         ? val.split("").reverse().join("")
         : walkReverse(val),
-    ])
+    ]),
   ) as T;
 }
 
@@ -87,13 +86,13 @@ export function defaultLocale(): LocaleTag {
 // stolen from https://www.raygesualdo.com/posts/flattening-object-keys-with-typescript-types/
 type FlattenKeys<
   T extends Record<string, unknown>,
-  Key = keyof T
+  Key = keyof T,
 > = Key extends string
   ? T[Key] extends Record<string, unknown>
     ? `${Key}.${FlattenKeys<T[Key]>}`
     : `${Key}`
   : never;
-export type TranslateKey = FlattenKeys<typeof en>;
+export type TranslateKey = FlattenKeys<typeof locals0.en>;
 
 type TranslateJson = { [k: string]: string | TranslateJson };
 function flattenKeys(o: TranslateJson): { [k: string]: string } {
@@ -101,11 +100,11 @@ function flattenKeys(o: TranslateJson): { [k: string]: string } {
     Object.entries(o).flatMap(([k, v]) =>
       typeof v === "string"
         ? [[k, v]]
-        : Object.entries(flattenKeys(v)).map(([k2, v2]) => [`${k}.${k2}`, v2])
-    )
+        : Object.entries(flattenKeys(v)).map(([k2, v2]) => [`${k}.${k2}`, v2]),
+    ),
   );
 }
 export const translateKeys = Object.keys(
-  flattenKeys(en)
+  flattenKeys(locals0.en),
 ) as readonly TranslateKey[];
 export const translateKeySet = new Set<string>(translateKeys);

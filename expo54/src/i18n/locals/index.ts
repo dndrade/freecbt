@@ -19,11 +19,14 @@ import ru from "./ru.json";
 import sv from "./sv.json";
 import uk from "./uk.json";
 import zhHans from "./zh-Hans.json";
+import enCommon from "../locales/en/common.json";
+import enErrors from "../locales/en/errors.json";
+import enValidation from "../locales/en/validation.json";
 
 export default {
   bg,
   de,
-  en,
+  en: { ...en, common: enCommon, errors: enErrors, validation: enValidation },
   es,
   fa,
   fi,
