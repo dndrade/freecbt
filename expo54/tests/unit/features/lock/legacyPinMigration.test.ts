@@ -43,6 +43,18 @@ describe("migrateLegacyPinIfNeeded", () => {
     expect(await AsyncStorage.getItem(Settings.pincodeKey)).toBeNull();
   });
 
+  it("replaces a malformed SecureStore PIN with a valid legacy PIN", async () => {
+    await SecureStore.setItemAsync(Settings.pincodeSecureKey, "invalid");
+    await AsyncStorage.setItem(Settings.pincodeKey, "2222");
+
+    await migrateLegacyPinIfNeeded();
+
+    expect(await SecureStore.getItemAsync(Settings.pincodeSecureKey)).toBe(
+      "2222",
+    );
+    expect(await AsyncStorage.getItem(Settings.pincodeKey)).toBeNull();
+  });
+
   it("leaves the legacy value when the SecureStore write fails", async () => {
     await AsyncStorage.setItem(Settings.pincodeKey, "9999");
     jest.mocked(setPin).mockRejectedValueOnce(new Error("unavailable"));

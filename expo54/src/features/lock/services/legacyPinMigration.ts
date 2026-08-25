@@ -6,7 +6,8 @@ export async function migrateLegacyPinIfNeeded(): Promise<void> {
   const legacy = await AsyncStorage.getItem(Settings.pincodeKey);
   if (legacy === null) return;
 
-  if ((await getPin()) !== null) {
+  const current = await getPin();
+  if (current !== null && /^[0-9]{4}$/.test(current)) {
     await AsyncStorage.removeItem(Settings.pincodeKey);
     return;
   }
