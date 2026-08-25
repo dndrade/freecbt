@@ -18,6 +18,10 @@
     "gate_subtitle": "Enter your 4-digit PIN to continue.",
     "unlock_button": "Unlock",
     "forgot_pin": "Forgot your PIN?",
-    "reset_warning": "If you reset your PIN, some local access may be affected."
+    "reset_warning": "If you reset your PIN, some local access may be affected.",
+    "wrong_pin": "That PIN didn't match. Try again.",
+    "storage_error_title": "App lock is unavailable",
+    "storage_error_body": "FreeCBT couldn't check your app lock. Your private content remains hidden until you retry.",
+    "storage_error_retry": "Try again"
   }
 }
