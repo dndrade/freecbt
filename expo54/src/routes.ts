@@ -25,6 +25,9 @@ export function thoughtEditV2(id: Thought.Id, slide: Thought.SlideName): Href {
 export function lockUpdateV2(): Href {
   return "/v2/settings/lock";
 }
+export function lockSetupV2(): Href {
+  return "/v2/settings/lock-setup";
+}
 export function exportV2(): Href {
   return "/v2/settings/export";
 }

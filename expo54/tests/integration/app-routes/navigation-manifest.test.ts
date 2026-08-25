@@ -16,6 +16,7 @@ describe("production route namespace", () => {
         "./(public)/thoughts/[idOrKey]/edit.tsx",
         "./(public)/settings/_layout.tsx",
         "./(public)/settings/lock.tsx",
+        "./(public)/settings/lock-setup.tsx",
         "./(public)/settings/export.tsx",
       ],
       { internal_stripLoadRoute: true },
@@ -67,6 +68,7 @@ describe("production route namespace", () => {
         "/(public)/thoughts/create",
         "/(public)/thoughts/[idOrKey]/edit",
         "/(public)/settings/lock",
+        "/(public)/settings/lock-setup",
         "/(public)/settings/export",
       ]),
     );
@@ -79,6 +81,7 @@ describe("production route namespace", () => {
         "/v2/thoughts/:id/edit",
         "/v2/settings",
         "/v2/settings/lock",
+        "/v2/settings/lock-setup",
         "/v2/settings/export",
       ]),
     );
