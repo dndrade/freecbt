@@ -1,31 +1,23 @@
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as SecureStore from "expo-secure-store";
 import { Settings } from "@/model";
 
-export async function getPin(): Promise<string | null> {
-  const secure = await SecureStore.getItemAsync(Settings.pincodeSecureKey);
-  if (secure !== null) return secure;
+const PIN_PATTERN = /^[0-9]{4}$/;
 
-  const legacy = await AsyncStorage.getItem(Settings.pincodeKey);
-  if (legacy !== null) {
-    try {
-      await SecureStore.setItemAsync(Settings.pincodeSecureKey, legacy);
-      await AsyncStorage.removeItem(Settings.pincodeKey);
-    } catch {
-      // Keep the legacy PIN so a later successful SecureStore write can migrate it.
-    }
-  }
-  return legacy;
+export async function getPin(): Promise<string | null> {
+  return SecureStore.getItemAsync(Settings.pincodeSecureKey);
 }
 
 export async function setPin(pin: string): Promise<void> {
+  if (!PIN_PATTERN.test(pin)) {
+    throw new Error("PIN must be exactly 4 digits");
+  }
   await SecureStore.setItemAsync(Settings.pincodeSecureKey, pin);
-  await AsyncStorage.removeItem(Settings.pincodeKey);
 }
 
 export async function removePin(): Promise<void> {
-  await Promise.all([
-    SecureStore.deleteItemAsync(Settings.pincodeSecureKey),
-    AsyncStorage.removeItem(Settings.pincodeKey),
-  ]);
+  await SecureStore.deleteItemAsync(Settings.pincodeSecureKey);
+}
+
+export async function hasPin(): Promise<boolean> {
+  return (await getPin()) !== null;
 }

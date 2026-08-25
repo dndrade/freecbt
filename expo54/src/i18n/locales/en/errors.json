@@ -1,0 +1,5 @@
+{
+  "network_unavailable": "Network is unavailable.",
+  "storage_unavailable": "Storage is unavailable.",
+  "unknown": "An unknown error occurred."
+}

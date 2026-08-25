@@ -1,0 +1,13 @@
+{
+  "settings": {
+    "pincode": {
+      "header": "*pincode lock 🔒",
+      "description": "Du kannst die App mit einem Pincode sperren, wenn du das möchtest. Merke dir diesen Code gut, denn die einzige Möglichkeit, einen vergessenen Code zurückzusetzen, besteht darin, alle deine Daten zu löschen.",
+      "button": {
+        "update": "Update Pincode",
+        "clear": "Lösche Pincode",
+        "set": "Setze Pincode"
+      }
+    }
+  }
+}
