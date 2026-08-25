@@ -1,0 +1,37 @@
+{
+  "onboarding_screen": {
+    "reminders": {
+      "header": "Before you finish, we can send you reminders if you'd like.",
+      "disabled": "You can control reminders in the settings screen.",
+      "button": {
+        "yes": "Yes please!",
+        "no": "Continue without reminders",
+        "continue": "Continue"
+      }
+    }
+  },
+  "settings": {
+    "reminders": {
+      "header": "*reminders",
+      "description": "If you'd like, you can turn on notification reminders that help you build up the habit of challenging thoughts.",
+      "button": {
+        "yes": "Please remind me",
+        "no": "No reminders, thanks"
+      }
+    }
+  },
+  "reminder_notification": {
+    "1": {
+      "title": "If something's been going on, record it.",
+      "body": "Don't let your thoughts sit, work through them as soon as possible."
+    },
+    "2": {
+      "title": "If you're having trouble, FreeCBT can help.",
+      "body": "Take a moment now to challenge your thoughts"
+    },
+    "intro": {
+      "title": "If you're having trouble, FreeCBT can help.",
+      "body": "You'll receive a reminder like this one once a day"
+    }
+  }
+}
