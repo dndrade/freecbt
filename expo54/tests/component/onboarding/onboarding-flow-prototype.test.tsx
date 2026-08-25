@@ -1,7 +1,6 @@
 import React from "react";
 import {
   fireEvent,
-  render,
   renderHook,
   screen,
   waitFor,
@@ -12,10 +11,16 @@ import {
   slidesWithReminders,
   slidesWithoutReminders,
 } from "@/src/debug/ui-lab/onboarding/fixtures";
-import { OnboardingFlowPrototype, useOnboardingFlow } from "@/src/debug/ui-lab/onboarding/onboarding-flow";
+import {
+  OnboardingFlowPrototype,
+  useOnboardingFlow,
+} from "@/src/debug/ui-lab/onboarding/onboarding-flow";
+import { renderWithProviders } from "@/tests/support/render";
 
 jest.mock("@/shared/components", () => ({
   Screen: (props: { children: React.ReactNode }) =>
+    React.createElement(View, null, props.children),
+  StandardScreen: (props: { children: React.ReactNode }) =>
     React.createElement(View, null, props.children),
   Section: (props: { children: React.ReactNode }) =>
     React.createElement(View, null, props.children),
@@ -31,7 +36,7 @@ jest.mock("@/shared/components", () => ({
     React.createElement(
       View,
       { accessibilityRole: "progressbar", accessibilityLabel },
-      `Step ${currentIndex + 1} of ${count}`
+      `Step ${currentIndex + 1} of ${count}`,
     ),
 }));
 
@@ -67,41 +72,51 @@ describe("onboarding flow lab", () => {
   });
 
   it("shows saving, then settles to idle or failure", async () => {
-    render(
-      <OnboardingFlowPrototype remindersSupported />
-    );
+    renderWithProviders(<OnboardingFlowPrototype remindersSupported />);
 
     fireEvent.press(screen.getByRole("button", { name: "Next" }));
     fireEvent.press(screen.getByRole("button", { name: "Next" }));
     fireEvent.press(screen.getByRole("button", { name: "Next" }));
-    fireEvent.press(screen.getByRole("button", { name: "Get started" }));
-
-    expect(screen.getByText("Completion: saving")).toBeTruthy();
-
-    await waitFor(() => expect(screen.getByText("Completion: idle")).toBeTruthy());
-
-    fireEvent.press(screen.getByRole("button", { name: "Reset flow" }));
-    fireEvent.press(screen.getByRole("button", { name: "Simulate save failure" }));
     fireEvent.press(screen.getByRole("button", { name: "Get started" }));
 
     expect(screen.getByText("Completion: saving")).toBeTruthy();
 
     await waitFor(() =>
-      expect(screen.getByText("Completion: failure")).toBeTruthy()
+      expect(screen.getByText("Completion: idle")).toBeTruthy(),
+    );
+
+    fireEvent.press(screen.getByRole("button", { name: "Reset flow" }));
+    fireEvent.press(
+      screen.getByRole("button", { name: "Simulate save failure" }),
+    );
+    fireEvent.press(screen.getByRole("button", { name: "Get started" }));
+
+    expect(screen.getByText("Completion: saving")).toBeTruthy();
+
+    await waitFor(() =>
+      expect(screen.getByText("Completion: failure")).toBeTruthy(),
     );
     expect(screen.getByText("Unable to save. Try again.")).toBeTruthy();
   });
 
   it("lets the reminder choice be changed on the final slide", () => {
-    render(<OnboardingFlowPrototype remindersSupported />);
+    renderWithProviders(<OnboardingFlowPrototype remindersSupported />);
 
     fireEvent.press(screen.getByRole("button", { name: "Next" }));
     fireEvent.press(screen.getByRole("button", { name: "Next" }));
     fireEvent.press(screen.getByRole("button", { name: "Next" }));
-    fireEvent.press(screen.getByRole("button", { name: "onboarding_screen.reminders.button.yes" }));
+    fireEvent.press(
+      screen.getByRole("button", {
+        name: "onboarding_screen.reminders.button.yes",
+      }),
+    );
 
     expect(screen.getByText("Reminder choice: enabled")).toBeTruthy();
-    fireEvent.press(screen.getByRole("button", { name: "onboarding_screen.reminders.button.no" }));
+    fireEvent.press(
+      screen.getByRole("button", {
+        name: "onboarding_screen.reminders.button.no",
+      }),
+    );
     expect(screen.getByText("Reminder choice: disabled")).toBeTruthy();
   });
 });
