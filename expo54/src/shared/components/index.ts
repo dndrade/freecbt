@@ -13,6 +13,9 @@ export type { AppButtonProps, ButtonVariant } from "./Button";
 export { Card } from "./Card";
 export type { AppCardProps } from "./Card";
 
+export { SelectableCard } from "./SelectableCard/SelectableCard";
+export type { AppSelectableCardProps } from "./SelectableCard/SelectableCard";
+
 export { TextInput } from "./TextInput";
 export type { AppTextInputProps } from "./TextInput";
 
