@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
 import { View } from "react-native";
-import { useThemeColor } from "heroui-native";
+import { useThemeColor } from "@/shared/components";
 import Animated, {
   ReduceMotion,
   useAnimatedStyle,

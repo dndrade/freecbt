@@ -12,6 +12,8 @@ import { useTranslate } from "@/i18n/use-i18n";
 import { useSettings } from "../hooks/useSettings";
 import { SettingRow } from "../components/SettingRow";
 import { LanguagePicker } from "../components/LanguagePicker";
+import * as Routes from "@/src/routes";
+import { useRouter } from "expo-router";
 
 const SOURCE_URL = "https://github.com/erosson/freecbt";
 const PRIVACY_URL = "https://github.com/erosson/freecbt/blob/master/PRIVACY.md";
@@ -20,6 +22,7 @@ const ISSUES_URL = "https://github.com/erosson/freecbt/issues";
 export const SettingsScreen: React.FC = () => {
   const t = useTranslate();
   const [isLanguageModalOpen, setIsLanguageModalOpen] = useState(false);
+  const router = useRouter();
 
   const { settings, setReminders } = useSettings();
   const appVersion = Constants.expoConfig?.version ?? "1.0.0";
@@ -46,6 +49,12 @@ export const SettingsScreen: React.FC = () => {
           label={t("settings.general.language.label")}
           value={settings?.locale ? settings.locale.toUpperCase() : "DEFAULT"}
           onPress={() => setIsLanguageModalOpen(true)}
+        />
+        <SettingRow
+          type="nav"
+          icon="lock"
+          label={t("lock_screen.hub_off_cta")}
+          onPress={() => router.push(Routes.lockSettingsV2())}
         />
 
         {/* Support & Legal */}

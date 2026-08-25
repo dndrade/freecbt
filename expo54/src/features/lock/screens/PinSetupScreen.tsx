@@ -1,12 +1,13 @@
 import {
   Section,
   StandardScreen,
+  Button,
+  Typography,
   backHeaderAction,
   useScreenHeader,
 } from "@/shared/components";
 import { useTranslate } from "@/i18n/use-i18n";
 import * as Routes from "@/src/routes";
-import { Button, Typography } from "heroui-native";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import { useAuthStore } from "../store/useAuthStore";

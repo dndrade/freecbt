@@ -1,5 +1,5 @@
-import { PinUpdateScreen } from "@/features/lock/screens/PinUpdateScreen";
+import { LockSettingsScreen } from "@/features/lock/screens/LockSettingsScreen";
 
 export default function Lock() {
-  return <PinUpdateScreen />;
+  return <LockSettingsScreen />;
 }

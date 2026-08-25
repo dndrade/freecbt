@@ -1,6 +1,6 @@
 import React from "react";
 import { Pressable, View } from "react-native";
-import { Typography } from "heroui-native";
+import { Typography } from "@/shared/components";
 
 const ROWS = [
   ["1", "2", "3"],

@@ -1,6 +1,11 @@
-import { Card, Section, StandardScreen } from "@/shared/components";
+import {
+  Button,
+  Card,
+  Section,
+  StandardScreen,
+  Typography,
+} from "@/shared/components";
 import { useTranslate } from "@/i18n/use-i18n";
-import { Button, Typography } from "heroui-native";
 import React, { useEffect, useState } from "react";
 import { AppState, Image } from "react-native";
 import * as ImagePath from "@/src/assets/image-path";
