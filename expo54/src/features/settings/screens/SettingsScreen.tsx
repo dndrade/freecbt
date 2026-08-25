@@ -10,6 +10,7 @@ import {
 } from "@/shared/components";
 import { useTranslate } from "@/i18n/use-i18n";
 import { useSettings } from "../hooks/useSettings";
+import { useReminders } from "@/src/features/reminders/use-reminders";
 import { SettingRow } from "../components/SettingRow";
 import { LanguagePicker } from "../components/LanguagePicker";
 import * as Routes from "@/src/routes";
@@ -24,7 +25,8 @@ export const SettingsScreen: React.FC = () => {
   const [isLanguageModalOpen, setIsLanguageModalOpen] = useState(false);
   const router = useRouter();
 
-  const { settings, setReminders } = useSettings();
+  const { settings } = useSettings();
+  const { enableReminders, disableReminders } = useReminders();
   const appVersion = Constants.expoConfig?.version ?? "1.0.0";
 
   useScreenHeader({ title: t("settings.header") });
@@ -41,7 +43,9 @@ export const SettingsScreen: React.FC = () => {
           icon="bell"
           label={t("settings.general.notifications.label")}
           value={settings?.reminders ?? false}
-          onValueChange={(val) => void setReminders(val)}
+          onValueChange={(val) =>
+            void (val ? enableReminders(undefined, t) : disableReminders())
+          }
         />
         <SettingRow
           type="value"

@@ -1,13 +1,10 @@
 import { View } from "react-native";
 import { Button } from "heroui-native";
 import * as ImagePath from "@/src/assets/image-path";
-import { useSettings } from "@/src/features/settings/hooks/useSettings";
 import { OnboardingStepFrame } from "../components/OnboardingStepFrame";
 import type { OnboardingStepProps } from "./index";
 
 export function RemindersStep({ translate, reminders }: OnboardingStepProps) {
-  const setReminders = useSettings((s) => s.setReminders);
-
   return (
     <OnboardingStepFrame
       titleKey="onboarding_screen.reminders.header"
@@ -17,8 +14,7 @@ export function RemindersStep({ translate, reminders }: OnboardingStepProps) {
         <View className="w-full max-w-xs gap-3">
           <Button
             onPress={() => {
-              void reminders.enable(translate);
-              void setReminders(true);
+              void reminders.enableReminders(undefined, translate);
             }}
           >
             {translate("onboarding_screen.reminders.button.yes")}
@@ -26,8 +22,7 @@ export function RemindersStep({ translate, reminders }: OnboardingStepProps) {
           <Button
             variant="secondary"
             onPress={() => {
-              void reminders.disable();
-              void setReminders(false);
+              void reminders.disableReminders();
             }}
           >
             {translate("onboarding_screen.reminders.button.no")}
