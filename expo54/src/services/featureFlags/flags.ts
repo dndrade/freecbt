@@ -4,6 +4,7 @@ export interface FeatureFlags {
   enable_v3_rich_editor: boolean;
   enable_debug_tools: boolean;
   enable_device_unlock: boolean;
+  enable_onboarding_reminders_step: boolean;
 }
 
 export const DEFAULT_FLAGS: FeatureFlags = {
@@ -12,4 +13,5 @@ export const DEFAULT_FLAGS: FeatureFlags = {
   enable_v3_rich_editor: false,
   enable_debug_tools: __DEV__, // Automatically true in local development
   enable_device_unlock: false,
+  enable_onboarding_reminders_step: false,
 };
