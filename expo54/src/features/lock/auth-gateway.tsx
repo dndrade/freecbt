@@ -4,6 +4,7 @@ import { Button, Typography } from "heroui-native";
 import React, { useEffect, useState } from "react";
 import { AppState, Image } from "react-native";
 import * as ImagePath from "@/src/assets/image-path";
+import { migrateLegacyPinIfNeeded } from "./services/legacyPinMigration";
 import { getPin } from "./services/pinStorage";
 import { useAuthStore } from "./store/useAuthStore";
 import { PinInput } from "./ui/pin-input";
@@ -25,7 +26,9 @@ export function AuthGateway(props: {
 
   useEffect(() => {
     const refresh = () => {
-      void getPin().then(setPin, () => setPin(undefined));
+      void migrateLegacyPinIfNeeded()
+        .then(getPin)
+        .then(setPin, () => setPin(undefined));
     };
     refresh();
     const subscription = AppState.addEventListener("change", (state) => {
