@@ -16,6 +16,9 @@ export type { AppCardProps } from "./Card";
 export { SelectableCard } from "./SelectableCard/SelectableCard";
 export type { AppSelectableCardProps } from "./SelectableCard/SelectableCard";
 
+export { ChipRow } from "./ChipRow/ChipRow";
+export type { AppChipRowProps } from "./ChipRow/ChipRow";
+
 export { TextInput } from "./TextInput";
 export type { AppTextInputProps } from "./TextInput";
 
