@@ -97,15 +97,6 @@
     "got_it": {
       "line1": "You're ready to go!",
       "btn_title": "Let's go!"
-    },
-    "reminders": {
-      "header": "Before you finish, we can send you reminders if you'd like.",
-      "disabled": "You can control reminders in the settings screen.",
-      "button": {
-        "yes": "Yes please!",
-        "no": "Continue without reminders",
-        "continue": "Continue"
-      }
     }
   },
   "auto_thought": "Automatic Thought",
@@ -126,14 +117,6 @@
       "light": "Light",
       "dark": "Dark",
       "default": "System default"
-    },
-    "reminders": {
-      "header": "*reminders",
-      "description": "If you'd like, you can turn on notification reminders that help you build up the habit of challenging thoughts.",
-      "button": {
-        "yes": "Please remind me",
-        "no": "No reminders, thanks"
-      }
     },
     "history": {
       "header": "*history button labels",
@@ -354,20 +337,6 @@
     "delete_thought_button": "delete thought",
     "thought_field_not_set": "Not set",
     "close_button": "close"
-  },
-  "reminder_notification": {
-    "1": {
-      "title": "If something's been going on, record it.",
-      "body": "Don't let your thoughts sit, work through them as soon as possible."
-    },
-    "2": {
-      "title": "If you're having trouble, FreeCBT can help.",
-      "body": "Take a moment now to challenge your thoughts"
-    },
-    "intro": {
-      "title": "If you're having trouble, FreeCBT can help.",
-      "body": "You'll receive a reminder like this one once a day"
-    }
   },
   "all_or_nothing_thinking_one_liner": "ex: \"That was a thorough waste of time\"",
   "overgeneralization_one_liner": "ex: \"Everyone will let me down\"",
