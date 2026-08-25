@@ -1,0 +1,23 @@
+{
+  "settings": {
+    "pincode": {
+      "header": "*pincode lock 🔒",
+      "description": "You can lock the app with a pincode if you'd like. Be warned that the only way to reset a forgotten code is to erase all your data, so be careful not to forget.",
+      "button": {
+        "update": "Update Pincode",
+        "clear": "Clear Pincode",
+        "set": "Set Pincode"
+      }
+    }
+  },
+  "lock_screen": {
+    "auth": "Please enter your passcode.",
+    "update": "Please set a passcode.",
+    "confirm": "Please re-enter your passcode to confirm.",
+    "gate_title": "FreeCBT is locked",
+    "gate_subtitle": "Enter your 4-digit PIN to continue.",
+    "unlock_button": "Unlock",
+    "forgot_pin": "Forgot your PIN?",
+    "reset_warning": "If you reset your PIN, some local access may be affected."
+  }
+}

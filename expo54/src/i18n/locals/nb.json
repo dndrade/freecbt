@@ -128,15 +128,6 @@
         "no": "Nei takk, ingen påminnelser"
       }
     },
-    "pincode": {
-      "header": "*lås med PIN 🔒",
-      "description": "Lås appen med en PIN-kode. Ikke glem koden, den eneste måten å nullstille en glemt kode på er å slette alle data.",
-      "button": {
-        "update": "Oppdater PIN",
-        "clear": "Slett PIN",
-        "set": "Lag PIN"
-      }
-    },
     "history": {
       "header": "*standard tanke for historikk ",
       "description": "Som standard vises Alternativ Tanke i historikk-visningen. Dette understreker at tanken er \"endret.\"",

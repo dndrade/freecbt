@@ -1,0 +1,13 @@
+{
+  "settings": {
+    "pincode": {
+      "header": "*Bloqueio por código PIN 🔒",
+      "description": "Podes bloquear a aplicação com um código PIN, se assim desejares. No entanto, tem em mente que a única forma de redefinir um código esquecido é apagando todos os teus dados, por isso tem cuidado para não esquecê-lo.",
+      "button": {
+        "update": "Atualizar código PIN",
+        "clear": "Limpar código PIN",
+        "set": "Definir código PIN"
+      }
+    }
+  }
+}

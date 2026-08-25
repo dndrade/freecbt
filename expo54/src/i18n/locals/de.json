@@ -130,15 +130,6 @@
         "no": "Keine Erinnerungen, danke"
       }
     },
-    "pincode": {
-      "header": "*pincode lock 🔒",
-      "description": "Du kannst die App mit einem Pincode sperren, wenn du das möchtest. Merke dir diesen Code gut, denn die einzige Möglichkeit, einen vergessenen Code zurückzusetzen, besteht darin, alle deine Daten zu löschen.",
-      "button": {
-        "update": "Update Pincode",
-        "clear": "Lösche Pincode",
-        "set": "Setze Pincode"
-      }
-    },
     "history": {
       "header": "*history button labels",
       "description": "Standardmäßig ist die Übersicht im historischen Verlauf so eingestellt, dass dein alternative Gedanke angezeigt wird. Dies soll dabei helfen, den Gedanken als „geändert“ zu verfestigen.",
