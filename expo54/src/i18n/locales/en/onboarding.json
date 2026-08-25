@@ -2,6 +2,55 @@
   "onboarding_screen": {
     "previous": "Previous",
     "skip": "Skip",
+    "back": "Back",
+    "welcome": {
+      "eyebrow": "A private place to think",
+      "title": "A clearer moment starts here.",
+      "body": "FreeCBT helps you slow down, look closer, and find a more balanced thought.",
+      "cta": "Get started"
+    },
+    "privacy": {
+      "eyebrow": "Private by design",
+      "title": "No account. No cloud required.",
+      "body": "Your journal is designed to stay on this device. You decide what to keep, export, or protect.",
+      "chip_local_first": "Local-first",
+      "chip_no_sign_in": "No sign-in",
+      "chip_your_choice": "Your choice",
+      "cta": "Continue"
+    },
+    "path": {
+      "eyebrow": "A simple path",
+      "title": "One thought at a time.",
+      "body": "You don't need to solve everything at once. FreeCBT gives one thought room to change.",
+      "node_thought_title": "Thought",
+      "node_thought_body": "Name what's here.",
+      "node_pattern_title": "Pattern",
+      "node_pattern_body": "Notice the thinking pattern.",
+      "node_challenge_title": "Challenge",
+      "node_challenge_body": "Ask whether it's fully true.",
+      "node_alternative_title": "Alternative",
+      "node_alternative_body": "Try a more balanced view.",
+      "cta": "Continue"
+    },
+    "invitation": {
+      "eyebrow": "Before you begin",
+      "title": "Want to try it first?",
+      "body": "You can walk through one guided example, or jump straight to your own thought. Either way takes about the same time.",
+      "guided_tag": "Recommended",
+      "guided_title": "Try a guided example",
+      "guided_body": "See exactly how FreeCBT works with a made-up situation, one step at a time. Nothing personal to share yet.",
+      "quick_title": "Just start writing",
+      "quick_body": "Skip the walkthrough and write your own first thought right now."
+    },
+    "composer": {
+      "eyebrow": "Quick start",
+      "title": "What's on your mind right now?",
+      "body": "There's no right way to begin. A sentence, a phrase, or a question is enough.",
+      "placeholder": "Start wherever you are...",
+      "hint_default": "This stays on your device.",
+      "hint_ready": "Your draft is ready to continue.",
+      "cta": "Continue"
+    },
     "next": "Next",
     "progress": "Onboarding progress",
     "progress_step": "Step %{step} of %{count}",
@@ -106,6 +155,56 @@
         "no": "Continue without reminders",
         "continue": "Continue"
       }
+    },
+    "guided": {
+      "begin_eyebrow": "A guided first practice",
+      "begin_title": "Let's try one thought together.",
+      "begin_body": "You will practice the same four-part record FreeCBT uses to slow down an upsetting thought.",
+      "begin_cta": "Begin",
+      "situation_step_label": "Step 1 · Catch it",
+      "situation_title": "Start with a moment, not a diagnosis.",
+      "situation_body": "Pick a made-up situation so you can learn the flow before sharing anything of your own.",
+      "situation_cta": "Use this example",
+      "thought_step_label": "Step 1 · Catch it",
+      "thought_title": "What did the mind add?",
+      "thought_body": "The situation is one thing. The automatic thought is the conclusion that arrived with it.",
+      "thought_reveal_cta": "Reveal the thought",
+      "thought_revealed_hint": "We're going to look at this thought closely — not treat it as a settled fact.",
+      "thought_continue_cta": "Check the pattern",
+      "pattern_step_label": "Step 2 · Check it",
+      "pattern_title": "Which patterns might be here?",
+      "pattern_body": "These are thinking patterns, not labels about you. More than one can apply.",
+      "pattern_cta": "Check the evidence",
+      "evidence_step_label": "Step 3 · Challenge it",
+      "evidence_title": "Separate what happened from what it means.",
+      "evidence_body": "Tap the details worth remembering.",
+      "evidence_cta": "Build a balanced thought",
+      "alternative_step_label": "Step 4 · Change it",
+      "alternative_title": "Make room for a fuller thought.",
+      "alternative_body": "It doesn't need to sound cheerful — it needs to feel more complete and believable.",
+      "alternative_placeholder": "Write a more complete thought...",
+      "alternative_cta": "Save this practice",
+      "complete_eyebrow": "Practice complete",
+      "complete_title": "You just made a thought record.",
+      "complete_body": "Next time you can start with your own moment — same four steps.",
+      "complete_cta": "Write my first thought",
+      "your_turn_eyebrow": "Your turn",
+      "your_turn_title": "What's on your mind?",
+      "your_turn_body": "Start with the first step whenever you're ready — the rest can wait.",
+      "your_turn_placeholder": "Write a thought...",
+      "your_turn_hint": "This stays on your device. No account, no cloud.",
+      "your_turn_cta": "Continue"
+    },
+    "home_handoff": {
+      "eyebrow": "Your journal",
+      "title_with_thought": "Start wherever you are.",
+      "title_empty": "Your journal is ready when you are.",
+      "body_with_thought": "Your first thought is now part of your journal. The rest can unfold at your pace.",
+      "body_empty": "You can add your first thought any time — there's no deadline and no streak to keep.",
+      "journal_card_eyebrow": "First thought",
+      "journal_card_empty": "No thought recorded yet — you can start one any time from here.",
+      "cta_with_thought": "Open my journal",
+      "cta_empty": "Start my first thought"
     }
   }
 }
