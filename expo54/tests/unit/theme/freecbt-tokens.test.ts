@@ -19,7 +19,7 @@ import { readSrcFile } from "@/tests/support/route-manifest";
  * native compiler's side effects.
  */
 function readThemeWithoutComments(): string {
-  const css = readSrcFile("theme/freecbt.css");
+  const css = readSrcFile("shared/theme/freecbt.css");
   return css.replace(/\/\*[\s\S]*?\*\//g, "");
 }
 
@@ -45,11 +45,14 @@ describe("design tokens", () => {
     ["2xl", 24, 32],
     ["3xl", 28, 36],
     ["4xl", 32, 40],
-  ])("defines --text-%s at %ipx with a %ipx line height", (step, size, lineHeight) => {
-    expect(css).toContain(`--text-${step}: ${size}px;`);
-    expect(css).toContain(`--text-${step}--line-height: ${lineHeight}px;`);
-    expect(lineHeight % 4).toBe(0);
-  });
+  ])(
+    "defines --text-%s at %ipx with a %ipx line height",
+    (step, size, lineHeight) => {
+      expect(css).toContain(`--text-${step}: ${size}px;`);
+      expect(css).toContain(`--text-${step}--line-height: ${lineHeight}px;`);
+      expect(lineHeight % 4).toBe(0);
+    },
+  );
 
   it("gives heroui headings a real weight", () => {
     // heroui expresses weight as a font-family swap, which collapses to the

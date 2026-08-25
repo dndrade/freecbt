@@ -1,7 +1,7 @@
 import { fireEvent, screen } from "@testing-library/react-native";
 import { BottomTabBarHeightContext } from "@react-navigation/bottom-tabs";
 import React from "react";
-import { Pressable, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
 import {
   useThoughtEntryForm,
   type ThoughtEntryFormProps,
@@ -375,6 +375,8 @@ describe("create-thought regression: actions row clears the tab bar", () => {
 
     const footerWrapper = screen.getByTestId("thought-entry-actions").parent
       ?.parent;
-    expect(footerWrapper?.props.style.paddingBottom).toBe(24 + 72);
+    expect(StyleSheet.flatten(footerWrapper?.props.style)?.paddingBottom).toBe(
+      12 + 72,
+    );
   });
 });

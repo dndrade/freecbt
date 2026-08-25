@@ -1,6 +1,7 @@
 import React from "react";
-import { fireEvent, render, screen } from "@testing-library/react-native";
+import { fireEvent, screen } from "@testing-library/react-native";
 import { DebugDrawerContent } from "@/src/debug/ui/debug-drawer-content";
+import { renderWithProviders } from "@/tests/support/render";
 
 const mockNavigate = jest.fn();
 const mockCloseDrawer = jest.fn();
@@ -26,7 +27,7 @@ describe("DebugDrawerContent", () => {
   });
 
   it("shows exactly the four workspaces plus Return to FreeCBT", () => {
-    render(<DebugDrawerContent {...buildProps()} />);
+    renderWithProviders(<DebugDrawerContent {...buildProps()} />);
 
     expect(screen.getByRole("button", { name: "UI/UX Lab" })).toBeTruthy();
     expect(
@@ -42,7 +43,7 @@ describe("DebugDrawerContent", () => {
 
   it("marks the active workspace as selected from its root route", () => {
     mockPathname = "/v2/debug/diagnostics";
-    render(<DebugDrawerContent {...buildProps()} />);
+    renderWithProviders(<DebugDrawerContent {...buildProps()} />);
 
     expect(
       screen.getByRole("button", {
@@ -57,7 +58,7 @@ describe("DebugDrawerContent", () => {
 
   it("marks the active workspace as selected from a route nested two levels deep", () => {
     mockPathname = "/v2/debug/diagnostics/notifications";
-    render(<DebugDrawerContent {...buildProps()} />);
+    renderWithProviders(<DebugDrawerContent {...buildProps()} />);
 
     expect(
       screen.getByRole("button", {
@@ -71,7 +72,7 @@ describe("DebugDrawerContent", () => {
   });
 
   it("navigates via typed Expo Router calls and closes the drawer", () => {
-    render(<DebugDrawerContent {...buildProps()} />);
+    renderWithProviders(<DebugDrawerContent {...buildProps()} />);
 
     fireEvent.press(screen.getByRole("button", { name: "Tools" }));
 
@@ -80,7 +81,7 @@ describe("DebugDrawerContent", () => {
   });
 
   it("routes Return to FreeCBT to the v2 home screen", () => {
-    render(<DebugDrawerContent {...buildProps()} />);
+    renderWithProviders(<DebugDrawerContent {...buildProps()} />);
 
     fireEvent.press(screen.getByRole("button", { name: "Return to FreeCBT" }));
 

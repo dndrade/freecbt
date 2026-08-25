@@ -1,14 +1,15 @@
 import { AdaptiveThoughtsLayout } from "@/src/features/thoughtRecord/screens/AdaptiveThoughtsLayout";
-import { fireEvent, render, screen } from "@testing-library/react-native";
+import { fireEvent, screen } from "@testing-library/react-native";
 import React from "react";
 import { Text, View } from "react-native";
+import { renderWithProviders } from "@/tests/support/render";
 
 function renderLayout(
   selectedId: string | null,
   hasThoughts = true,
   list = <View testID="journal-pane" />,
 ) {
-  render(
+  renderWithProviders(
     <AdaptiveThoughtsLayout
       list={list}
       detail={<View testID="detail-pane" />}

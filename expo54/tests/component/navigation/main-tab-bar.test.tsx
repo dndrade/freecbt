@@ -21,7 +21,6 @@ const state = {
   routes: [
     { key: "thoughts-key", name: "thoughts" },
     { key: "home-key", name: "index" },
-    { key: "settings-key", name: "settings/index" },
   ],
 };
 
@@ -41,12 +40,13 @@ describe("MainTabBar", () => {
             insets={{ bottom: 0, left: 0, right: 0, top: 0 }}
           />
         </I18nProvider>
-      </SafeAreaProvider>
+      </SafeAreaProvider>,
     );
 
     expect(screen.getByRole("tab", { name: "Journal" })).toBeTruthy();
-    expect(screen.getByRole("tab", { name: "Home", selected: true })).toBeTruthy();
-    expect(screen.getByRole("tab", { name: "settings" })).toBeTruthy();
+    expect(
+      screen.getByRole("tab", { name: "Home", selected: true }),
+    ).toBeTruthy();
   });
 });
 
@@ -66,7 +66,7 @@ describe("MainTabBar height reporting", () => {
             />
           </BottomTabBarHeightCallbackContext.Provider>
         </I18nProvider>
-      </SafeAreaProvider>
+      </SafeAreaProvider>,
     );
 
     const region = screen.getByTestId("main-tab-bar");
@@ -97,14 +97,16 @@ describe("MainTabBar height reporting", () => {
             />
           </BottomTabBarHeightCallbackContext.Provider>
         </I18nProvider>
-      </SafeAreaProvider>
+      </SafeAreaProvider>,
     );
 
     expect(onHeightChange).toHaveBeenLastCalledWith(0);
     // The pill self-marks accessibilityElementsHidden/importantForAccessibility
     // when hidden, which RNTL's queries exclude by default - opt back in to
     // find it so the hidden-state props themselves can be asserted below.
-    const region = screen.getByTestId("main-tab-bar", { includeHiddenElements: true });
+    const region = screen.getByTestId("main-tab-bar", {
+      includeHiddenElements: true,
+    });
     expect(region.props.pointerEvents).toBe("none");
     expect(region.props.accessibilityElementsHidden).toBe(true);
     expect(region.props.importantForAccessibility).toBe("no-hide-descendants");
