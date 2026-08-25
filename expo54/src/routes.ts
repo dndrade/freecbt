@@ -22,9 +22,6 @@ export function thoughtEditV2(id: Thought.Id, slide: Thought.SlideName): Href {
     params: { idOrKey: id, slide },
   };
 }
-export function lockUpdateV2(): Href {
-  return "/v2/settings/lock-update";
-}
 export function lockSettingsV2(): Href {
   return "/v2/settings/lock";
 }

@@ -52,21 +52,6 @@ export const labFamilies = [
     href: "/v2/debug/lab/settings",
     scenarios: [
       {
-        id: "pin-setup",
-        title: "PIN Setup",
-        description: "Current PIN setup flow.",
-        href: "/v2/debug/lab/settings/pin",
-        variants: [
-          {
-            id: "pin-setup-current",
-            title: "Current",
-            description: "Production-like PIN entry flow.",
-            href: "/v2/debug/lab/settings/pin/current",
-            status: "current",
-          },
-        ],
-      },
-      {
         id: "secure-backups-v2",
         title: "Secure Backups (v2)",
         description: "Proposed secure-vault backup setup experience (mocked).",

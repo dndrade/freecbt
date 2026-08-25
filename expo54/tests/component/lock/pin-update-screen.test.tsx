@@ -1,19 +1,14 @@
 import React from "react";
 import * as SecureStore from "expo-secure-store";
-import { act, fireEvent, screen } from "@testing-library/react-native";
+import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
 import { renderWithProviders } from "@/tests/support/render";
-import { PinUpdateScreen } from "@/features/lock/screens/PinUpdateScreen";
+import { UpdatePinSheet } from "@/features/lock/components/UpdatePinSheet";
 import { useAuthStore } from "@/features/lock/store/useAuthStore";
 import { Settings } from "@/model";
 
 jest.mock("@/i18n/use-i18n", () => ({
   ...jest.requireActual("@/i18n/use-i18n"),
   useTranslate: () => (key: string) => key,
-}));
-
-jest.mock("expo-router", () => ({
-  useRouter: () => ({ back: jest.fn(), replace: jest.fn() }),
-  useNavigation: () => ({ setOptions: jest.fn() }),
 }));
 
 const initialState = useAuthStore.getState();
@@ -30,9 +25,11 @@ function pressDigits(digits: string) {
   }
 }
 
-describe("PinUpdateScreen", () => {
+describe("UpdatePinSheet", () => {
   it("blocks advancement on an incorrect current PIN", async () => {
-    renderWithProviders(<PinUpdateScreen />);
+    renderWithProviders(
+      <UpdatePinSheet isOpen onOpenChange={jest.fn()} onComplete={jest.fn()} />,
+    );
 
     pressDigits("0000");
 
@@ -40,7 +37,14 @@ describe("PinUpdateScreen", () => {
   });
 
   it("stores a new PIN after current, new, and confirm steps", async () => {
-    renderWithProviders(<PinUpdateScreen />);
+    const onComplete = jest.fn();
+    renderWithProviders(
+      <UpdatePinSheet
+        isOpen
+        onOpenChange={jest.fn()}
+        onComplete={onComplete}
+      />,
+    );
 
     pressDigits("1111");
     await act(async () => {});
@@ -48,7 +52,7 @@ describe("PinUpdateScreen", () => {
     await act(async () => {});
     pressDigits("2222");
 
-    await screen.findByText("lock_screen.update_success_title");
+    await waitFor(() => expect(onComplete).toHaveBeenCalled());
     expect(await useAuthStore.getState().verifyPin("2222")).toBe(true);
   });
 });
