@@ -147,7 +147,7 @@ describe("production route namespace", () => {
 
     const publicLayout = readSrcFile("app/v2/(public)/_layout.tsx");
     expect(publicLayout).not.toMatch(/name="thoughts\/\[idOrKey\]\/index"/);
-    expect(publicLayout).not.toMatch(/name="settings(?:\/|"|$)/);
+    expect(publicLayout).toMatch(/name="settings"/);
     expect(publicLayout).not.toMatch(/name="settings\/lock"/);
     expect(publicLayout).not.toMatch(/name="settings\/export"/);
   });

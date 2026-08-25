@@ -13,7 +13,10 @@ jest.mock("expo-router", () => {
     return null;
   };
 
-  return { Stack };
+  return {
+    Stack,
+    useRouter: () => ({ push: jest.fn(), back: jest.fn(), replace: jest.fn() }),
+  };
 });
 
 jest.mock("heroui-native", () => ({

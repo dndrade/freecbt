@@ -5,7 +5,7 @@ import { ThoughtCreateScreen } from "@/features/thoughtRecord/screens/ThoughtCre
 import { ThoughtEditScreen } from "@/features/thoughtRecord/screens/ThoughtEditScreen";
 import { ensureThoughtRecordReady } from "@/features/thoughtRecord/services/ensureThoughtRecordReady";
 import { Thought } from "@/model";
-import { fireEvent, screen, waitFor } from "@testing-library/react-native";
+import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
 import React from "react";
 import { Pressable, Text } from "react-native";
 import { renderWithProviders } from "@/tests/support/render";
@@ -294,7 +294,11 @@ test("clears a selected wide-pane detail after deleting its thought", async () =
   await waitFor(() => expect(screen.getByText("selected record")).toBeTruthy());
   expect(screen.getByTestId("selected-thought-detail")).toBeTruthy();
   fireEvent.press(screen.getByLabelText("accessibility.delete_thought_button"));
-  fireEvent.press(screen.getByTestId(`thought-delete-confirm-${record.uuid}`));
+  await act(async () => {
+    fireEvent.press(
+      screen.getByTestId(`thought-delete-confirm-${record.uuid}`),
+    );
+  });
 
   await waitFor(() =>
     expect(screen.queryByTestId("selected-thought-detail")).toBeNull(),
