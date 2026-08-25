@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import { BottomSheet, Typography } from "@/shared/components";
+import { View } from "react-native";
+import { BottomSheet, Icon, Typography } from "@/shared/components";
 import { useTranslate } from "@/i18n/use-i18n";
 import { PinEntry } from "./PinEntry";
 import { useAuthStore } from "../store/useAuthStore";
@@ -35,9 +36,18 @@ export function TurnOffLockSheet({
       <BottomSheet.Portal unstable_accessibilityContainerViewIsModal>
         <BottomSheet.Overlay />
         <BottomSheet.Content>
-          <BottomSheet.Title>
-            {t("lock_screen.turn_off_title")}
-          </BottomSheet.Title>
+          <View className="flex-row items-center justify-between px-5 pt-4">
+            <BottomSheet.Title>
+              {t("lock_screen.turn_off_title")}
+            </BottomSheet.Title>
+            <BottomSheet.Close
+              testID="lock-turn-off-close"
+              accessibilityLabel={t("lock_screen.close")}
+              className="h-11 w-11 items-center justify-center"
+            >
+              <Icon name="close" />
+            </BottomSheet.Close>
+          </View>
           <BottomSheet.Description>
             {t("lock_screen.turn_off_body")}
           </BottomSheet.Description>
