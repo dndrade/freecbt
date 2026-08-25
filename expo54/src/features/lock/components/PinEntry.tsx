@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { View } from "react-native";
-import { Keypad } from "./keypad";
-import { PinDots } from "./pin-dots";
+import { Keypad } from "./Keypad";
+import { PinDots } from "./PinDots";
 
 export function PinEntry(props: {
   onComplete: (value: string) => void;

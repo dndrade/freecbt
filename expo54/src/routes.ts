@@ -23,7 +23,7 @@ export function thoughtEditV2(id: Thought.Id, slide: Thought.SlideName): Href {
   };
 }
 export function lockUpdateV2(): Href {
-  return "/v2/settings/lock";
+  return "/v2/settings/lock-update";
 }
 export function lockSetupV2(): Href {
   return "/v2/settings/lock-setup";

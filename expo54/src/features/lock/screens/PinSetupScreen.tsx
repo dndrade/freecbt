@@ -10,7 +10,7 @@ import { Button, Typography } from "heroui-native";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import { useAuthStore } from "../store/useAuthStore";
-import { PinEntry } from "../ui/pin-entry";
+import { PinEntry } from "../components/PinEntry";
 
 type Step =
   | { name: "intro" }

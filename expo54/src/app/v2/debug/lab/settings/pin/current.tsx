@@ -1,4 +1,4 @@
-import { PinUpdateScreen } from "@/src/features/lock/pin-update-screen";
+import { PinUpdateScreen } from "@/features/lock/screens/PinUpdateScreen";
 import React from "react";
 
 export default function PinSetupCurrent() {

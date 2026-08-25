@@ -1,6 +1,6 @@
 import React from "react";
 import { fireEvent, screen } from "@testing-library/react-native";
-import { PinEntry } from "@/features/lock/ui/pin-entry";
+import { PinEntry } from "@/features/lock/components/PinEntry";
 import { renderWithProviders } from "@/tests/support/render";
 import { HeroUINativeProvider } from "heroui-native/provider";
 

@@ -5,7 +5,7 @@ import React, { useEffect, useState } from "react";
 import { AppState, Image } from "react-native";
 import * as ImagePath from "@/src/assets/image-path";
 import { useAuthStore } from "./store/useAuthStore";
-import { PinEntry } from "./ui/pin-entry";
+import { PinEntry } from "./components/PinEntry";
 
 export function AuthGateway(props: {
   children: React.ReactNode;
