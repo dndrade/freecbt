@@ -1,6 +1,8 @@
+import { useTranslate } from "@/i18n/use-i18n";
 import { Routes } from "@/src";
-import { LoadModel, ModelLoadedProps } from "@/src/hooks/use-model";
 import * as ImagePath from "@/src/assets/image-path";
+import { useDefaultStyle } from "@/src/hooks/use-style";
+import { DistortionData } from "@/model";
 import { Link } from "expo-router";
 import React from "react";
 import { Image, ScrollView, TouchableOpacity, View } from "react-native";
@@ -8,10 +10,8 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Typography } from "heroui-native";
 
 export default function Index() {
-  return <LoadModel ready={Ready} />;
-}
-function Ready(props: ModelLoadedProps) {
-  const { model, style: s, translate: t } = props;
+  const s = useDefaultStyle();
+  const t = useTranslate();
   const img = (i: number) => ImagePath.bubbles[i % ImagePath.bubbles.length];
   return (
     <ScrollView style={[s.view]}>
@@ -42,13 +42,17 @@ function Ready(props: ModelLoadedProps) {
               href={Routes.introV2()}
             >
               <TouchableOpacity style={[s.flex1]}>
-                <Typography type="body-sm">{t("explanation_screen.intro")}</Typography>
+                <Typography type="body-sm">
+                  {t("explanation_screen.intro")}
+                </Typography>
               </TouchableOpacity>
             </Link>
           </View>
-          {model.distortionData.list.map((d, i) => (
+          {DistortionData.list.map((d, i) => (
             <View key={d.slug} style={[s.my2]}>
-              <Typography type="body-sm" className="font-semibold">{t(d.labelKey)}</Typography>
+              <Typography type="body-sm" className="font-semibold">
+                {t(d.labelKey)}
+              </Typography>
               {/* <Typography type="body-sm">{t(d.descriptionKey)}</Typography> */}
               <Typography type="body-sm">
                 {d.explanationKeys.map((tk) => t(tk)).join("\n\n")}

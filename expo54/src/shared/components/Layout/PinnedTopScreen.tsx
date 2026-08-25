@@ -83,7 +83,7 @@ export const PinnedTopScreen: React.FC<PinnedTopScreenProps> = ({
         {footer && (
           <View
             accessibilityRole="toolbar"
-            accessibilityLabel="Action bar"
+            accessibilityLabel="Controls"
             style={[
               styles.footerContainer,
               { paddingBottom: isInsideTabBar ? tabBarHeight + 12 : 12 },

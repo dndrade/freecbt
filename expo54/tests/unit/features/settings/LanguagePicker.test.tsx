@@ -18,7 +18,12 @@ import { LanguagePicker } from "@/features/settings/components/LanguagePicker";
 beforeEach(() => {
   values.clear();
   useSettings.setState({
-    settings: { locale: null, reminders: false, existingUser: false },
+    settings: {
+      locale: null,
+      reminders: false,
+      existingUser: false,
+      theme: null,
+    },
   });
 });
 

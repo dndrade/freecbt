@@ -18,7 +18,12 @@ import { SettingsScreen } from "@/features/settings/screens/SettingsScreen";
 beforeEach(() => {
   values.clear();
   useSettings.setState({
-    settings: { locale: null, reminders: false, existingUser: false },
+    settings: {
+      locale: null,
+      reminders: false,
+      existingUser: false,
+      theme: null,
+    },
   });
 });
 

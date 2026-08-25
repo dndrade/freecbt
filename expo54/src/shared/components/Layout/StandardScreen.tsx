@@ -87,7 +87,7 @@ export const StandardScreen: React.FC<StandardScreenProps> = ({
         {footer && (
           <View
             accessibilityRole="toolbar"
-            accessibilityLabel="Action bar"
+            accessibilityLabel="Controls"
             style={[
               styles.footerContainer,
               { borderTopColor: separator },

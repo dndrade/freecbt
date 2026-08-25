@@ -1,7 +1,8 @@
-import { Model } from "@/src/model";
 import { StyleSheet, useColorScheme } from "react-native";
 
-export function useStyle(c: Model.ColorScheme) {
+type ColorScheme = "light" | "dark";
+
+export function useStyle(c: ColorScheme) {
   return style(useTheme(c));
 }
 export function useDefaultStyle() {
@@ -11,7 +12,7 @@ export function useDefaultTheme(): Theme {
   return useTheme(useColorScheme() ?? "light");
 }
 
-export function useTheme(c: Model.ColorScheme): Theme {
+export function useTheme(c: ColorScheme): Theme {
   switch (c) {
     case "dark":
       return DarkTheme;

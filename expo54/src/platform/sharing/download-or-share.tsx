@@ -2,7 +2,7 @@ import * as FileSystem from "expo-file-system";
 import * as Sharing from "expo-sharing";
 import { useEffect } from "react";
 import { ActivityIndicator, Platform } from "react-native";
-import { ModelLoadedProps } from "../../hooks/use-model";
+import type { TranslateFn } from "@/i18n/use-i18n";
 import { PromiseRender } from "../../hooks/use-promise-state";
 
 export function DownloadOrShareLink(props: {
@@ -10,7 +10,7 @@ export function DownloadOrShareLink(props: {
   body: () => string;
   type?: string;
   UTI?: string; // IOS-only filetype id
-  translate: ModelLoadedProps["translate"];
+  translate: TranslateFn;
   error: (err: string) => React.ReactNode;
   share: (onPress: () => void) => React.ReactNode;
   download: () => React.ReactNode;
@@ -28,7 +28,7 @@ function ShareLink(props: {
   type?: string;
   UTI?: string; // IOS-only filetype id
   error: (err: string) => React.ReactNode;
-  translate: ModelLoadedProps["translate"];
+  translate: TranslateFn;
   children: (onPress: () => void) => React.ReactNode;
 }) {
   const { name, body, type, UTI, error, translate: t, children } = props;
@@ -71,7 +71,7 @@ async function onShare(
   name: string,
   body: () => string,
   mimeType?: string,
-  UTI?: string
+  UTI?: string,
 ) {
   await withNamedTempFile(name, async (f) => {
     f.write(body());
@@ -80,7 +80,7 @@ async function onShare(
 }
 async function withNamedTempFile<O>(
   name: string,
-  fn: (f: FileSystem.File) => Promise<O>
+  fn: (f: FileSystem.File) => Promise<O>,
 ) {
   const f = new FileSystem.File(FileSystem.Paths.cache, name);
   tryDelete(f);

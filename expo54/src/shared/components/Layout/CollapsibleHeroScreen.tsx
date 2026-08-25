@@ -168,11 +168,11 @@ export const CollapsibleHeroScreen: React.FC<CollapsibleHeroScreenProps> = ({
         {children}
       </Animated.ScrollView>
 
-      {/* 4. Pinned Bottom Action Footer */}
+      {/* 4. Pinned Bottom Controls */}
       {footer && (
         <View
           accessibilityRole="toolbar"
-          accessibilityLabel="Action toolbar"
+          accessibilityLabel="Controls"
           style={[
             styles.footerContainer,
             { paddingBottom: isInsideTabBar ? tabBarHeight + 12 : 12 },

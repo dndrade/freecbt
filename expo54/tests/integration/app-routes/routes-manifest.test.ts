@@ -11,18 +11,14 @@ describe("debug lab route namespace", () => {
         "./debug/lab/onboarding/index.tsx",
         "./debug/lab/settings/_layout.tsx",
         "./debug/lab/settings/index.tsx",
-        "./debug/lab/settings/main/index.tsx",
-        "./debug/lab/settings/main/current.tsx",
         "./debug/lab/settings/pin/index.tsx",
         "./debug/lab/settings/pin/current.tsx",
-        "./debug/lab/settings/backup/index.tsx",
-        "./debug/lab/settings/backup/current.tsx",
         "./debug/lab/settings/secure-backups-v2/index.tsx",
         "./debug/lab/settings/secure-backups-v2/current.tsx",
         "./debug/lab/settings/export/index.tsx",
         "./debug/lab/settings/export/current.tsx",
       ],
-      { internal_stripLoadRoute: true }
+      { internal_stripLoadRoute: true },
     );
 
     expect(manifest).not.toBeNull();
@@ -37,17 +33,13 @@ describe("debug lab route namespace", () => {
         "/v2/debug/lab",
         "/v2/debug/lab/onboarding",
         "/v2/debug/lab/settings",
-        "/v2/debug/lab/settings/main",
-        "/v2/debug/lab/settings/main/current",
         "/v2/debug/lab/settings/pin",
         "/v2/debug/lab/settings/pin/current",
-        "/v2/debug/lab/settings/backup",
-        "/v2/debug/lab/settings/backup/current",
         "/v2/debug/lab/settings/secure-backups-v2",
         "/v2/debug/lab/settings/secure-backups-v2/current",
         "/v2/debug/lab/settings/export",
         "/v2/debug/lab/settings/export/current",
-      ])
+      ]),
     );
     expect(routes.some((route) => route.includes("reminders"))).toBe(false);
   });

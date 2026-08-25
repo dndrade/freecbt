@@ -29,10 +29,14 @@ describe("DebugDrawerContent", () => {
     render(<DebugDrawerContent {...buildProps()} />);
 
     expect(screen.getByRole("button", { name: "UI/UX Lab" })).toBeTruthy();
-    expect(screen.getByRole("button", { name: "Feature Diagnostics" })).toBeTruthy();
+    expect(
+      screen.getByRole("button", { name: "Feature Diagnostics" }),
+    ).toBeTruthy();
     expect(screen.getByRole("button", { name: "Tools" })).toBeTruthy();
     expect(screen.getByRole("button", { name: "Logic Demos" })).toBeTruthy();
-    expect(screen.getByRole("button", { name: "Return to FreeCBT" })).toBeTruthy();
+    expect(
+      screen.getByRole("button", { name: "Return to FreeCBT" }),
+    ).toBeTruthy();
     expect(screen.getAllByRole("button")).toHaveLength(5);
   });
 
@@ -41,22 +45,28 @@ describe("DebugDrawerContent", () => {
     render(<DebugDrawerContent {...buildProps()} />);
 
     expect(
-      screen.getByRole("button", { name: "Feature Diagnostics", selected: true })
+      screen.getByRole("button", {
+        name: "Feature Diagnostics",
+        selected: true,
+      }),
     ).toBeTruthy();
     expect(
-      screen.getByRole("button", { name: "UI/UX Lab", selected: false })
+      screen.getByRole("button", { name: "UI/UX Lab", selected: false }),
     ).toBeTruthy();
   });
 
   it("marks the active workspace as selected from a route nested two levels deep", () => {
-    mockPathname = "/v2/debug/diagnostics/backup/recovery-key-workflow";
+    mockPathname = "/v2/debug/diagnostics/notifications";
     render(<DebugDrawerContent {...buildProps()} />);
 
     expect(
-      screen.getByRole("button", { name: "Feature Diagnostics", selected: true })
+      screen.getByRole("button", {
+        name: "Feature Diagnostics",
+        selected: true,
+      }),
     ).toBeTruthy();
     expect(
-      screen.getByRole("button", { name: "UI/UX Lab", selected: false })
+      screen.getByRole("button", { name: "UI/UX Lab", selected: false }),
     ).toBeTruthy();
   });
 

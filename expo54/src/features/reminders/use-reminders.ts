@@ -1,6 +1,5 @@
 import * as Notifications from "expo-notifications";
 import { Platform } from "react-native";
-import { Action } from "../../model";
 import { TranslateFn } from "@/src/i18n/use-i18n";
 
 export type Reminders = ReturnType<typeof useReminders>;
@@ -10,23 +9,17 @@ export function useReminders() {
     // as of 2025/12, expo-notifications doesn't support web: https://docs.expo.dev/guides/using-push-notifications-services/#tips-and-important-considerations
     // TODO: not sure why android wasn't enabled, but wait til the big v2 release is done to enable it
     isSupported: () => Platform.OS === "ios",
-    async enable(dispatch: (a: Action.Action) => void, t: TranslateFn) {
+    async enable(t: TranslateFn) {
       await enable(t);
-      dispatch(Action.setReminders(true));
     },
-    async disable(dispatch: (a: Action.Action) => void) {
+    async disable() {
       await disable();
-      dispatch(Action.setReminders(false));
     },
-    async set(
-      v: boolean,
-      dispatch: (a: Action.Action) => void,
-      t: TranslateFn
-    ) {
+    async set(v: boolean, t: TranslateFn) {
       if (v) {
-        await this.enable(dispatch, t);
+        await this.enable(t);
       } else {
-        await this.disable(dispatch);
+        await this.disable();
       }
     },
   } as const;

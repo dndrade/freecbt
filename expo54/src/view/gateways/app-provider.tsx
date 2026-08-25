@@ -4,7 +4,6 @@ import {
   ReanimatedLogLevel,
 } from "react-native-reanimated";
 import { I18nProvider, defaultLocale } from "../../i18n/use-i18n";
-import { ModelProvider } from "../../hooks/use-model";
 import { useSettings } from "@/src/features/settings/hooks/useSettings";
 import { AuthGateway } from "@/src/features/lock/auth-gateway";
 import { OnboardingGateway } from "./onboarding-gateway";
@@ -29,7 +28,7 @@ export function AppProvider(props: { children: React.ReactNode }) {
     strict: false,
   });
   return (
-    <ModelProvider>
+    <>
       <ThemeSync />
 
       <ModelI18nProvider>
@@ -37,6 +36,6 @@ export function AppProvider(props: { children: React.ReactNode }) {
           <AuthGateway>{props.children}</AuthGateway>
         </OnboardingGateway>
       </ModelI18nProvider>
-    </ModelProvider>
+    </>
   );
 }

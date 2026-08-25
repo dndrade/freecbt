@@ -1,45 +1,43 @@
 import { Card, Section, StandardScreen } from "@/shared/components";
-import { LoadModel, ModelLoadedProps } from "@/src/hooks/use-model";
-import { Action } from "@/src/model";
+import { useTranslate } from "@/i18n/use-i18n";
 import { Button, Typography } from "heroui-native";
 import React, { useEffect, useState } from "react";
 import { AppState, Image } from "react-native";
 import * as ImagePath from "@/src/assets/image-path";
+import { getPin } from "./services/pinStorage";
+import { useAuthStore } from "./store/useAuthStore";
 import { PinInput } from "./ui/pin-input";
 
 export function AuthGateway(props: {
   children: React.ReactNode;
 }): React.JSX.Element {
-  return (
-    <LoadModel
-      ready={(lprops) => <AuthReady {...lprops}>{props.children}</AuthReady>}
-    />
-  );
-}
-
-function AuthReady(props: ModelLoadedProps & { children: React.ReactNode }) {
-  const { model, dispatch, translate: t } = props;
+  const t = useTranslate();
+  const isUnlocked = useAuthStore((state) => state.isUnlocked);
+  const unlock = useAuthStore((state) => state.unlock);
+  const lock = useAuthStore((state) => state.lock);
+  const [pin, setPin] = useState<string | null | undefined>(undefined);
   const [value, setValue] = useState<string>("");
 
   function trySubmit(candidate: string) {
-    // reset text entry. this won't matter if auth succeeds
     setValue("");
-    if (candidate === model.settings.pincode) {
-      dispatch(Action.setSessionAuthed(true));
-    }
+    if (candidate === pin) unlock();
   }
 
-  // remove auth if the app is in the background, because it's easy to not close it all the way
   useEffect(() => {
-    AppState.addEventListener("change", (st) => {
-      if (st !== "active") {
-        dispatch(Action.setSessionAuthed(false));
-      }
+    const refresh = () => {
+      void getPin().then(setPin, () => setPin(undefined));
+    };
+    refresh();
+    const subscription = AppState.addEventListener("change", (state) => {
+      if (state !== "active") lock();
+      refresh();
     });
-  });
+    return () => subscription.remove();
+  }, [lock]);
 
-  if (model.settings.pincode === null || model.sessionAuthed) {
-    return props.children;
+  if (pin === undefined) return <></>;
+  if (pin === null || isUnlocked) {
+    return <>{props.children}</>;
   }
 
   return (

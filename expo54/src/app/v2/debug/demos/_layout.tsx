@@ -7,11 +7,6 @@ export default function DemosLayout() {
       <Stack.Screen name="index" options={{ title: "Logic Demos" }} />
       <Stack.Screen name="counter" options={{ title: "Counter" }} />
       <Stack.Screen name="promise" options={{ title: "Promise" }} />
-      <Stack.Screen name="hooks-init" options={{ title: "Hooks Init" }} />
-      <Stack.Screen
-        name="pure-elm-arch"
-        options={{ title: "Pure Elm Architecture" }}
-      />
     </Stack>
   );
 }

@@ -16,24 +16,25 @@ describe("production route namespace", () => {
         "./(public)/thoughts/[idOrKey]/edit.tsx",
         "./(public)/settings/_layout.tsx",
         "./(public)/settings/lock.tsx",
-        "./(public)/settings/data/backup/index.tsx",
         "./(public)/settings/export.tsx",
       ],
-      { internal_stripLoadRoute: true }
+      { internal_stripLoadRoute: true },
     );
 
     expect(manifest).not.toBeNull();
-    const routeEntries = manifest?.htmlRoutes.map(({ file, page }) => ({ file, page })) ?? [];
-    const routes = routeEntries
-      .map(({ page }) => {
-        const route = page
-          .replaceAll("/(public)", "")
-          .replaceAll("/(tabs)", "")
-          .replace("[idOrKey]", ":id")
-          .replace(/\/index$/, "");
-        return route === "/" ? "/v2" : `/v2${route}`;
-      });
-    const tabRoutes = routeEntries.filter(({ page }) => page.includes("/(tabs)/"));
+    const routeEntries =
+      manifest?.htmlRoutes.map(({ file, page }) => ({ file, page })) ?? [];
+    const routes = routeEntries.map(({ page }) => {
+      const route = page
+        .replaceAll("/(public)", "")
+        .replaceAll("/(tabs)", "")
+        .replace("[idOrKey]", ":id")
+        .replace(/\/index$/, "");
+      return route === "/" ? "/v2" : `/v2${route}`;
+    });
+    const tabRoutes = routeEntries.filter(({ page }) =>
+      page.includes("/(tabs)/"),
+    );
     expect(tabRoutes).toHaveLength(4);
     expect(tabRoutes).toEqual(
       expect.arrayContaining([
@@ -53,19 +54,21 @@ describe("production route namespace", () => {
           file: "./(public)/(tabs)/settings/index.tsx",
           page: "/(public)/(tabs)/settings/index",
         },
-      ])
+      ]),
     );
     const publicRoutes = routeEntries
-      .filter(({ page }) => page.startsWith("/(public)/") && !page.includes("/(tabs)/"))
+      .filter(
+        ({ page }) =>
+          page.startsWith("/(public)/") && !page.includes("/(tabs)/"),
+      )
       .map(({ page }) => page);
     expect(publicRoutes).toEqual(
       expect.arrayContaining([
         "/(public)/thoughts/create",
         "/(public)/thoughts/[idOrKey]/edit",
         "/(public)/settings/lock",
-        "/(public)/settings/data/backup/index",
         "/(public)/settings/export",
-      ])
+      ]),
     );
     expect(routes).toEqual(
       expect.arrayContaining([
@@ -76,9 +79,8 @@ describe("production route namespace", () => {
         "/v2/thoughts/:id/edit",
         "/v2/settings",
         "/v2/settings/lock",
-        "/v2/settings/data/backup",
         "/v2/settings/export",
-      ])
+      ]),
     );
     expect(routeEntries).toEqual(
       expect.arrayContaining([
@@ -106,7 +108,7 @@ describe("production route namespace", () => {
           file: "./(public)/thoughts/[idOrKey]/edit.tsx",
           page: "/(public)/thoughts/[idOrKey]/edit",
         },
-      ])
+      ]),
     );
 
     const tabsLayout = readSrcFile("app/v2/(public)/(tabs)/_layout.tsx");
@@ -119,17 +121,21 @@ describe("production route namespace", () => {
     expect(tabsLayout).toContain("title: t(tab.labelKey)");
     // Visible tab chrome is owned by MainTabBar, not the default tab bar.
     expect(tabsLayout).toContain(
-      'import { MainTabBar } from "@/shared/components/navigation/main-tab-bar"'
+      'import { MainTabBar } from "@/shared/components/navigation/main-tab-bar"',
     );
-    expect(tabsLayout).toContain("tabBar={(props) => <MainTabBar {...props} />}");
+    expect(tabsLayout).toContain(
+      "tabBar={(props) => <MainTabBar {...props} />}",
+    );
 
-    const mainTabBar = readSrcFile("shared/components/navigation/main-tab-bar.tsx");
+    const mainTabBar = readSrcFile(
+      "shared/components/navigation/main-tab-bar.tsx",
+    );
     expect(mainTabBar).toContain("state.routes.map");
     expect(mainTabBar).toContain("navigation.navigate(routeName)");
 
     const tabsConfig = readSrcFile("constants/tabs-config.ts");
     expect(
-      Array.from(tabsConfig.matchAll(/name:\s*"([^"]+)"/g), ([, name]) => name)
+      Array.from(tabsConfig.matchAll(/name:\s*"([^"]+)"/g), ([, name]) => name),
     ).toEqual(["thoughts", "index"]);
     expect(tabsConfig).toContain('labelKey: "settings.hub.journal.label"');
     expect(tabsConfig).toContain('labelKey: "settings.hub.home.label"');
@@ -140,7 +146,6 @@ describe("production route namespace", () => {
     expect(publicLayout).not.toMatch(/name="thoughts\/\[idOrKey\]\/index"/);
     expect(publicLayout).not.toMatch(/name="settings(?:\/|"|$)/);
     expect(publicLayout).not.toMatch(/name="settings\/lock"/);
-    expect(publicLayout).not.toMatch(/name="settings\/data\/backup"/);
     expect(publicLayout).not.toMatch(/name="settings\/export"/);
   });
 });
