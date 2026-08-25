@@ -10,8 +10,6 @@ import {
 import { SettingRow } from "@/features/settings/components/SettingRow";
 import { useTranslate } from "@/i18n/use-i18n";
 import { useFeatureFlagStore } from "@/services";
-import * as Routes from "@/src/routes";
-import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import { View } from "react-native";
 import { useAuthStore } from "../store/useAuthStore";
@@ -19,10 +17,10 @@ import { DeviceUnlockSheet } from "../components/DeviceUnlockSheet";
 import { SetupLockSheet } from "../components/SetupLockSheet";
 import { TurnOffLockSheet } from "../components/TurnOffLockSheet";
 import { VerifyPinModal } from "../components/VerifyPinModal";
+import { UpdatePinSheet } from "../components/UpdatePinSheet";
 
 export function LockSettingsScreen(): React.ReactNode {
   const t = useTranslate();
-  const router = useRouter();
   const hasPin = useAuthStore((state) => state.hasPin);
   const deviceUnlockEnabled = useFeatureFlagStore(
     (state) => state.flags.enable_device_unlock,
@@ -32,6 +30,7 @@ export function LockSettingsScreen(): React.ReactNode {
   const [deviceUnlockOpen, setDeviceUnlockOpen] = useState(false);
   const [verifyOpen, setVerifyOpen] = useState(false);
   const [turnOffOpen, setTurnOffOpen] = useState(false);
+  const [updateOpen, setUpdateOpen] = useState(false);
   const [showToast, setShowToast] = useState(false);
 
   useScreenHeader({
@@ -137,7 +136,7 @@ export function LockSettingsScreen(): React.ReactNode {
           type="nav"
           icon="lock"
           label={t("lock_screen.hub_change_pin")}
-          onPress={() => router.push(Routes.lockUpdateV2())}
+          onPress={() => setUpdateOpen(true)}
         />
         <FeatureGate flag="enable_device_unlock">
           <SettingRow
@@ -163,6 +162,11 @@ export function LockSettingsScreen(): React.ReactNode {
       </Section>
       <VerifyPinModal isOpen={verifyOpen} onOpenChange={setVerifyOpen} />
       <TurnOffLockSheet isOpen={turnOffOpen} onOpenChange={setTurnOffOpen} />
+      <UpdatePinSheet
+        isOpen={updateOpen}
+        onOpenChange={setUpdateOpen}
+        onComplete={() => setShowToast(true)}
+      />
       <FeatureGate flag="enable_device_unlock">
         <DeviceUnlockSheet
           isOpen={deviceUnlockOpen}

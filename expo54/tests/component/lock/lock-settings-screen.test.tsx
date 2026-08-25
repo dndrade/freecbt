@@ -98,4 +98,13 @@ describe("LockSettingsScreen", () => {
 
     expect(screen.getByTestId("lock-verify-close")).toBeTruthy();
   });
+
+  it("opens change PIN in a drawer", () => {
+    useAuthStore.setState({ hasPin: true });
+    renderWithProviders(<LockSettingsScreen />);
+
+    fireEvent.press(screen.getByText("lock_screen.hub_change_pin"));
+
+    expect(screen.getByTestId("lock-update-close")).toBeTruthy();
+  });
 });
