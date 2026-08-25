@@ -1,5 +1,7 @@
 import {
+  initializeOnboardingFlow,
   mergeOnboardingFlowState,
+  ONBOARDING_STORE_NAME,
   useOnboardingFlow,
 } from "@/features/onboarding/store/useOnboardingFlow";
 import { useSettings } from "@/features/settings/hooks/useSettings";
@@ -51,7 +53,12 @@ const initial = {
 };
 
 beforeEach(() => {
-  useOnboardingFlow.setState(initial);
+  useOnboardingFlow.setState({
+    ...initial,
+    activeIndex: 0,
+    completion: "idle",
+    reminderChoice: null,
+  });
   values.clear();
   jest.clearAllMocks();
 });
@@ -234,5 +241,67 @@ test("finishOnboarding keeps the draft and reports failure when the write reject
     composerThought: "keep me",
     isSaving: false,
     error: failure,
+  });
+});
+
+test("finishOnboarding keeps the draft and reports failure when settings completion rejects", async () => {
+  const { ensureThoughtRecordReady } = jest.requireMock(
+    "@/features/thoughtRecord/services/ensureThoughtRecordReady",
+  ) as { ensureThoughtRecordReady: jest.Mock };
+  ensureThoughtRecordReady.mockResolvedValueOnce({});
+  write.mockResolvedValueOnce();
+  const failure = new Error("settings unavailable");
+  completeOnboardingMock().mockRejectedValueOnce(failure);
+
+  useOnboardingFlow.getState().setComposerThought("keep me too");
+  const result = await useOnboardingFlow.getState().finishOnboarding();
+
+  expect(result).toEqual({ status: "failed" });
+  expect(useOnboardingFlow.getState()).toMatchObject({
+    composerThought: "keep me too",
+    isSaving: false,
+    error: failure,
+  });
+});
+
+test("initializeOnboardingFlow excludes transient and legacy state so a persisted draft can retry", async () => {
+  useOnboardingFlow.setState({
+    isSaving: true,
+    error: new Error("stale save"),
+    activeIndex: 2,
+    completion: "saving",
+    reminderChoice: "enabled",
+  });
+  useOnboardingFlow.getState().setComposerThought("retry me");
+  const persisted = values.get(ONBOARDING_STORE_NAME);
+
+  useOnboardingFlow.setState({
+    ...initial,
+    activeIndex: 0,
+    completion: "idle",
+    reminderChoice: null,
+  });
+  values.set(ONBOARDING_STORE_NAME, persisted!);
+  await initializeOnboardingFlow();
+
+  expect(useOnboardingFlow.getState()).toMatchObject({
+    composerThought: "retry me",
+    isSaving: false,
+    error: null,
+    activeIndex: 0,
+    completion: "idle",
+    reminderChoice: null,
+  });
+
+  const { ensureThoughtRecordReady } = jest.requireMock(
+    "@/features/thoughtRecord/services/ensureThoughtRecordReady",
+  ) as { ensureThoughtRecordReady: jest.Mock };
+  ensureThoughtRecordReady.mockResolvedValueOnce({});
+  write.mockResolvedValueOnce();
+
+  await expect(
+    useOnboardingFlow.getState().finishOnboarding(),
+  ).resolves.toMatchObject({
+    status: "saved",
   });
 });

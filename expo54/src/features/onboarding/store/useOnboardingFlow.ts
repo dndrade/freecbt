@@ -21,6 +21,55 @@ const GUIDED_ORDER = [
 ] as const;
 const RESTART_AFTER_MS = 24 * 60 * 60 * 1000;
 
+type OnboardingDraft = Pick<
+  OnboardingFlowState,
+  | "currentStepId"
+  | "history"
+  | "lastActiveAt"
+  | "situation"
+  | "revealed"
+  | "selectedDistortionSlugs"
+  | "selectedEvidenceIds"
+  | "guidedAlternative"
+  | "guidedPersonalThought"
+  | "composerThought"
+  | "hasCompletedGuidedPractice"
+>;
+
+function durableDraft(
+  state: Partial<OnboardingFlowState>,
+): Partial<OnboardingDraft> {
+  return {
+    ...(typeof state.currentStepId === "string" && {
+      currentStepId: state.currentStepId,
+    }),
+    ...(Array.isArray(state.history) && { history: state.history }),
+    ...(typeof state.lastActiveAt === "string" && {
+      lastActiveAt: state.lastActiveAt,
+    }),
+    ...(typeof state.situation === "string" && { situation: state.situation }),
+    ...(typeof state.revealed === "boolean" && { revealed: state.revealed }),
+    ...(Array.isArray(state.selectedDistortionSlugs) && {
+      selectedDistortionSlugs: state.selectedDistortionSlugs,
+    }),
+    ...(Array.isArray(state.selectedEvidenceIds) && {
+      selectedEvidenceIds: state.selectedEvidenceIds,
+    }),
+    ...(typeof state.guidedAlternative === "string" && {
+      guidedAlternative: state.guidedAlternative,
+    }),
+    ...(typeof state.guidedPersonalThought === "string" && {
+      guidedPersonalThought: state.guidedPersonalThought,
+    }),
+    ...(typeof state.composerThought === "string" && {
+      composerThought: state.composerThought,
+    }),
+    ...(typeof state.hasCompletedGuidedPractice === "boolean" && {
+      hasCompletedGuidedPractice: state.hasCompletedGuidedPractice,
+    }),
+  };
+}
+
 function nextStepId(current: string): string {
   const prefixIndex = PREFIX_ORDER.indexOf(
     current as (typeof PREFIX_ORDER)[number],
@@ -169,7 +218,7 @@ export const useOnboardingFlow = create<OnboardingFlowState>()(
             DistortionData,
             await ensureThoughtRecordReady(),
           ).write(thought);
-          useSettings.getState().completeOnboarding();
+          await useSettings.getState().completeOnboarding();
           const viaGuidedPractice =
             state.guidedPersonalThought.trim().length > 0;
           set({
@@ -210,10 +259,7 @@ export const useOnboardingFlow = create<OnboardingFlowState>()(
       name: ONBOARDING_STORE_NAME,
       storage: createJSONStorage(() => zustandMmkvStorage),
       skipHydration: true,
-      partialize: ({ hasCompletedGuidedPractice, ...draft }) => ({
-        ...draft,
-        hasCompletedGuidedPractice,
-      }),
+      partialize: durableDraft,
       merge: mergeOnboardingFlowState,
     },
   ),
@@ -223,7 +269,9 @@ export function mergeOnboardingFlowState(
   persistedState: unknown,
   currentState: OnboardingFlowState,
 ): OnboardingFlowState {
-  const persisted = persistedState as Partial<OnboardingFlowState> | undefined;
+  const persisted = durableDraft(
+    (persistedState as Partial<OnboardingFlowState> | undefined) ?? {},
+  );
   if (!persisted || typeof persisted.lastActiveAt !== "string") {
     return currentState;
   }
