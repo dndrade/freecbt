@@ -1,31 +1,39 @@
 import { View } from "react-native";
 import { Button } from "heroui-native";
 import * as ImagePath from "@/src/assets/image-path";
-import { OnboardingStepFrame } from "../components/OnboardingStepFrame";
-import type { OnboardingStepProps } from "./index";
+import { useI18n } from "@/i18n/use-i18n";
+import { useReminders } from "@/features/reminders/use-reminders";
+import { OnboardingStepFrameLegacy } from "./RemindersStepFrame";
+import { useOnboardingFlow } from "../store/useOnboardingFlow";
 
-export function RemindersStep({ translate, reminders }: OnboardingStepProps) {
+export function RemindersStep() {
+  const i18n = useI18n();
+  const reminders = useReminders();
+  const next = useOnboardingFlow((s) => s.next);
+
   return (
-    <OnboardingStepFrame
+    <OnboardingStepFrameLegacy
       titleKey="onboarding_screen.reminders.header"
       illustration={ImagePath.notifications}
-      translate={translate}
+      translate={i18n.t.bind(i18n)}
       variation={
         <View className="w-full max-w-xs gap-3">
           <Button
-            onPress={() => {
-              void reminders.enableReminders(undefined, translate);
+            onPress={async () => {
+              await reminders.enableReminders(undefined, i18n.t.bind(i18n));
+              next();
             }}
           >
-            {translate("onboarding_screen.reminders.button.yes")}
+            {i18n.t("onboarding_screen.reminders.button.yes")}
           </Button>
           <Button
             variant="secondary"
-            onPress={() => {
-              void reminders.disableReminders();
+            onPress={async () => {
+              await reminders.disableReminders();
+              next();
             }}
           >
-            {translate("onboarding_screen.reminders.button.no")}
+            {i18n.t("onboarding_screen.reminders.button.no")}
           </Button>
         </View>
       }
