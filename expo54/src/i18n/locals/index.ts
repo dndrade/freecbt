@@ -24,6 +24,7 @@ import deLock from "../locales/de/lock.json";
 import enCommon from "../locales/en/common.json";
 import enErrors from "../locales/en/errors.json";
 import enLock from "../locales/en/lock.json";
+import enOnboarding from "../locales/en/onboarding.json";
 import enReminders from "../locales/en/reminders.json";
 import enValidation from "../locales/en/validation.json";
 import faLock from "../locales/fa/lock.json";
@@ -43,6 +44,7 @@ export default {
     onboarding_screen: {
       ...en.onboarding_screen,
       ...enReminders.onboarding_screen,
+      ...enOnboarding.onboarding_screen,
     },
     settings: {
       ...en.settings,
