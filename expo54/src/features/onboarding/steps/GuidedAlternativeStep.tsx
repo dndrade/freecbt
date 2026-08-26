@@ -27,7 +27,7 @@ export function GuidedAlternativeStep() {
         {i18n.t("onboarding_screen.guided.alternative_body")}
       </Typography>
       <ChipRow
-        items={situations[situation].phrases}
+        items={situations[situation].phrases.map((key) => i18n.t(key))}
         onPress={appendAlternativePhrase}
       />
       <TextInput

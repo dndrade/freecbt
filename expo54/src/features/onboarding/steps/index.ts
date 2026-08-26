@@ -1,6 +1,4 @@
 import type { ComponentType } from "react";
-import type { Reminders } from "@/src/features/reminders/use-reminders";
-import type { TranslateFn } from "@/src/i18n/use-i18n";
 import { getFeatureFlag } from "@/services";
 import { ComposerStep } from "./ComposerStep";
 import { GuidedAlternativeStep } from "./GuidedAlternativeStep";
@@ -67,8 +65,3 @@ export function isKnownStepId(id: string): id is OnboardingStepId {
 export function remindersEnabled(): boolean {
   return getFeatureFlag("enable_onboarding_reminders_step");
 }
-
-export type OnboardingStepProps = {
-  translate: TranslateFn;
-  reminders: Reminders;
-};

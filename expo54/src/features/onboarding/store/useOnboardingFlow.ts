@@ -6,7 +6,7 @@ import { getFeatureFlag } from "@/services";
 import { zustandMmkvStorage } from "@/services/storage/zustandStorage";
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
-import type { SituationId } from "../content/situations";
+import { situationIds, type SituationId } from "../content/situations";
 
 export const ONBOARDING_STORE_NAME = "onboarding:flow-session:v1";
 
@@ -20,7 +20,57 @@ const GUIDED_ORDER = [
   "g-complete",
   "g-your-turn",
 ] as const;
+const ONBOARDING_STEP_IDS = new Set<string>([
+  ...PREFIX_ORDER,
+  "reminders",
+  "composer",
+  ...GUIDED_ORDER,
+]);
 const RESTART_AFTER_MS = 24 * 60 * 60 * 1000;
+
+function isKnownStepId(value: unknown): value is string {
+  return typeof value === "string" && ONBOARDING_STEP_IDS.has(value);
+}
+
+function isKnownSituationId(value: unknown): value is SituationId {
+  return (
+    typeof value === "string" && situationIds.includes(value as SituationId)
+  );
+}
+
+function isStringArray(value: unknown): value is string[] {
+  return (
+    Array.isArray(value) && value.every((item) => typeof item === "string")
+  );
+}
+
+function isValidPersistedDraft(
+  value: unknown,
+): value is Partial<OnboardingDraft> {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return false;
+  const state = value as Record<string, unknown>;
+  return (
+    (state.currentStepId === undefined || isKnownStepId(state.currentStepId)) &&
+    (state.history === undefined ||
+      (isStringArray(state.history) && state.history.every(isKnownStepId))) &&
+    (state.lastActiveAt === undefined ||
+      typeof state.lastActiveAt === "string") &&
+    (state.situation === undefined || isKnownSituationId(state.situation)) &&
+    (state.revealed === undefined || typeof state.revealed === "boolean") &&
+    (state.selectedDistortionSlugs === undefined ||
+      isStringArray(state.selectedDistortionSlugs)) &&
+    (state.selectedEvidenceIds === undefined ||
+      isStringArray(state.selectedEvidenceIds)) &&
+    (state.guidedAlternative === undefined ||
+      typeof state.guidedAlternative === "string") &&
+    (state.guidedPersonalThought === undefined ||
+      typeof state.guidedPersonalThought === "string") &&
+    (state.composerThought === undefined ||
+      typeof state.composerThought === "string") &&
+    (state.hasCompletedGuidedPractice === undefined ||
+      typeof state.hasCompletedGuidedPractice === "boolean")
+  );
+}
 
 type OnboardingDraft = Pick<
   OnboardingFlowState,
@@ -95,9 +145,6 @@ function nextStepId(current: string): string {
   return current;
 }
 
-export type OnboardingCompletion =
-  "idle" | "saving" | { status: "failure"; error: string };
-
 export interface OnboardingFlowState {
   currentStepId: string;
   history: string[];
@@ -128,12 +175,6 @@ export interface OnboardingFlowState {
     | { status: "saved"; thought: Thought.Thought }
     | { status: "empty" | "failed" }
   >;
-  activeIndex: number;
-  completion: OnboardingCompletion;
-  reminderChoice: "enabled" | "disabled" | null;
-  setActiveIndex(index: number): void;
-  setReminderChoice(choice: "enabled" | "disabled"): void;
-  finish(): Promise<void>;
 }
 
 const initialDraft = {
@@ -156,9 +197,6 @@ export const useOnboardingFlow = create<OnboardingFlowState>()(
     (set, get) => ({
       ...initialDraft,
       hasCompletedGuidedPractice: false,
-      activeIndex: 0,
-      completion: "idle" as OnboardingCompletion,
-      reminderChoice: null,
 
       goTo: (stepId) =>
         set(({ currentStepId, history }) => ({
@@ -183,61 +221,102 @@ export const useOnboardingFlow = create<OnboardingFlowState>()(
           };
         }),
       skip: () => set({ history: [], lastActiveAt: new Date().toISOString() }),
-      chooseSituation: (situation) => set({ situation }),
-      reveal: () => set({ revealed: true }),
+      chooseSituation: (situation) =>
+        set((state) =>
+          state.situation === situation
+            ? {}
+            : {
+                situation,
+                revealed: false,
+                selectedDistortionSlugs: [],
+                selectedEvidenceIds: [],
+                guidedAlternative: "",
+                lastActiveAt: new Date().toISOString(),
+              },
+        ),
+      reveal: () =>
+        set((state) =>
+          state.revealed
+            ? {}
+            : { revealed: true, lastActiveAt: new Date().toISOString() },
+        ),
       toggleDistortion: (slug) =>
         set(({ selectedDistortionSlugs }) => ({
           selectedDistortionSlugs: selectedDistortionSlugs.includes(slug)
             ? selectedDistortionSlugs.filter((s) => s !== slug)
             : [...selectedDistortionSlugs, slug],
+          lastActiveAt: new Date().toISOString(),
         })),
       toggleEvidence: (id) =>
         set(({ selectedEvidenceIds }) => ({
           selectedEvidenceIds: selectedEvidenceIds.includes(id)
             ? selectedEvidenceIds.filter((e) => e !== id)
             : [...selectedEvidenceIds, id],
+          lastActiveAt: new Date().toISOString(),
         })),
-      setGuidedAlternative: (guidedAlternative) => set({ guidedAlternative }),
+      setGuidedAlternative: (guidedAlternative) =>
+        set((state) =>
+          state.guidedAlternative === guidedAlternative
+            ? {}
+            : { guidedAlternative, lastActiveAt: new Date().toISOString() },
+        ),
       appendAlternativePhrase: (phrase) =>
         set(({ guidedAlternative }) => ({
           guidedAlternative: `${guidedAlternative}${guidedAlternative ? " " : ""}${phrase}.`,
+          lastActiveAt: new Date().toISOString(),
         })),
       setGuidedPersonalThought: (guidedPersonalThought) =>
-        set({ guidedPersonalThought }),
-      setComposerThought: (composerThought) => set({ composerThought }),
+        set((state) =>
+          state.guidedPersonalThought === guidedPersonalThought
+            ? {}
+            : {
+                guidedPersonalThought,
+                lastActiveAt: new Date().toISOString(),
+              },
+        ),
+      setComposerThought: (composerThought) =>
+        set((state) =>
+          state.composerThought === composerThought
+            ? {}
+            : { composerThought, lastActiveAt: new Date().toISOString() },
+        ),
 
       finishOnboarding: async () => {
         if (get().isSaving) return { status: "failed" };
         const state = get();
-        const finalThought = state.guidedPersonalThought.trim()
+        const viaGuidedPractice = state.currentStepId === "g-your-turn";
+        const finalThought = viaGuidedPractice
           ? state.guidedPersonalThought
-          : state.composerThought;
+          : state.currentStepId === "composer"
+            ? state.composerThought
+            : "";
         const spec: Thought.Spec = {
           automaticThought: finalThought,
           cognitiveDistortions: new Set(),
           challenge: "",
           alternativeThought: "",
         };
-        if (!Thought.isMeaningfulSpec(spec)) return { status: "empty" };
+        const hasThought = Thought.isMeaningfulSpec(spec);
 
         set({ isSaving: true, error: null });
         try {
-          const thought = Thought.create(spec, new Date());
-          await thoughtsService(
-            DistortionData,
-            await ensureThoughtRecordReady(),
-          ).write(thought);
-          await useSettings.getState().completeOnboarding();
-          const viaGuidedPractice =
-            state.guidedPersonalThought.trim().length > 0;
+          const thought = hasThought ? Thought.create(spec, new Date()) : null;
+          if (thought) {
+            await thoughtsService(
+              DistortionData,
+              await ensureThoughtRecordReady(),
+            ).write(thought);
+          }
+          useSettings.getState().completeOnboarding();
           set({
             ...initialDraft,
             lastActiveAt: new Date().toISOString(),
             hasCompletedGuidedPractice:
-              viaGuidedPractice || get().hasCompletedGuidedPractice,
+              (hasThought && viaGuidedPractice) ||
+              get().hasCompletedGuidedPractice,
             isSaving: false,
           });
-          return { status: "saved", thought };
+          return thought ? { status: "saved", thought } : { status: "empty" };
         } catch (error) {
           set({
             isSaving: false,
@@ -245,23 +324,6 @@ export const useOnboardingFlow = create<OnboardingFlowState>()(
           });
           return { status: "failed" };
         }
-      },
-
-      setActiveIndex: (activeIndex) => set({ activeIndex }),
-      setReminderChoice: (reminderChoice) => set({ reminderChoice }),
-      finish: async () => {
-        set({ completion: "saving" });
-        const result = await get().finishOnboarding();
-        if (result.status === "failed") {
-          set({
-            completion: {
-              status: "failure",
-              error: get().error?.message ?? "Unable to save onboarding",
-            },
-          });
-          return;
-        }
-        set({ completion: "idle" });
       },
     }),
     {
@@ -278,20 +340,28 @@ export function mergeOnboardingFlowState(
   persistedState: unknown,
   currentState: OnboardingFlowState,
 ): OnboardingFlowState {
-  const persisted = durableDraft(
-    (persistedState as Partial<OnboardingFlowState> | undefined) ?? {},
-  );
-  if (!persisted || typeof persisted.lastActiveAt !== "string") {
+  if (persistedState === undefined || persistedState === null) {
     return currentState;
+  }
+  const completedGuidedPractice =
+    typeof (persistedState as { hasCompletedGuidedPractice?: unknown })
+      .hasCompletedGuidedPractice === "boolean"
+      ? (persistedState as { hasCompletedGuidedPractice: boolean })
+          .hasCompletedGuidedPractice
+      : currentState.hasCompletedGuidedPractice;
+  const restart = () => ({
+    ...currentState,
+    hasCompletedGuidedPractice: completedGuidedPractice,
+  });
+  if (!isValidPersistedDraft(persistedState)) return restart();
+
+  const persisted = durableDraft(persistedState);
+  if (!persisted || typeof persisted.lastActiveAt !== "string") {
+    return restart();
   }
   const elapsedMs = Date.now() - new Date(persisted.lastActiveAt).getTime();
   if (!Number.isFinite(elapsedMs) || elapsedMs >= RESTART_AFTER_MS) {
-    return {
-      ...currentState,
-      hasCompletedGuidedPractice:
-        persisted.hasCompletedGuidedPractice ??
-        currentState.hasCompletedGuidedPractice,
-    };
+    return restart();
   }
   return { ...currentState, ...persisted };
 }

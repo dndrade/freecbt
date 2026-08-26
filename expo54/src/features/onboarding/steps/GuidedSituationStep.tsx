@@ -27,8 +27,8 @@ export function GuidedSituationStep() {
         {situationIds.map((id) => (
           <SelectableCard
             key={id}
-            title={situations[id].title}
-            detail={situations[id].detail}
+            title={i18n.t(situations[id].title)}
+            detail={i18n.t(situations[id].detail)}
             selected={situation === id}
             onPress={() => chooseSituation(id)}
           />

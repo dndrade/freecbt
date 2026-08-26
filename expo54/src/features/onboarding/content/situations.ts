@@ -1,15 +1,16 @@
 import type { Distortion } from "@/model";
+import type { TranslateKey } from "@/i18n/use-i18n";
 
 export type SituationId = "interview" | "message" | "mistake";
 
 export interface Situation {
   id: SituationId;
-  title: string;
-  detail: string;
-  autoThought: string;
+  title: TranslateKey;
+  detail: TranslateKey;
+  autoThought: TranslateKey;
   distortionSlugs: readonly Distortion.Slug[];
-  evidence: readonly string[];
-  phrases: readonly string[];
+  evidence: readonly TranslateKey[];
+  phrases: readonly TranslateKey[];
 }
 
 const asSlug = (s: string) => s as Distortion.Slug;
@@ -23,71 +24,74 @@ export const situationIds: readonly SituationId[] = [
 export const situations: Record<SituationId, Situation> = {
   interview: {
     id: "interview",
-    title: "After an interview",
-    detail: "I took a little too long to answer one question.",
-    autoThought: "I probably failed.",
+    title: "onboarding_screen.guided.situations.interview.title",
+    detail: "onboarding_screen.guided.situations.interview.detail",
+    autoThought:
+      "onboarding_screen.guided.situations.interview.automatic_thought",
     distortionSlugs: [
       asSlug("fortune-telling"),
       asSlug("catastrophizing"),
       asSlug("labeling"),
     ],
     evidence: [
-      "I paused before answering.",
-      "The other person kept talking with me.",
-      "One part wasn't perfect — not all of it.",
-      "I don't actually know the outcome yet.",
+      "onboarding_screen.guided.situations.interview.evidence_1",
+      "onboarding_screen.guided.situations.interview.evidence_2",
+      "onboarding_screen.guided.situations.interview.evidence_3",
+      "onboarding_screen.guided.situations.interview.evidence_4",
     ],
     phrases: [
-      "I may not have done this perfectly",
-      "one moment doesn't decide the outcome",
-      "it was still useful practice",
-      "I can learn from this",
+      "onboarding_screen.guided.situations.interview.phrase_1",
+      "onboarding_screen.guided.situations.interview.phrase_2",
+      "onboarding_screen.guided.situations.interview.phrase_3",
+      "onboarding_screen.guided.situations.interview.phrase_4",
     ],
   },
   message: {
     id: "message",
-    title: "After a difficult message",
-    detail: "I'm not sure how someone read my words.",
-    autoThought: "I probably upset them.",
+    title: "onboarding_screen.guided.situations.message.title",
+    detail: "onboarding_screen.guided.situations.message.detail",
+    autoThought:
+      "onboarding_screen.guided.situations.message.automatic_thought",
     distortionSlugs: [
       asSlug("mind-reading"),
       asSlug("catastrophizing"),
       asSlug("emotional-reasoning"),
     ],
     evidence: [
-      "I sent it with good intent.",
-      "They haven't said anything upset.",
-      "People get busy and reply late for many reasons.",
-      "I don't actually know how they read it yet.",
+      "onboarding_screen.guided.situations.message.evidence_1",
+      "onboarding_screen.guided.situations.message.evidence_2",
+      "onboarding_screen.guided.situations.message.evidence_3",
+      "onboarding_screen.guided.situations.message.evidence_4",
     ],
     phrases: [
-      "I may not know how it landed yet",
-      "people read messages differently than they're meant",
-      "one message doesn't define how someone sees me",
-      "I can clarify if it matters",
+      "onboarding_screen.guided.situations.message.phrase_1",
+      "onboarding_screen.guided.situations.message.phrase_2",
+      "onboarding_screen.guided.situations.message.phrase_3",
+      "onboarding_screen.guided.situations.message.phrase_4",
     ],
   },
   mistake: {
     id: "mistake",
-    title: "After making a mistake",
-    detail: "I noticed one thing I wish I'd done differently.",
-    autoThought: "I always mess this up.",
+    title: "onboarding_screen.guided.situations.mistake.title",
+    detail: "onboarding_screen.guided.situations.mistake.detail",
+    autoThought:
+      "onboarding_screen.guided.situations.mistake.automatic_thought",
     distortionSlugs: [
       asSlug("all-or-nothing"),
       asSlug("should-statements"),
       asSlug("self-blaming"),
     ],
     evidence: [
-      "I noticed it myself.",
-      "One slip doesn't undo the rest of the work.",
-      "Mistakes are part of doing anything real.",
-      "I can still fix or learn from this one.",
+      "onboarding_screen.guided.situations.mistake.evidence_1",
+      "onboarding_screen.guided.situations.mistake.evidence_2",
+      "onboarding_screen.guided.situations.mistake.evidence_3",
+      "onboarding_screen.guided.situations.mistake.evidence_4",
     ],
     phrases: [
-      "one mistake doesn't erase everything else I did",
-      "mistakes are part of doing anything real",
-      "I can learn from this and move on",
-      "this doesn't decide how capable I am",
+      "onboarding_screen.guided.situations.mistake.phrase_1",
+      "onboarding_screen.guided.situations.mistake.phrase_2",
+      "onboarding_screen.guided.situations.mistake.phrase_3",
+      "onboarding_screen.guided.situations.mistake.phrase_4",
     ],
   },
 };

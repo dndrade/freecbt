@@ -28,7 +28,7 @@ export function GuidedThoughtStep() {
       {revealed ? (
         <Animated.View
           entering={FadeIn.duration(260).reduceMotion(ReduceMotion.System)}
-          className="gap-2 rounded-2xl border border-accent/50 bg-accent/10 p-5"
+          className="gap-2 rounded-2xl border border-default-soft bg-accent/10 p-5"
         >
           <Typography
             type="body-xs"
@@ -37,7 +37,7 @@ export function GuidedThoughtStep() {
             {i18n.t("auto_thought")}
           </Typography>
           <Typography type="h4" className="font-bold">
-            “{situations[situation].autoThought}”
+            “{i18n.t(situations[situation].autoThought)}”
           </Typography>
           <Typography type="body-sm" className="text-default-500">
             {i18n.t("onboarding_screen.guided.thought_revealed_hint")}

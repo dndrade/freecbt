@@ -108,7 +108,48 @@
       "your_turn_body": "Start with the first step whenever you're ready — the rest can wait.",
       "your_turn_placeholder": "Write a thought...",
       "your_turn_hint": "This stays on your device. No account, no cloud.",
-      "your_turn_cta": "Continue"
+      "your_turn_cta": "Continue",
+      "situations": {
+        "interview": {
+          "title": "After an interview",
+          "detail": "I took a little too long to answer one question.",
+          "automatic_thought": "I probably failed.",
+          "evidence_1": "I paused before answering.",
+          "evidence_2": "The other person kept talking with me.",
+          "evidence_3": "One part wasn't perfect — not all of it.",
+          "evidence_4": "I don't actually know the outcome yet.",
+          "phrase_1": "I may not have done this perfectly",
+          "phrase_2": "one moment doesn't decide the outcome",
+          "phrase_3": "it was still useful practice",
+          "phrase_4": "I can learn from this"
+        },
+        "message": {
+          "title": "After a difficult message",
+          "detail": "I'm not sure how someone read my words.",
+          "automatic_thought": "I probably upset them.",
+          "evidence_1": "I sent it with good intent.",
+          "evidence_2": "They haven't said anything upset.",
+          "evidence_3": "People get busy and reply late for many reasons.",
+          "evidence_4": "I don't actually know how they read it yet.",
+          "phrase_1": "I may not know how it landed yet",
+          "phrase_2": "people read messages differently than they're meant",
+          "phrase_3": "one message doesn't define how someone sees me",
+          "phrase_4": "I can clarify if it matters"
+        },
+        "mistake": {
+          "title": "After making a mistake",
+          "detail": "I noticed one thing I wish I'd done differently.",
+          "automatic_thought": "I always mess this up.",
+          "evidence_1": "I noticed it myself.",
+          "evidence_2": "One slip doesn't undo the rest of the work.",
+          "evidence_3": "Mistakes are part of doing anything real.",
+          "evidence_4": "I can still fix or learn from this one.",
+          "phrase_1": "one mistake doesn't erase everything else I did",
+          "phrase_2": "mistakes are part of doing anything real",
+          "phrase_3": "I can learn from this and move on",
+          "phrase_4": "this doesn't decide how capable I am"
+        }
+      }
     },
     "home_handoff": {
       "eyebrow": "Your journal",

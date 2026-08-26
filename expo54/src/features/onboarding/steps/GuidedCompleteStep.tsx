@@ -25,7 +25,7 @@ export function GuidedCompleteStep() {
       <Typography type="body" className="text-center text-default-500">
         {i18n.t("onboarding_screen.guided.complete_body")}
       </Typography>
-      <View className="w-full gap-2 rounded-2xl border border-accent/50 bg-accent/10 p-5">
+      <View className="w-full gap-2 rounded-2xl border border-default-soft bg-accent/10 p-5">
         <Typography
           type="body-xs"
           className="uppercase font-bold text-default-500"

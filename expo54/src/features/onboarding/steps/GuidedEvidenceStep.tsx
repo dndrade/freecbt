@@ -25,12 +25,12 @@ export function GuidedEvidenceStep() {
         {i18n.t("onboarding_screen.guided.evidence_body")}
       </Typography>
       <View className="gap-3">
-        {situations[situation].evidence.map((text) => (
+        {situations[situation].evidence.map((key) => (
           <SelectableCard
-            key={text}
-            title={text}
-            selected={selected.includes(text)}
-            onPress={() => toggleEvidence(text)}
+            key={key}
+            title={i18n.t(key)}
+            selected={selected.includes(key)}
+            onPress={() => toggleEvidence(key)}
             variant="check"
           />
         ))}
