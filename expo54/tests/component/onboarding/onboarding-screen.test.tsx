@@ -1,5 +1,6 @@
 import React from "react";
 import {
+  act,
   fireEvent,
   render,
   screen,
@@ -104,13 +105,18 @@ jest.mock("heroui-native", () => ({
 jest.mock("react-native-gesture-handler", () => {
   const pan = () => {
     const gesture: {
-      enabled: () => typeof gesture;
+      isEnabled: boolean;
+      enabled: (value: boolean) => typeof gesture;
       onEnd: (
         handler: (event: { translationX: number }) => void,
       ) => typeof gesture;
       end?: (event: { translationX: number }) => void;
     } = {
-      enabled: () => gesture,
+      isEnabled: true,
+      enabled: (value: boolean) => {
+        gesture.isEnabled = value;
+        return gesture;
+      },
       onEnd: (handler: (event: { translationX: number }) => void) => {
         gesture.end = handler;
         return gesture;
@@ -122,16 +128,22 @@ jest.mock("react-native-gesture-handler", () => {
     Gesture: { Pan: pan },
     GestureDetector: (props: {
       children: React.ReactNode;
-      gesture: { end?: (event: { translationX: number }) => void };
+      gesture: {
+        isEnabled: boolean;
+        end?: (event: { translationX: number }) => void;
+      };
     }) =>
       React.createElement(
         View,
         {
           testID: "onboarding-swipe-area",
-          onTouchEnd: (event) =>
-            props.gesture.end?.(
-              event.nativeEvent as unknown as { translationX: number },
-            ),
+          onTouchEnd: (event) => {
+            if (props.gesture.isEnabled) {
+              props.gesture.end?.(
+                event.nativeEvent as unknown as { translationX: number },
+              );
+            }
+          },
         },
         props.children,
       ),
@@ -191,6 +203,7 @@ describe("OnboardingScreen", () => {
       composerThought: "",
       isSaving: false,
       error: null,
+      next: defaults.next,
       finishOnboarding: defaults.finishOnboarding,
     });
     onSkip.mockReset();
@@ -216,14 +229,21 @@ describe("OnboardingScreen", () => {
   });
 
   it("does not leave onboarding when Skip cannot save", async () => {
+    let resolveFailure!: (result: { status: "failed" }) => void;
     useOnboardingFlow.setState({
-      finishOnboarding: jest.fn().mockResolvedValue({ status: "failed" }),
+      finishOnboarding: jest.fn(
+        () =>
+          new Promise<{ status: "failed" }>((resolve) => {
+            resolveFailure = resolve;
+          }),
+      ),
     });
     renderScreen();
 
     fireEvent.press(screen.getByLabelText("onboarding_screen.skip"));
+    await act(async () => resolveFailure({ status: "failed" }));
 
-    await waitFor(() => expect(onSkip).not.toHaveBeenCalled());
+    expect(onSkip).not.toHaveBeenCalled();
   });
 
   it("keeps terminal-step Skip on its separate callback", async () => {
@@ -244,6 +264,7 @@ describe("OnboardingScreen", () => {
     useOnboardingFlow.setState({
       currentStepId: "invitation",
       history: ["path"],
+      next: () => useOnboardingFlow.setState({ currentStepId: "composer" }),
     });
     renderScreen();
 
@@ -351,7 +372,11 @@ describe("OnboardingScreen", () => {
 
     fireEvent.press(screen.getByText("onboarding_screen.composer.cta"));
 
-    await waitFor(() => expect(finishOnboarding).toHaveBeenCalledTimes(1));
+    await waitFor(() =>
+      expect(useOnboardingFlow.getState().error).toMatchObject({
+        message: "disk full",
+      }),
+    );
     expect(useOnboardingFlow.getState().currentStepId).toBe("composer");
     expect(onComplete).not.toHaveBeenCalled();
   });
