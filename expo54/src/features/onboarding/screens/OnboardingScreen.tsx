@@ -3,12 +3,12 @@ import { Pressable } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, {
   ReduceMotion,
-  runOnJS,
   SlideInLeft,
   SlideInRight,
   SlideOutLeft,
   SlideOutRight,
 } from "react-native-reanimated";
+import { scheduleOnRN } from "react-native-worklets";
 import { Typography } from "heroui-native";
 import {
   ErrorBoundary,
@@ -147,8 +147,8 @@ export function OnboardingScreen({
     .enabled(!swipeDisabled)
     .onEnd((event) => {
       "worklet";
-      if (event.translationX < -40) runOnJS(goNext)();
-      if (event.translationX > 40) runOnJS(goBack)();
+      if (event.translationX < -40) scheduleOnRN(goNext);
+      if (event.translationX > 40) scheduleOnRN(goBack);
     });
 
   useScreenHeader({
