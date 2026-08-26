@@ -81,6 +81,7 @@ jest.mock("@/src/features/reminders/use-reminders", () => ({
 }));
 
 jest.mock("@/src/i18n/use-i18n", () => ({
+  ...jest.requireActual("@/src/i18n/use-i18n"),
   useI18n: () => ({ t: (key: string) => key }),
 }));
 
