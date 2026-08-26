@@ -17,6 +17,7 @@ import { useOnboardingFlow } from "@/features/onboarding/store/useOnboardingFlow
 
 const onSkip = jest.fn();
 const onComplete = jest.fn();
+const mockCompleteOnboarding = jest.fn();
 let headerRightElement: React.ReactNode;
 
 function renderScreen() {
@@ -174,6 +175,11 @@ jest.mock("@/i18n/use-i18n", () => ({
   ...jest.requireActual("@/i18n/use-i18n"),
   useI18n: () => ({ t: (key: string) => key }),
 }));
+jest.mock("@/features/settings/hooks/useSettings", () => ({
+  useSettings: Object.assign(jest.fn(), {
+    getState: () => ({ completeOnboarding: mockCompleteOnboarding }),
+  }),
+}));
 jest.mock("@/features/reminders/use-reminders", () => ({
   useReminders: () => ({
     isSupported: () => false,
@@ -208,6 +214,7 @@ describe("OnboardingScreen", () => {
     });
     onSkip.mockReset();
     onComplete.mockReset();
+    mockCompleteOnboarding.mockReset();
     headerRightElement = null;
   });
 
@@ -226,6 +233,18 @@ describe("OnboardingScreen", () => {
     fireEvent.press(screen.getByLabelText("onboarding_screen.skip"));
 
     await waitFor(() => expect(onSkip).toHaveBeenCalledTimes(1));
+  });
+
+  it("persists empty Skip completion before invoking the route handoff", async () => {
+    renderScreen();
+
+    fireEvent.press(screen.getByLabelText("onboarding_screen.skip"));
+
+    await waitFor(() => expect(onSkip).toHaveBeenCalledTimes(1));
+    expect(mockCompleteOnboarding).toHaveBeenCalledTimes(1);
+    expect(mockCompleteOnboarding.mock.invocationCallOrder[0]).toBeLessThan(
+      onSkip.mock.invocationCallOrder[0],
+    );
   });
 
   it("does not leave onboarding when Skip cannot save", async () => {

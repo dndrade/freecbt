@@ -10,7 +10,7 @@ jest.mock("react-native-reanimated", () => ({
   useReducedMotion: () => false,
 }));
 
-function renderStep() {
+function renderStep(locale: "en" | "_test" = "en") {
   useOnboardingFlow.setState({
     currentStepId: "g-thought",
     situation: "interview",
@@ -18,7 +18,7 @@ function renderStep() {
   });
 
   return renderWithProviders(
-    <I18nProvider locale="en">
+    <I18nProvider locale={locale}>
       <GuidedThoughtStep />
     </I18nProvider>,
   );
@@ -41,4 +41,13 @@ test("Continue advances after the automatic thought is revealed", () => {
   fireEvent.press(screen.getByText("Check the pattern"));
 
   expect(useOnboardingFlow.getState().currentStepId).toBe("g-pattern");
+});
+
+test("resolves the automatic thought through the active locale", () => {
+  renderStep("_test");
+
+  fireEvent.press(screen.getByText("thguoht eht laeveR"));
+
+  expect(screen.queryByText("“I probably failed.”")).toBeNull();
+  expect(screen.getByText("“.deliaf ylbaborp I”")).toBeTruthy();
 });

@@ -3,15 +3,22 @@ import {
   situationIds,
   situations,
 } from "@/features/onboarding/content/situations";
+import { translateKeySet } from "@/i18n/use-i18n";
 
 describe("onboarding situation content", () => {
-  it("has exactly three situations, each with a title, detail, and auto-thought", () => {
+  it("has exactly three situations whose copy resolves through i18n", () => {
     expect(situationIds).toEqual(["interview", "message", "mistake"]);
     for (const id of situationIds) {
       const s = situations[id];
-      expect(s.title).toBeTruthy();
-      expect(s.detail).toBeTruthy();
-      expect(s.autoThought).toBeTruthy();
+      for (const key of [
+        s.title,
+        s.detail,
+        s.autoThought,
+        ...s.evidence,
+        ...s.phrases,
+      ]) {
+        expect(translateKeySet.has(key)).toBe(true);
+      }
     }
   });
 

@@ -55,12 +55,7 @@ const initial = {
 
 beforeEach(() => {
   useFeatureFlagStore.getState().resetFlags();
-  useOnboardingFlow.setState({
-    ...initial,
-    activeIndex: 0,
-    completion: "idle",
-    reminderChoice: null,
-  });
+  useOnboardingFlow.setState(initial);
   values.clear();
   jest.clearAllMocks();
 });
@@ -135,6 +130,44 @@ test("chooseSituation, toggleDistortion, and toggleEvidence are reversible", () 
   expect(useOnboardingFlow.getState().selectedEvidenceIds).toEqual([]);
 });
 
+test("changing situation after going back clears situation-derived readiness before going forward", () => {
+  useOnboardingFlow.setState({
+    currentStepId: "g-alternative",
+    history: [
+      "invitation",
+      "g-situation",
+      "g-thought",
+      "g-pattern",
+      "g-evidence",
+    ],
+    situation: "interview",
+    revealed: true,
+    selectedDistortionSlugs: ["fortune-telling"],
+    selectedEvidenceIds: [
+      "onboarding_screen.guided.situations.interview.evidence_1",
+    ],
+    guidedAlternative: "I can handle this",
+  });
+
+  useOnboardingFlow.getState().back();
+  useOnboardingFlow.getState().back();
+  useOnboardingFlow.getState().back();
+  useOnboardingFlow.getState().back();
+  expect(useOnboardingFlow.getState().currentStepId).toBe("g-situation");
+
+  useOnboardingFlow.getState().chooseSituation("message");
+  useOnboardingFlow.getState().next();
+
+  expect(useOnboardingFlow.getState()).toMatchObject({
+    currentStepId: "g-thought",
+    situation: "message",
+    revealed: false,
+    selectedDistortionSlugs: [],
+    selectedEvidenceIds: [],
+    guidedAlternative: "",
+  });
+});
+
 test("reveal() is one-way and appendAlternativePhrase appends, not replaces", () => {
   useOnboardingFlow.getState().reveal();
   expect(useOnboardingFlow.getState().revealed).toBe(true);
@@ -145,6 +178,46 @@ test("reveal() is one-way and appendAlternativePhrase appends, not replaces", ()
     .appendAlternativePhrase("one moment doesn't decide the outcome");
   expect(useOnboardingFlow.getState().guidedAlternative).toBe(
     "I tried my best one moment doesn't decide the outcome.",
+  );
+});
+
+test.each([
+  [
+    "situation changes",
+    () => useOnboardingFlow.getState().chooseSituation("message"),
+  ],
+  ["thought reveals", () => useOnboardingFlow.getState().reveal()],
+  [
+    "distortion selections",
+    () => useOnboardingFlow.getState().toggleDistortion("labeling"),
+  ],
+  [
+    "evidence selections",
+    () => useOnboardingFlow.getState().toggleEvidence("evidence-1"),
+  ],
+  [
+    "alternative edits",
+    () => useOnboardingFlow.getState().setGuidedAlternative("Balanced"),
+  ],
+  [
+    "alternative phrase selections",
+    () => useOnboardingFlow.getState().appendAlternativePhrase("Maybe"),
+  ],
+  [
+    "guided draft edits",
+    () => useOnboardingFlow.getState().setGuidedPersonalThought("Guided"),
+  ],
+  [
+    "composer draft edits",
+    () => useOnboardingFlow.getState().setComposerThought("Quick"),
+  ],
+] as const)("%s refresh lastActiveAt", (_name, mutate) => {
+  useOnboardingFlow.setState({ lastActiveAt: "2000-01-01T00:00:00.000Z" });
+
+  mutate();
+
+  expect(useOnboardingFlow.getState().lastActiveAt).not.toBe(
+    "2000-01-01T00:00:00.000Z",
   );
 });
 
@@ -196,6 +269,64 @@ test("mergeOnboardingFlowState falls back to current state when nothing was ever
   expect(mergeOnboardingFlowState(undefined, current)).toBe(current);
 });
 
+test.each([
+  ["unknown current step", { currentStepId: "missing-step" }],
+  ["unknown situation", { situation: "missing-situation" }],
+  ["unknown history step", { history: ["welcome", "missing-step"] }],
+  [
+    "non-string distortion selection",
+    { selectedDistortionSlugs: ["labeling", 7] },
+  ],
+  [
+    "non-string evidence selection",
+    { selectedEvidenceIds: ["evidence-1", null] },
+  ],
+] as const)(
+  "mergeOnboardingFlowState safely restarts for %s",
+  (_name, invalid) => {
+    const current = {
+      ...initial,
+      currentStepId: "welcome",
+      hasCompletedGuidedPractice: false,
+    } as never;
+    const merged = mergeOnboardingFlowState(
+      {
+        currentStepId: "g-pattern",
+        history: [
+          "welcome",
+          "privacy",
+          "path",
+          "invitation",
+          "g-situation",
+          "g-thought",
+        ],
+        lastActiveAt: new Date().toISOString(),
+        situation: "interview",
+        revealed: true,
+        selectedDistortionSlugs: ["labeling"],
+        selectedEvidenceIds: ["evidence-1"],
+        guidedAlternative: "A balanced view",
+        guidedPersonalThought: "My thought",
+        composerThought: "Quick thought",
+        hasCompletedGuidedPractice: true,
+        ...invalid,
+      },
+      current,
+    );
+
+    expect(merged).toMatchObject({
+      currentStepId: "welcome",
+      history: [],
+      situation: "interview",
+      revealed: false,
+      selectedDistortionSlugs: [],
+      selectedEvidenceIds: [],
+      guidedAlternative: "",
+      hasCompletedGuidedPractice: true,
+    });
+  },
+);
+
 test("finishOnboarding writes a Thought with the guided draft, saves, and completes onboarding", async () => {
   const { ensureThoughtRecordReady } = jest.requireMock(
     "@/features/thoughtRecord/services/ensureThoughtRecordReady",
@@ -203,6 +334,7 @@ test("finishOnboarding writes a Thought with the guided draft, saves, and comple
   ensureThoughtRecordReady.mockResolvedValueOnce({});
   write.mockResolvedValueOnce();
 
+  useOnboardingFlow.setState({ currentStepId: "g-your-turn" });
   useOnboardingFlow.getState().setGuidedPersonalThought("I can start small");
   const result = await useOnboardingFlow.getState().finishOnboarding();
 
@@ -228,6 +360,7 @@ test("finishOnboarding prefers the composer draft when there is no guided draft,
   ensureThoughtRecordReady.mockResolvedValueOnce({});
   write.mockResolvedValueOnce();
 
+  useOnboardingFlow.setState({ currentStepId: "composer" });
   useOnboardingFlow.getState().setComposerThought("Quick draft");
   const result = await useOnboardingFlow.getState().finishOnboarding();
 
@@ -235,11 +368,60 @@ test("finishOnboarding prefers the composer draft when there is no guided draft,
   expect(useOnboardingFlow.getState().hasCompletedGuidedPractice).toBe(false);
 });
 
-test("finishOnboarding writes nothing when both drafts are empty", async () => {
+test("finishOnboarding completes settings without writing a Thought when the visible draft is empty", async () => {
   const result = await useOnboardingFlow.getState().finishOnboarding();
   expect(result).toEqual({ status: "empty" });
   expect(write).not.toHaveBeenCalled();
-  expect(completeOnboardingMock()).not.toHaveBeenCalled();
+  expect(completeOnboardingMock()).toHaveBeenCalledTimes(1);
+});
+
+test("finishOnboarding saves the guided draft after switching from quick to guided", async () => {
+  const { ensureThoughtRecordReady } = jest.requireMock(
+    "@/features/thoughtRecord/services/ensureThoughtRecordReady",
+  ) as { ensureThoughtRecordReady: jest.Mock };
+  ensureThoughtRecordReady.mockResolvedValueOnce({});
+  write.mockResolvedValueOnce();
+  useOnboardingFlow.setState({
+    currentStepId: "composer",
+    history: ["invitation"],
+    composerThought: "Hidden quick draft",
+  });
+
+  useOnboardingFlow.getState().back();
+  useOnboardingFlow.getState().goTo("g-situation");
+  for (let step = 0; step < 6; step += 1) {
+    useOnboardingFlow.getState().next();
+  }
+  useOnboardingFlow.getState().setGuidedPersonalThought("Visible guided draft");
+  const result = await useOnboardingFlow.getState().finishOnboarding();
+
+  expect(result.status).toBe("saved");
+  if (result.status === "saved") {
+    expect(result.thought.automaticThought).toBe("Visible guided draft");
+  }
+});
+
+test("finishOnboarding saves the composer draft after switching from guided to quick", async () => {
+  const { ensureThoughtRecordReady } = jest.requireMock(
+    "@/features/thoughtRecord/services/ensureThoughtRecordReady",
+  ) as { ensureThoughtRecordReady: jest.Mock };
+  ensureThoughtRecordReady.mockResolvedValueOnce({});
+  write.mockResolvedValueOnce();
+  useOnboardingFlow.setState({
+    currentStepId: "g-your-turn",
+    history: ["invitation"],
+    guidedPersonalThought: "Hidden guided draft",
+  });
+
+  useOnboardingFlow.getState().back();
+  useOnboardingFlow.getState().goTo("composer");
+  useOnboardingFlow.getState().setComposerThought("Visible quick draft");
+  const result = await useOnboardingFlow.getState().finishOnboarding();
+
+  expect(result.status).toBe("saved");
+  if (result.status === "saved") {
+    expect(result.thought.automaticThought).toBe("Visible quick draft");
+  }
 });
 
 test("finishOnboarding keeps the draft and reports failure when the write rejects", async () => {
@@ -250,6 +432,7 @@ test("finishOnboarding keeps the draft and reports failure when the write reject
   const failure = new Error("disk full");
   write.mockRejectedValueOnce(failure);
 
+  useOnboardingFlow.setState({ currentStepId: "composer" });
   useOnboardingFlow.getState().setComposerThought("keep me");
   const result = await useOnboardingFlow.getState().finishOnboarding();
 
@@ -270,6 +453,7 @@ test("finishOnboarding keeps the draft and reports failure when settings complet
   const failure = new Error("settings unavailable");
   completeOnboardingMock().mockRejectedValueOnce(failure);
 
+  useOnboardingFlow.setState({ currentStepId: "composer" });
   useOnboardingFlow.getState().setComposerThought("keep me too");
   const result = await useOnboardingFlow.getState().finishOnboarding();
 
@@ -281,23 +465,15 @@ test("finishOnboarding keeps the draft and reports failure when settings complet
   });
 });
 
-test("initializeOnboardingFlow excludes transient and legacy state so a persisted draft can retry", async () => {
+test("initializeOnboardingFlow excludes transient state so a persisted draft can retry", async () => {
   useOnboardingFlow.setState({
     isSaving: true,
     error: new Error("stale save"),
-    activeIndex: 2,
-    completion: "saving",
-    reminderChoice: "enabled",
   });
   useOnboardingFlow.getState().setComposerThought("retry me");
   const persisted = values.get(ONBOARDING_STORE_NAME);
 
-  useOnboardingFlow.setState({
-    ...initial,
-    activeIndex: 0,
-    completion: "idle",
-    reminderChoice: null,
-  });
+  useOnboardingFlow.setState(initial);
   values.set(ONBOARDING_STORE_NAME, persisted!);
   await initializeOnboardingFlow();
 
@@ -305,9 +481,6 @@ test("initializeOnboardingFlow excludes transient and legacy state so a persiste
     composerThought: "retry me",
     isSaving: false,
     error: null,
-    activeIndex: 0,
-    completion: "idle",
-    reminderChoice: null,
   });
 
   const { ensureThoughtRecordReady } = jest.requireMock(
@@ -315,6 +488,7 @@ test("initializeOnboardingFlow excludes transient and legacy state so a persiste
   ) as { ensureThoughtRecordReady: jest.Mock };
   ensureThoughtRecordReady.mockResolvedValueOnce({});
   write.mockResolvedValueOnce();
+  useOnboardingFlow.setState({ currentStepId: "composer" });
 
   await expect(
     useOnboardingFlow.getState().finishOnboarding(),

@@ -10,18 +10,28 @@ jest.mock("react-native-reanimated", () => ({
   useReducedMotion: () => false,
 }));
 
-function renderStep() {
+function renderStep(locale: "en" | "_test" = "en") {
   useOnboardingFlow.setState({
     currentStepId: "g-situation",
     situation: "interview",
   });
 
   return renderWithProviders(
-    <I18nProvider locale="en">
+    <I18nProvider locale={locale}>
       <GuidedSituationStep />
     </I18nProvider>,
   );
 }
+
+test("resolves situation titles and details through the active locale", () => {
+  renderStep("_test");
+
+  expect(screen.queryByText("After an interview")).toBeNull();
+  expect(screen.getByText("weivretni na retfA")).toBeTruthy();
+  expect(
+    screen.getByText(".noitseuq eno rewsna ot gnol oot elttil a koot I"),
+  ).toBeTruthy();
+});
 
 test("choosing a situation updates the example and Continue advances", () => {
   renderStep();

@@ -10,7 +10,7 @@ jest.mock("react-native-reanimated", () => ({
   useReducedMotion: () => false,
 }));
 
-function renderStep() {
+function renderStep(locale: "en" | "_test" = "en") {
   useOnboardingFlow.setState({
     currentStepId: "g-evidence",
     situation: "interview",
@@ -18,7 +18,7 @@ function renderStep() {
   });
 
   return renderWithProviders(
-    <I18nProvider locale="en">
+    <I18nProvider locale={locale}>
       <GuidedEvidenceStep />
     </I18nProvider>,
   );
@@ -71,4 +71,11 @@ test("shows the situation's evidence, gates Continue, and supports multi-select"
 
   fireEvent.press(continueButton);
   expect(useOnboardingFlow.getState().currentStepId).toBe("g-alternative");
+});
+
+test("resolves evidence through the active locale", () => {
+  renderStep("_test");
+
+  expect(screen.queryByText("I paused before answering.")).toBeNull();
+  expect(screen.getByText(".gnirewsna erofeb desuap I")).toBeTruthy();
 });
