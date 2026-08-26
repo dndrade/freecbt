@@ -16,7 +16,7 @@ import {
   backHeaderAction,
   useScreenHeader,
 } from "@/shared/components";
-import { useI18n } from "@/i18n/use-i18n";
+import { useTranslate } from "@/i18n/use-i18n";
 import { useOnboardingFlow } from "../store/useOnboardingFlow";
 import { isKnownStepId, NO_SWIPE_STEP_IDS, stepRegistry } from "../steps";
 
@@ -35,7 +35,7 @@ export function OnboardingScreen({
   onSkip,
   onComplete,
 }: OnboardingScreenProps) {
-  const { t } = useI18n();
+  const t = useTranslate();
   const currentStepId = useOnboardingFlow((state) => state.currentStepId);
   const history = useOnboardingFlow((state) => state.history);
   const revealed = useOnboardingFlow((state) => state.revealed);
