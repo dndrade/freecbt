@@ -2,6 +2,7 @@ import { DistortionData, Thought } from "@/model";
 import { useSettings } from "@/features/settings/hooks/useSettings";
 import { ensureThoughtRecordReady } from "@/features/thoughtRecord/services/ensureThoughtRecordReady";
 import { thoughtsService } from "@/features/thoughtRecord/services/thoughtsService";
+import { getFeatureFlag } from "@/services";
 import { zustandMmkvStorage } from "@/services/storage/zustandStorage";
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
@@ -71,6 +72,14 @@ function durableDraft(
 }
 
 function nextStepId(current: string): string {
+  if (
+    current === "path" &&
+    getFeatureFlag("enable_onboarding_reminders_step")
+  ) {
+    return "reminders";
+  }
+  if (current === "reminders") return "invitation";
+
   const prefixIndex = PREFIX_ORDER.indexOf(
     current as (typeof PREFIX_ORDER)[number],
   );

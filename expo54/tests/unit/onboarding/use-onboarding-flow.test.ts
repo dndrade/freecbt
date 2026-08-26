@@ -5,6 +5,7 @@ import {
   useOnboardingFlow,
 } from "@/features/onboarding/store/useOnboardingFlow";
 import { useSettings } from "@/features/settings/hooks/useSettings";
+import { useFeatureFlagStore } from "@/services";
 
 const values = new Map<string, string>();
 const write = jest.fn<Promise<void>, [unknown]>();
@@ -53,6 +54,7 @@ const initial = {
 };
 
 beforeEach(() => {
+  useFeatureFlagStore.getState().resetFlags();
   useOnboardingFlow.setState({
     ...initial,
     activeIndex: 0,
@@ -70,6 +72,21 @@ test("next() walks the shared prefix in order", () => {
   expect(useOnboardingFlow.getState().currentStepId).toBe("privacy");
   useOnboardingFlow.getState().next();
   expect(useOnboardingFlow.getState().currentStepId).toBe("path");
+  useOnboardingFlow.getState().next();
+  expect(useOnboardingFlow.getState().currentStepId).toBe("invitation");
+});
+
+test("next() routes through reminders when its feature flag is enabled", () => {
+  useFeatureFlagStore
+    .getState()
+    .overrideFlags({ enable_onboarding_reminders_step: true });
+  useOnboardingFlow.setState({
+    currentStepId: "path",
+    history: ["welcome", "privacy"],
+  });
+
+  useOnboardingFlow.getState().next();
+  expect(useOnboardingFlow.getState().currentStepId).toBe("reminders");
   useOnboardingFlow.getState().next();
   expect(useOnboardingFlow.getState().currentStepId).toBe("invitation");
 });
