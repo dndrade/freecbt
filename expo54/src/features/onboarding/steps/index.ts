@@ -1,9 +1,7 @@
-import type { ComponentType, ReactNode } from "react";
+import type { ComponentType } from "react";
 import type { Reminders } from "@/src/features/reminders/use-reminders";
 import type { TranslateFn } from "@/src/i18n/use-i18n";
 import { getFeatureFlag } from "@/services";
-import { ChallengeStep } from "./ChallengeStep";
-import { ChangeStep } from "./ChangeStep";
 import { ComposerStep } from "./ComposerStep";
 import { GuidedAlternativeStep } from "./GuidedAlternativeStep";
 import { GuidedCompleteStep } from "./GuidedCompleteStep";
@@ -15,7 +13,6 @@ import { GuidedYourTurnStep } from "./GuidedYourTurnStep";
 import { InvitationStep } from "./InvitationStep";
 import { PathStep } from "./PathStep";
 import { PrivacyStep } from "./PrivacyStep";
-import { RecordStep } from "./RecordStep";
 import { RemindersStep } from "./RemindersStep";
 import { WelcomeStep } from "./WelcomeStep";
 
@@ -75,42 +72,3 @@ export type OnboardingStepProps = {
   translate: TranslateFn;
   reminders: Reminders;
 };
-
-export type OnboardingStepDefinition = {
-  id: LegacyOnboardingStepId;
-  Component: (props: OnboardingStepProps) => ReactNode;
-};
-
-type LegacyOnboardingStepId = "record" | "challenge" | "change" | "reminders";
-
-const legacyStepRegistry: Record<
-  LegacyOnboardingStepId,
-  OnboardingStepDefinition
-> = {
-  record: { id: "record", Component: RecordStep },
-  challenge: { id: "challenge", Component: ChallengeStep },
-  change: { id: "change", Component: ChangeStep },
-  reminders: { id: "reminders", Component: RemindersStep },
-};
-
-const legacyDefaultOrder: readonly LegacyOnboardingStepId[] = [
-  "record",
-  "challenge",
-  "change",
-  "reminders",
-];
-
-function isKnownLegacyStepId(id: string): id is LegacyOnboardingStepId {
-  return Object.prototype.hasOwnProperty.call(legacyStepRegistry, id);
-}
-
-export function buildOnboardingSteps(options: {
-  includeReminders: boolean;
-  candidateIds?: readonly string[];
-}): OnboardingStepDefinition[] {
-  const candidates = options.candidateIds ?? legacyDefaultOrder;
-  return candidates
-    .filter(isKnownLegacyStepId)
-    .filter((id) => options.includeReminders || id !== "reminders")
-    .map((id) => legacyStepRegistry[id]);
-}
