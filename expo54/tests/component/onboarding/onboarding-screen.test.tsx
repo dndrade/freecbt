@@ -174,6 +174,7 @@ jest.mock("react-native-reanimated", () => {
 jest.mock("@/i18n/use-i18n", () => ({
   ...jest.requireActual("@/i18n/use-i18n"),
   useI18n: () => ({ t: (key: string) => key }),
+  useTranslate: () => (key: string) => key,
 }));
 jest.mock("@/features/settings/hooks/useSettings", () => ({
   useSettings: Object.assign(jest.fn(), {

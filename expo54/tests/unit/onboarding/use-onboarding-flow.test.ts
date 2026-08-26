@@ -444,14 +444,16 @@ test("finishOnboarding keeps the draft and reports failure when the write reject
   });
 });
 
-test("finishOnboarding keeps the draft and reports failure when settings completion rejects", async () => {
+test("finishOnboarding keeps the draft and reports failure when settings completion throws", async () => {
   const { ensureThoughtRecordReady } = jest.requireMock(
     "@/features/thoughtRecord/services/ensureThoughtRecordReady",
   ) as { ensureThoughtRecordReady: jest.Mock };
   ensureThoughtRecordReady.mockResolvedValueOnce({});
   write.mockResolvedValueOnce();
   const failure = new Error("settings unavailable");
-  completeOnboardingMock().mockRejectedValueOnce(failure);
+  completeOnboardingMock().mockImplementationOnce(() => {
+    throw failure;
+  });
 
   useOnboardingFlow.setState({ currentStepId: "composer" });
   useOnboardingFlow.getState().setComposerThought("keep me too");
