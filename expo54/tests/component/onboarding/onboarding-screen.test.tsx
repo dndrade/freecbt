@@ -295,7 +295,7 @@ describe("OnboardingScreen", () => {
     expect(useOnboardingFlow.getState().currentStepId).toBe("invitation");
   });
 
-  it("reveals the guided thought before a second forward swipe advances", () => {
+  it("reveals the guided thought before a second forward swipe advances", async () => {
     useOnboardingFlow.setState({
       currentStepId: "g-thought",
       history: ["g-situation"],
@@ -305,13 +305,17 @@ describe("OnboardingScreen", () => {
     fireEvent(screen.getByTestId("onboarding-swipe-area"), "touchEnd", {
       nativeEvent: { translationX: -50 },
     });
-    expect(useOnboardingFlow.getState().revealed).toBe(true);
-    expect(useOnboardingFlow.getState().currentStepId).toBe("g-thought");
+    await waitFor(() => {
+      expect(useOnboardingFlow.getState().revealed).toBe(true);
+      expect(useOnboardingFlow.getState().currentStepId).toBe("g-thought");
+    });
 
     fireEvent(screen.getByTestId("onboarding-swipe-area"), "touchEnd", {
       nativeEvent: { translationX: -50 },
     });
-    expect(useOnboardingFlow.getState().currentStepId).toBe("g-pattern");
+    await waitFor(() =>
+      expect(useOnboardingFlow.getState().currentStepId).toBe("g-pattern"),
+    );
   });
 
   it.each([
@@ -338,7 +342,7 @@ describe("OnboardingScreen", () => {
     },
   );
 
-  it("swipes back through recorded history", () => {
+  it("swipes back through recorded history", async () => {
     useOnboardingFlow.setState({
       currentStepId: "g-evidence",
       history: ["g-situation", "g-thought", "g-pattern"],
@@ -349,10 +353,12 @@ describe("OnboardingScreen", () => {
       nativeEvent: { translationX: 50 },
     });
 
-    expect(useOnboardingFlow.getState()).toMatchObject({
-      currentStepId: "g-pattern",
-      history: ["g-situation", "g-thought"],
-    });
+    await waitFor(() =>
+      expect(useOnboardingFlow.getState()).toMatchObject({
+        currentStepId: "g-pattern",
+        history: ["g-situation", "g-thought"],
+      }),
+    );
   });
 
   it.each([

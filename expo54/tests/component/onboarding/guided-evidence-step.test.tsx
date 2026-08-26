@@ -51,7 +51,7 @@ test("shows the situation's evidence, gates Continue, and supports multi-select"
 
   fireEvent.press(evidence);
   expect(useOnboardingFlow.getState().selectedEvidenceIds).toEqual([
-    "I paused before answering.",
+    "onboarding_screen.guided.situations.interview.evidence_1",
   ]);
   expect(
     screen.getByRole("button", { name: "I paused before answering." }).props
@@ -65,8 +65,8 @@ test("shows the situation's evidence, gates Continue, and supports multi-select"
     }),
   );
   expect(useOnboardingFlow.getState().selectedEvidenceIds).toEqual([
-    "I paused before answering.",
-    "The other person kept talking with me.",
+    "onboarding_screen.guided.situations.interview.evidence_1",
+    "onboarding_screen.guided.situations.interview.evidence_2",
   ]);
 
   fireEvent.press(continueButton);
