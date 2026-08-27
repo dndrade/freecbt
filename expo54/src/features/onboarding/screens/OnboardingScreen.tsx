@@ -1,126 +1,161 @@
-import React, { useRef, useState } from "react";
-import {
-  AccessibilityInfo,
-  Keyboard,
-  LayoutChangeEvent,
-  Platform,
-  Pressable,
-  View,
-} from "react-native";
-import Carousel, { ICarouselInstance } from "react-native-reanimated-carousel";
-import { Typography, useThemeColor } from "heroui-native";
-
+import React from "react";
+import { Pressable } from "react-native";
+import { Gesture, GestureDetector } from "react-native-gesture-handler";
+import Animated, {
+  ReduceMotion,
+  SlideInLeft,
+  SlideInRight,
+  SlideOutLeft,
+  SlideOutRight,
+} from "react-native-reanimated";
+import { scheduleOnRN } from "react-native-worklets";
+import { Typography } from "heroui-native";
 import {
   ErrorBoundary,
-  FlowAction,
-  FlowProgress,
   StandardScreen,
   backHeaderAction,
   useScreenHeader,
 } from "@/shared/components";
-import { useReminders } from "@/features/reminders/use-reminders";
-import { useI18n } from "@/i18n/use-i18n";
+import { useTranslate } from "@/i18n/use-i18n";
 import { useOnboardingFlow } from "../store/useOnboardingFlow";
-import { buildOnboardingSteps, type OnboardingStepDefinition } from "../steps";
+import { isKnownStepId, NO_SWIPE_STEP_IDS, stepRegistry } from "../steps";
 
 export type OnboardingScreenProps = {
   onSkip: () => void | Promise<void>;
   onComplete: () => void | Promise<void>;
 };
 
+const TRANSITION_DURATION = 200;
+
+function isTerminalStep(stepId: string) {
+  return stepId === "composer" || stepId === "g-your-turn";
+}
+
 export function OnboardingScreen({
   onSkip,
   onComplete,
 }: OnboardingScreenProps) {
-  const ref = useRef<ICarouselInstance>(null);
-  const transitionPending = useRef(false);
-  const announcedIndex = useRef(0);
-  const [pagerSize, setPagerSize] = useState<{
-    width: number;
-    height: number;
-  }>();
+  const t = useTranslate();
+  const currentStepId = useOnboardingFlow((state) => state.currentStepId);
+  const history = useOnboardingFlow((state) => state.history);
+  const revealed = useOnboardingFlow((state) => state.revealed);
+  const selectedDistortionSlugs = useOnboardingFlow(
+    (state) => state.selectedDistortionSlugs,
+  );
+  const selectedEvidenceIds = useOnboardingFlow(
+    (state) => state.selectedEvidenceIds,
+  );
+  const guidedAlternative = useOnboardingFlow(
+    (state) => state.guidedAlternative,
+  );
+  const composerThought = useOnboardingFlow((state) => state.composerThought);
+  const guidedPersonalThought = useOnboardingFlow(
+    (state) => state.guidedPersonalThought,
+  );
+  const isSaving = useOnboardingFlow((state) => state.isSaving);
+  const error = useOnboardingFlow((state) => state.error);
+  const next = useOnboardingFlow((state) => state.next);
+  const back = useOnboardingFlow((state) => state.back);
+  const reveal = useOnboardingFlow((state) => state.reveal);
+  const finishOnboarding = useOnboardingFlow((state) => state.finishOnboarding);
 
-  const i18n = useI18n();
-  const t = (key: string, opts?: any) => i18n.t(key, opts);
-  const reminders = useReminders();
-  const accent = useThemeColor("accent");
+  const [direction, setDirection] = React.useState<"forward" | "back">(
+    "forward",
+  );
+  const wasSaving = React.useRef(isSaving);
+  const terminalSaveStep = React.useRef<string | undefined>(undefined);
+  const completionReported = React.useRef(false);
+  const skipPending = React.useRef(false);
 
-  const activeIndex = useOnboardingFlow((s) => s.activeIndex);
-  const setActiveIndex = useOnboardingFlow((s) => s.setActiveIndex);
-  const finish = useOnboardingFlow((s) => s.finish);
-
-  const slides = buildOnboardingSteps({
-    includeReminders: reminders.isSupported(),
-  });
-  const isFinal = activeIndex === slides.length - 1;
-
-  const complete = async (callback: () => void | Promise<void>) => {
-    await finish();
-    if (useOnboardingFlow.getState().completion === "idle") {
-      await callback();
+  React.useEffect(() => {
+    if (isSaving && isTerminalStep(currentStepId) && !skipPending.current) {
+      terminalSaveStep.current = currentStepId;
     }
-  };
-
-  const handleFinish = () => complete(onComplete);
-  const handleSkip = () => complete(onSkip);
-
-  function onPressStep(count: -1 | 1) {
     if (
-      transitionPending.current ||
-      (count < 0 && activeIndex === 0) ||
-      (count > 0 && isFinal) ||
-      ref.current === null
+      wasSaving.current &&
+      !isSaving &&
+      terminalSaveStep.current &&
+      !error &&
+      currentStepId === "welcome" &&
+      !skipPending.current &&
+      !completionReported.current
     ) {
+      completionReported.current = true;
+      void onComplete();
+    }
+    wasSaving.current = isSaving;
+  }, [currentStepId, error, isSaving, onComplete]);
+
+  const forwardReady =
+    currentStepId === "g-pattern"
+      ? selectedDistortionSlugs.length > 0
+      : currentStepId === "g-evidence"
+        ? selectedEvidenceIds.length > 0
+        : currentStepId === "g-alternative"
+          ? guidedAlternative.trim().length > 0
+          : currentStepId === "composer"
+            ? composerThought.trim().length > 0
+            : currentStepId === "g-your-turn"
+              ? guidedPersonalThought.trim().length > 0
+              : true;
+
+  const finishAndComplete = React.useCallback(async () => {
+    if (completionReported.current || isSaving) return;
+    const result = await finishOnboarding();
+    if (result.status === "saved" && !completionReported.current) {
+      completionReported.current = true;
+      await onComplete();
+    }
+  }, [finishOnboarding, isSaving, onComplete]);
+
+  const goNext = React.useCallback(() => {
+    if (currentStepId === "g-thought" && !revealed) {
+      reveal();
       return;
     }
+    if (!forwardReady) return;
+    if (isTerminalStep(currentStepId)) {
+      void finishAndComplete();
+      return;
+    }
+    setDirection("forward");
+    next();
+  }, [currentStepId, finishAndComplete, forwardReady, next, reveal, revealed]);
 
-    transitionPending.current = true;
-    ref.current.scrollTo({ count, animated: true });
-  }
+  const goBack = React.useCallback(() => {
+    if (history.length === 0) return;
+    setDirection("back");
+    back();
+  }, [back, history.length]);
 
-  function onPagerLayout(event: LayoutChangeEvent) {
-    const { width, height } = event.nativeEvent.layout;
-    if (width === 0 || height === 0) return;
+  const handleSkip = React.useCallback(async () => {
+    if (skipPending.current) return;
+    skipPending.current = true;
+    terminalSaveStep.current = undefined;
+    const result = await finishOnboarding();
+    if (result.status === "saved" || result.status === "empty") {
+      await onSkip();
+    } else {
+      skipPending.current = false;
+    }
+  }, [finishOnboarding, onSkip]);
 
-    setPagerSize((current) =>
-      current?.width === width && current.height === height
-        ? current
-        : { width, height },
-    );
-  }
-
-  const footer = (
-    <View className="items-center gap-3 pb-4">
-      <FlowProgress
-        variant="dots"
-        currentIndex={activeIndex}
-        count={slides.length}
-        accessibilityLabel={t("onboarding_screen.progress")}
-        accessibilityValueText={t("onboarding_screen.progress_step", {
-          step: activeIndex + 1,
-          count: slides.length,
-        })}
-      />
-      <View className="h-12 w-48 items-center">
-        <FlowAction
-          state={isFinal ? "final" : "next"}
-          onPress={isFinal ? handleFinish : () => onPressStep(1)}
-          accessibilityLabel={
-            isFinal
-              ? t("onboarding_screen.get_started")
-              : t("onboarding_screen.next")
-          }
-          finalLabel={t("onboarding_screen.get_started")}
-        />
-      </View>
-    </View>
-  );
+  const knownStep = isKnownStepId(currentStepId);
+  const StepComponent = knownStep ? stepRegistry[currentStepId] : null;
+  const swipeDisabled = knownStep && NO_SWIPE_STEP_IDS.has(currentStepId);
+  const pan = Gesture.Pan()
+    .enabled(!swipeDisabled)
+    .onEnd((event) => {
+      "worklet";
+      if (event.translationX < -40) scheduleOnRN(goNext);
+      if (event.translationX > 40) scheduleOnRN(goBack);
+    });
 
   useScreenHeader({
     leftAction:
-      activeIndex > 0
-        ? backHeaderAction(() => onPressStep(-1), {
-            accessibilityLabel: t("onboarding_screen.previous"),
+      history.length > 0
+        ? backHeaderAction(goBack, {
+            accessibilityLabel: t("onboarding_screen.back"),
           })
         : undefined,
     rightElement: (
@@ -128,92 +163,45 @@ export function OnboardingScreen({
         accessibilityRole="button"
         accessibilityLabel={t("onboarding_screen.skip")}
         className="items-center justify-center"
-        style={{ minWidth: 44, height: 44, paddingHorizontal: 8 }}
-        onPress={handleSkip}
+        style={{ minWidth: 48, height: 48, paddingHorizontal: 8 }}
+        onPress={() => void handleSkip()}
       >
-        <Typography type="body-sm" style={{ color: accent }}>
-          {t("onboarding_screen.skip")}
-        </Typography>
+        <Typography type="body-sm">{t("onboarding_screen.skip")}</Typography>
       </Pressable>
     ),
   });
 
+  if (!StepComponent) return null;
+
   return (
-    <StandardScreen
-      scrollable={false}
-      contentClassName="flex-1 gap-0 py-2"
-      footer={footer}
-    >
-      <View
-        testID="onboarding-pager-viewport"
-        className="min-h-0 flex-1 overflow-hidden"
-        onLayout={onPagerLayout}
-      >
-        {pagerSize ? (
-          <Carousel
-            ref={ref}
-            data={slides}
-            renderItem={({
-              item,
-              index,
-            }: {
-              item: OnboardingStepDefinition;
-              index: number;
-            }) => {
-              const isActive = index === activeIndex;
-              return (
-                <View
-                  testID={`onboarding-page-${item.id}`}
-                  accessibilityElementsHidden={!isActive}
-                  aria-hidden={!isActive}
-                  importantForAccessibility={
-                    isActive ? "auto" : "no-hide-descendants"
-                  }
-                  focusable={isActive ? undefined : false}
-                  tabIndex={isActive ? undefined : -1}
-                  {...(Platform.OS === "web" && !isActive
-                    ? ({ inert: true } as unknown as React.ComponentProps<
-                        typeof View
-                      >)
-                    : {})}
-                  style={{ width: "100%", flex: 1 }}
-                >
-                  <ErrorBoundary
-                    fallback={null}
-                    onError={(err) => {
-                      if (__DEV__) {
-                        console.warn(
-                          `onboarding step "${item.id}" failed to render:`,
-                          err,
-                        );
-                      }
-                    }}
-                  >
-                    <item.Component translate={t} reminders={reminders} />
-                  </ErrorBoundary>
-                </View>
-              );
-            }}
-            width={pagerSize.width}
-            height={pagerSize.height}
-            loop={false}
-            defaultIndex={0}
-            onSnapToItem={(index) => {
-              transitionPending.current = false;
-              setActiveIndex(index);
-              if (announcedIndex.current !== index) {
-                announcedIndex.current = index;
-                AccessibilityInfo.announceForAccessibility(t(slides[index].id));
+    <StandardScreen scrollable={false} contentClassName="flex-1">
+      <GestureDetector gesture={pan}>
+        <Animated.View
+          key={currentStepId}
+          testID={`onboarding-step-${currentStepId}`}
+          entering={(direction === "forward" ? SlideInRight : SlideInLeft)
+            .duration(TRANSITION_DURATION)
+            .reduceMotion(ReduceMotion.System)}
+          exiting={(direction === "forward" ? SlideOutLeft : SlideOutRight)
+            .duration(TRANSITION_DURATION)
+            .reduceMotion(ReduceMotion.System)}
+          style={{ flex: 1 }}
+        >
+          <ErrorBoundary
+            fallback={null}
+            onError={(error) => {
+              if (__DEV__) {
+                console.warn(
+                  `onboarding step "${currentStepId}" failed to render:`,
+                  error,
+                );
               }
-              Keyboard.dismiss();
             }}
-            onConfigurePanGesture={(gesture) => {
-              "worklet";
-              gesture.activeOffsetX([-10, 10]);
-            }}
-          />
-        ) : null}
-      </View>
+          >
+            <StepComponent />
+          </ErrorBoundary>
+        </Animated.View>
+      </GestureDetector>
     </StandardScreen>
   );
 }

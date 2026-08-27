@@ -31,21 +31,6 @@ export interface LabFamily {
 // 2. one entry in the matching scenario below
 export const labFamilies = [
   {
-    id: "onboarding",
-    title: "Onboarding",
-    description: "Current onboarding prototype.",
-    href: "/v2/debug/lab/onboarding",
-  },
-  {
-    id: "thoughts",
-    title: "Thoughts",
-    description: "Current thought list and detail experience.",
-    // Points at the real production route (not a lab-local reconstruction):
-    // the adaptive list/detail split can only be correctly assembled by the
-    // actual nested route tree, including [idOrKey] detail routing.
-    href: "/v2/thoughts",
-  },
-  {
     id: "settings",
     title: "Settings",
     description: "Current settings baselines and entry flows.",

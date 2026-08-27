@@ -1,5 +1,6 @@
 import "../../../global.css";
 import { AppProvider } from "@/src/view/gateways/app-provider";
+import { initializeOnboardingFlow } from "@/src/features/onboarding/store/useOnboardingFlow";
 import { runSettingsBootstrap } from "@/src/features/settings/hooks/settingsBootstrap";
 import { Slot } from "expo-router";
 import { HeroUINativeProvider } from "heroui-native/provider";
@@ -18,7 +19,7 @@ export default function Layout() {
   useEffect(() => {
     void (async () => {
       try {
-        await runSettingsBootstrap();
+        await Promise.all([runSettingsBootstrap(), initializeOnboardingFlow()]);
       } finally {
         setIsReady(true);
         await SplashScreen.hideAsync();
